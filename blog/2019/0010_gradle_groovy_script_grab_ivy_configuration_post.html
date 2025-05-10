@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="google-site-verification" content="oTZL-J0lpqoMMfQvrhFBaPfG1gtsswFKz1RzHoMLgbo" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+
+    <!-- Le styles -->
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/asciidoctor.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/prettify.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/01a45d7f35.js" crossorigin="anonymous"></script>
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../../favicon.ico">
+
+
+    <title>Groovy script, grab et ivy configuration</title>
+
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+<!-- Navigation -->
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button"
+                    class="navbar-toggle"
+                    data-toggle="collapse"
+                    data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><i class="fa-solid fa-house"></i></a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+
+
+
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown"><i class="fa-duotone fa-memo"></i> Memos<b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="../../blog/2022/0052_memo_jvm_post.html"><i class="fa-brands fa-java"></i> jvm</a></li>
+                        <li><a href="../../blog/2022/0053_memo_kotlin_post.html"><i class="fa-brands fa-korvue"></i> kotlin</a></li>
+                        <li><a href="../../blog/2022/0047_memo_gradle_post.html"><i class="fa-solid fa-industry"></i> gradle</a></li>
+                        <li><a href="../../blog/2023/0060_memo_js_post.html"><i class="fa-brands fa-square-js"></i> javascript</a></li>
+                        <li><a href="../../blog/2023/0063_memo_ts_post.html"><i class="fa-brands fa-square-js"></i> typescript</a></li>
+                        <li><a href="../../blog/2023/0062_memo_css_post.html"><i class="fa-brands fa-css3-alt"></i> css</a></li>
+                        <li><a href="../../blog/2023/0061_memo_html_post.html"><i class="fa-brands fa-html5"></i> html</a></li>
+                        <li><a href="../../blog/2023/0066_memo_python_post.html"><i class="fa-brands fa-python"></i> python</a></li>
+                        <li><a href="../../blog/2020/0021_memo_git_post.html"><i class="fa-brands fa-git-alt"></i> git</a></li>
+                        <li><a href="../../blog/2021/0030_memo_nix_post.html"><i class="fa-brands fa-linux"></i> linux</a></li>
+                        <li><a href="../../blog/2022/0054_memo_cadrage_post.html"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>
+                        <li><a href="../../blog/2022/0031_memo_design_system_post.html"><i class="fa-solid fa-pencil"></i> design system</a></li>
+                        <li><a href="../../blog/2020/0016_asciidoc_markdown_memo_post.html"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="../../blog.html">Blog</a></li>
+
+            </ul>
+
+
+            <ul class="nav navbar-nav">
+                <li><a href="mailto:cheroliv.contact@gmail.com" target="_blank"><i class="fa-regular fa-envelope fa-lg"></i></a></li>
+                <li><a href="https://github.com/cheroliv" target="_blank"><i class="fa-brands fa-github fa-lg"></i></a></li>
+                <li><a href="../../feed.xml"><i class="fa fa-rss fa-lg"></i></a></li>
+            </ul>
+
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+<div class="container">
+
+	<div class="page-header">
+		<h1>Groovy script, grab et ivy configuration</h1>
+	</div>
+
+	<p><em>14 août 2019</em></p>
+
+	<p><div class="paragraph">
+<p>Le sujet du ticket est la configuration d&#8217;un script de build Gradle.<br>
+Je veux pouvoir utiliser un script Groovy sans faire référence<br>
+au projet Gradle dans lequel je l&#8217;ai attaché.<br>
+Je veux avoir la possibilité de lancer ce script Groovy hors de Gradle<br>
+sans que les annotations ivy de récupération de dépendance externe<br>
+ne viennent poser problème de performance ou de compilation<br>
+du script de build Gradle.<br>
+Pour illustrer la configuration je m&#8217;appuie sur deux scripts:<br>
+un script de build Gradle et un script Groovy.<br>
+Le script Groovy contient au début à la ligne 2,<br>
+une instruction pour tirer une dépendance  externe<br>
+à l&#8217;aide du gestionnaire de dépendance ivy.<br></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code data-lang="Groovy">#!/usr/bin/env groovy
+@Grab("commons-io:commons-io:2.6")
+
+import org.apache.commons.io.FileUtils
+
+static String getSeparator() {
+    System.getProperty("file.separator")
+}
+
+String from = "${System.getProperty("user.home")}${separator}.config${separator}transmission${separator}torrents"
+String to = "${System.getProperty("user.home")}${separator}Documents${separator}torrents_completed"
+
+File fromDlDir = new File("${System.getProperty("user.home")}${separator}Téléchargements")
+File fromDir = new File(from)
+File toDir = new File(to)
+
+Collection&lt;File&gt; torrentFiles = FileUtils.listFiles(
+        fromDir,
+        ["torrent"] as String[],
+        false)
+torrentFiles.addAll(FileUtils.listFiles(
+        fromDlDir,
+        ["torrent", "torrent.added"] as String[],
+        false))
+
+
+torrentFiles.empty ?: torrentFiles.each { it -&gt;
+    FileUtils.copyFileToDirectory(it, toDir)
+}
+println torrentFiles.size()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Dans le fichier build.gradle, maintenant voyons comment mettre en harmonie<br>
+les deux gestionnaires de dépendances, ivy et Gradle.
+L&#8217;accord entre les deux se fait aux lignes :<br>
+26, 30, 37, 38 et 39<br>
+Ainsi je peux lancer mon script Groovy manuellement,<br>
+et la compilation de Gradle n&#8217;est pas gênée par le @Grab.<br>
+Les dépendances du script Groovy ne sont pas à fournir dans Gradle.<br>
+Par contre je ne peux pas lancer le script Groovy depuis Gradle.<br></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code data-lang="Groovy">plugins {
+    id "java"
+    id "groovy"
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDirs =["src/main/java", "src/main/groovy"] }
+        resources {
+            srcDirs =["src/main/resources"]
+        }
+    }
+    test {
+        java { srcDirs = [] }
+        groovy { srcDirs =["src/test/java", "src/test/groovy"] }
+    }
+}
+
+configurations {
+    ivy
+}
+
+dependencies {
+    ivy "org.apache.ivy:ivy:$ivy_version"
+    implementation "org.codehaus.groovy:groovy-all:$groovy_version"
+}
+
+
+
+tasks.withType(GroovyCompile) {
+    groovyClasspath += configurations.ivy
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>référence du ticket  sur <a href="https://stackoverflow.com/a/18174033/837404">stackoverflow</a></p>
+</div></p>
+
+	<section id="disqus_thread"></section>
+	<script type="text/javascript">
+		var disqus_identifier = 'blog/2019/0010_gradle_groovy_script_grab_ivy_configuration_post.html';
+
+		(({disqus_shortname, document}) => {
+			injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+			injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+			function injectScript(url) {
+				const s = document.createElement('script');
+				s.async = true;
+				s.src = url;
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(s);
+			}
+		})({'disqus_shortname': 'cheroliv', 'document': document});
+	</script>
+	<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	<hr/>
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+          <b>cheroliv.com | <a rel="À propos" href="../../about.html">À propos</a> | &copy; 2018-2025 | Licence Creative Commons BY-NC-SA
+              <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
+                <img alt="Creative Commons License"
+                        style="border-width:0"
+                        src="http://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png"/>
+          </b>
+          <br/>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../../js/jquery.min.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/prettify.js"></script>
+    
+  </body>
+</html>
