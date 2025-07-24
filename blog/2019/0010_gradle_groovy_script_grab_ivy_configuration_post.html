@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cheroliv - Développeur Formateur | Ingénierie Pédagogique</title>
+
+  <!-- Bootstrap 5.3.7 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link href="css/styles.css" rel="stylesheet">
+
+  <!-- Meta tags pour SEO -->
+  <meta name="description" content="Développeur formateur spécialisé en ingénierie pédagogique. Conception et développement de solutions e-learning innovantes.">
+  <meta name="keywords" content="développement, formation, e-learning, ingénierie pédagogique, JavaScript, Bootstrap">
+  <meta name="author" content="Cheroliv">
+</head>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-xxl navbar-light fixed-top bg-light-theme">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#home">
+            <i class="bi bi-code-slash me-2"></i>
+            Cheroliv
+        </a>
+
+        <!-- Theme Switcher -->
+        <div class="theme-switcher-container d-flex align-items-center me-3">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-palette me-1"></i>
+                    <span id="current-theme">Light</span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                    <li><a class="dropdown-item theme-option" href="#" data-theme="light">
+                        <i class="bi bi-sun me-2"></i>Light
+                    </a></li>
+                    <li><a class="dropdown-item theme-option" href="#" data-theme="dark">
+                        <i class="bi bi-moon me-2"></i>Dark
+                    </a></li>
+                    <li><a class="dropdown-item theme-option" href="#" data-theme="high-contrast">
+                        <i class="bi bi-circle-half me-2"></i>High Contrast
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#home">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#about">À propos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#services">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#expertise">Expertise</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#portfolio">Portfolio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#formations">Formations</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#blog">Blog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#contact">Contact</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <div class="mb-4 pb-2 border-bottom">
+        <h1 class="display-4">Groovy script, grab et ivy configuration</h1>
+    </div>
+
+<p><em class="text-muted">14 August 2019</em></p>
+
+<p><div class="paragraph">
+<p>Le sujet du ticket est la configuration d&#8217;un script de build Gradle.<br>
+Je veux pouvoir utiliser un script Groovy sans faire référence<br>
+au projet Gradle dans lequel je l&#8217;ai attaché.<br>
+Je veux avoir la possibilité de lancer ce script Groovy hors de Gradle<br>
+sans que les annotations ivy de récupération de dépendance externe<br>
+ne viennent poser problème de performance ou de compilation<br>
+du script de build Gradle.<br>
+Pour illustrer la configuration je m&#8217;appuie sur deux scripts:<br>
+un script de build Gradle et un script Groovy.<br>
+Le script Groovy contient au début à la ligne 2,<br>
+une instruction pour tirer une dépendance  externe<br>
+à l&#8217;aide du gestionnaire de dépendance ivy.<br></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-Groovy" data-lang="Groovy">#!/usr/bin/env groovy
+@Grab("commons-io:commons-io:2.6")
+
+import org.apache.commons.io.FileUtils
+
+static String getSeparator() {
+    System.getProperty("file.separator")
+}
+
+String from = "${System.getProperty("user.home")}${separator}.config${separator}transmission${separator}torrents"
+String to = "${System.getProperty("user.home")}${separator}Documents${separator}torrents_completed"
+
+File fromDlDir = new File("${System.getProperty("user.home")}${separator}Téléchargements")
+File fromDir = new File(from)
+File toDir = new File(to)
+
+Collection&lt;File&gt; torrentFiles = FileUtils.listFiles(
+        fromDir,
+        ["torrent"] as String[],
+        false)
+torrentFiles.addAll(FileUtils.listFiles(
+        fromDlDir,
+        ["torrent", "torrent.added"] as String[],
+        false))
+
+
+torrentFiles.empty ?: torrentFiles.each { it -&gt;
+    FileUtils.copyFileToDirectory(it, toDir)
+}
+println torrentFiles.size()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Dans le fichier build.gradle, maintenant voyons comment mettre en harmonie<br>
+les deux gestionnaires de dépendances, ivy et Gradle.
+L&#8217;accord entre les deux se fait aux lignes :<br>
+26, 30, 37, 38 et 39<br>
+Ainsi je peux lancer mon script Groovy manuellement,<br>
+et la compilation de Gradle n&#8217;est pas gênée par le @Grab.<br>
+Les dépendances du script Groovy ne sont pas à fournir dans Gradle.<br>
+Par contre je ne peux pas lancer le script Groovy depuis Gradle.<br></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-Groovy" data-lang="Groovy">plugins {
+    id "java"
+    id "groovy"
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDirs =["src/main/java", "src/main/groovy"] }
+        resources {
+            srcDirs =["src/main/resources"]
+        }
+    }
+    test {
+        java { srcDirs = [] }
+        groovy { srcDirs =["src/test/java", "src/test/groovy"] }
+    }
+}
+
+configurations {
+    ivy
+}
+
+dependencies {
+    ivy "org.apache.ivy:ivy:$ivy_version"
+    implementation "org.codehaus.groovy:groovy-all:$groovy_version"
+}
+
+
+
+tasks.withType(GroovyCompile) {
+    groovyClasspath += configurations.ivy
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>référence du ticket  sur <a href="https://stackoverflow.com/a/18174033/837404">stackoverflow</a></p>
+</div></p>
+
+<section id="disqus_thread" class="mt-5"></section>
+
+<script type="text/javascript">
+    var disqus_identifier = 'blog/2019/0010_gradle_groovy_script_grab_ivy_configuration_post.html';
+
+    (({disqus_shortname, document}) => {
+        injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+        injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+        function injectScript(url) {
+            const s = document.createElement('script');
+            s.async = true;
+            s.src = url;
+            (document.head || document.body).appendChild(s);
+        }
+    })({'disqus_shortname': 'cheroliv', 'document': document});
+</script>
+
+<noscript>
+    <div class="alert alert-warning">
+        Veuillez activer JavaScript pour voir les
+        <a href="http://disqus.com/?ref_noscript" class="alert-link">commentaires propulsés par Disqus</a>.
+    </div>
+</noscript>
+
+<hr class="my-5" />
+
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <p>&copy; 2024 Cheroliv. Tous droits réservés.</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <a href="#" class="text-white me-3"><i class="bi bi-linkedin"></i></a>
+        <a href="#" class="text-white me-3"><i class="bi bi-github"></i></a>
+        <a href="#" class="text-white"><i class="bi bi-envelope"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap 5.3.7 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="../../js/script.js"></script>
+<!--<script src="../../js/prettify.js"></script>-->
+<!--<script src="../../js/jquery.min.js"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+
