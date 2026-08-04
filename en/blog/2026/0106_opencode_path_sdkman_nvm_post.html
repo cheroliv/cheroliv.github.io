@@ -1,0 +1,1455 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OpenCode and the incomplete PATH: why your tools weren&#39;t in the agent&#39;s shell — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="OpenCode and the incomplete PATH: why your tools weren&#39;t in the agent&#39;s shell — Cheroliv"/>
+        <meta property="og:description" content="OpenCode executes non-interactive shells that do not source .zshrc. Result: SDKMAN, NVM, ~/apps and pnpm are missing from the agent&#39;s PATH. Full diagnostic of the problem, comparison of SDKMAN vs NVM behavior, and definitive solution via .zshenv + ~/.nvm/current symlink."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0106_opencode_path_sdkman_nvm_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="OpenCode and the incomplete PATH: why your tools weren&#39;t in the agent&#39;s shell — Cheroliv"/>
+        <meta name="twitter:description" content="OpenCode executes non-interactive shells that do not source .zshrc. Result: SDKMAN, NVM, ~/apps and pnpm are missing from the agent&#39;s PATH. Full diagnostic of the problem, comparison of SDKMAN vs NVM behavior, and definitive solution via .zshenv + ~/.nvm/current symlink."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="OpenCode executes non-interactive shells that do not source .zshrc. Result: SDKMAN, NVM, ~/apps and pnpm are missing from the agent&#39;s PATH. Full diagnostic of the problem, comparison of SDKMAN vs NVM behavior, and definitive solution via .zshenv + ~/.nvm/current symlink."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0106_opencode_path_sdkman_nvm_post.html"},
+                      "headline": "OpenCode and the incomplete PATH: why your tools weren't in the agent's shell",
+                      "description": "When OpenCode launches a non-interactive shell, SDKMAN and NVM disappear from the PATH. Explanation of the problem, step-by-step diagnostic, and a clean solution using .zshenv and a current symlink.",
+                      "datePublished": "2026-04-21",
+                      "dateModified": "2026-04-21",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0106_opencode_path_sdkman_nvm_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "OpenCode and the incomplete PATH: why your tools weren't in the agent's shell", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0106_opencode_path_sdkman_nvm_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">OpenCode and the incomplete PATH: why your tools weren&#39;t in the agent&#39;s shell</h1>
+                <p class="lead">
+                    <em>Published on 21 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_the_scene_a_blind_agent_in_a_world_of_tools">The scene: a blind agent in a world of tools</a></li>
+<li><a href="#_anatomy_of_the_bug_two_shells_two_worlds">Anatomy of the bug: two shells, two worlds</a></li>
+<li><a href="#_the_culprits_zshrc_vs_zshenv">The culprits: .zshrc vs .zshenv</a></li>
+<li><a href="#_step_by_step_diagnostic">Step-by-step diagnostic</a>
+<ul class="sectlevel2">
+<li><a href="#_1_verify_the_agents_path">1. Verify the agent&#8217;s PATH</a></li>
+<li><a href="#_2_identify_what_is_in_zshrc_but_not_in_zshenv">2. Identify what is in .zshrc but not in .zshenv</a></li>
+<li><a href="#_3_check_if_zshenv_exists">3. Check if .zshenv exists</a></li>
+</ul>
+</li>
+<li><a href="#_the_solution_zshenv_the_right_paths">The solution: .zshenv + the right paths</a>
+<ul class="sectlevel2">
+<li><a href="#_create_zshenv_with_all_essential_paths">Create .zshenv with all essential paths</a></li>
+<li><a href="#_why_not_source_sdkman_init_sh_in_zshenv">Why not <code>source sdkman-init.sh</code> in .zshenv?</a></li>
+</ul>
+</li>
+<li><a href="#_the_nvm_case_when_the_version_manager_forgets_to_leave_a_trace">The NVM case: when the version manager forgets to leave a trace</a>
+<ul class="sectlevel2">
+<li><a href="#_the_nvm_problem">The NVM problem</a></li>
+<li><a href="#_the_solution_create_the_current_symlink_for_nvm">The solution: create the <code>current</code> symlink for NVM</a></li>
+<li><a href="#_automating_the_symlink_update">Automating the symlink update</a></li>
+</ul>
+</li>
+<li><a href="#_summary_table_of_paths">Summary table of paths</a></li>
+<li><a href="#_pitfalls_and_mitigations">Pitfalls and mitigations</a></li>
+<li><a href="#_lessons_learned">Lessons learned</a></li>
+<li><a href="#_final_verification">Final verification</a></li>
+<li><a href="#_links">Links</a>
+<ul class="sectlevel2">
+<li><a href="#_official_documentation">Official Documentation</a></li>
+<li><a href="#_mentioned_tools">Mentioned Tools</a></li>
+<li><a href="#_further_reading">Further Reading</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>reading time: 13 minutes</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You launch OpenCode in your terminal, everything works. The agent tries a`gh`— not found. A`java -version`— absent. A`node`— nowhere. Yet, these tools are right there in <em>your</em> shell. The problem? OpenCode launches shells<strong>non-interactive</strong>that never read your`.zshrc`. Here is how to diagnose and fix this properly.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">toc</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_scene_a_blind_agent_in_a_world_of_tools">The scene: a blind agent in a world of tools</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>It was a Tuesday evening. I had just installedhttps://opencode.ai[OpenCode], the AI agent that promised to transform the way I code. First test: asking it to list my GitHub repositories.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ opencode
+&gt; Utilise gh pour lister mes repos
+❌ bash: gh: command not found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Strange.`gh`worked perfectly in my terminal. I try something else:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">&gt; Vérifie la version de Java
+❌ bash: java: command not found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">&gt; Lance le build Gradle
+❌ bash: gradle: command not found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Java, Gradle, Node,<code>gh</code>— everything was invisible to the agent. My terminal, however, saw everything. As if the agent and I lived in two parallel worlds.</p>
+</div>
+<div class="paragraph">
+<p>It took me hours to understand. Hours of`echo $PATH`, de <code>which java</code>, of growing frustration. I eventually realized the problem wasn&#8217;t the tools — it was the<strong>shell</strong>. OpenCode, like any agent that launches subprocesses, works in<strong>non-interactive</strong>shells. And Zsh, in those shells, simply ignores your`.zshrc`.</p>
+</div>
+<div class="paragraph">
+<p>What follows is the full account of this diagnostic, the resolution, and the lesson I learned. If you use an AI agent — OpenCode, Aider, Cursor, or even cron scripts — this problem will affect you one day.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_anatomy_of_the_bug_two_shells_two_worlds">Anatomy of the bug: two shells, two worlds</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When you open a terminal, Zsh treats it as an<strong>interactive</strong>shell. It loads`.zshrc`, which initializes everything: SDKMAN, NVM, pnpm, aliases, your pretty prompt. Your environment is complete.</p>
+</div>
+<div class="paragraph">
+<p>But when OpenCode executes a command, it doesn&#8217;t launch an interactive terminal. It launches a<strong>non-interactive</strong>shell — a task shell, with no human behind the screen. And Zsh, in this context, skips`.zshrc`. It only reads`.zshenv`.</p>
+</div>
+<div class="paragraph">
+<p>Why does this distinction exist? Because a non-interactive shell is designed to execute scripts, not to serve a human user. Loading aliases, prompts, and completions in a script running in the background would be a waste. The problem is that your PATH — the most critical information for finding executables — is often initialized in`.zshrc`, not in`.zshenv`.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/probleme-path.svg" alt="probleme path" width="558" height="434">
+</div>
+</div>
+<div class="paragraph">
+<p>The root of the problem:<strong>Zsh only sources <code>.zshrc</code> for interactive shells</strong>. OpenCode, like any AI agent that launches subprocesses, uses non-interactive shells. These shells only read`.zshenv`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_culprits_zshrc_vs_zshenv">The culprits: .zshrc vs .zshenv</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Zsh has<strong>four initialization files</strong>, each with a specific role. It&#8217;s an elegant design — but it&#8217;s also the heart of the problem:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sourced when</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Role</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Modifies PATH?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zshenv</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Always</strong>(interactive + non-interactive + login)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Essential environment variables, PATH</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Yes — this is ITS place</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zprofile</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Login shells only</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slow commands (once per session)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Possible</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zshrc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Interactive shells only</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Alias, prompt, completion, interactive tools</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌ Not for critical variables</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zlogin</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Login shells (after .zshrc)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Welcome messages, finalization</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rarely</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The table gives a hint, but it must be understood in depth. Think of it like the rooms of a house:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>`.zshenv`is the<strong>entrance hall</strong>— everyone passes through here, visitor or resident. If you put something here, any shell will see it.</p>
+</li>
+<li>
+<p>`.zshrc`is the<strong>living room</strong>— only residents (interactive shells) enter. Visitors (non-interactive shells) stay in the hall.</p>
+</li>
+<li>
+<p><code>.zprofile</code> et `.zlogin`are specialized rooms for login shells (like when you connect via SSH).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The tragedy is that most of us put the PATH in the living room. And the AI agent is never allowed to enter.</p>
+</div>
+<div class="paragraph">
+<p>The problem in a diagram:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/zsh-init-flow.svg" alt="zsh init flow" width="543" height="404">
+</div>
+</div>
+<div class="paragraph">
+<p>When you open a terminal, Zsh is interactive: it reads`.zshrc`, everything works. When OpenCode launches a shell to execute a command, Zsh is non-interactive: it skips`.zshrc`, reads only`.zshenv`. Et si `.zshenv`doesn&#8217;t exist or doesn&#8217;t contain the PATH — it&#8217;s a desert.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Why does Zsh do this?</strong>It&#8217;s a design choice inherited from Unix. A non-interactive shell must be<strong>fast</strong> et <strong>reproducible</strong>. Loading aliases, colored prompts, and heavy SDKMAN initializations in a cron script or an AI agent would be slow and fragile. The separation is therefore logical:`.zshenv`for the essentials (variables, PATH),`.zshrc`for convenience (aliases, prompt, completions). The problem arises when we put the essentials in the convenience section.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_by_step_diagnostic">Step-by-step diagnostic</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before fixing, you must understand exactly what is missing. Here is a reproducible diagnostic method — keep it bookmarked if you work with AI agents.</p>
+</div>
+<div class="sect2">
+<h3 id="_1_verify_the_agents_path">1. Verify the agent&#8217;s PATH</h3>
+<div class="paragraph">
+<p>We compare what your interactive terminal sees with what a non-interactive shell sees — i.e., what OpenCode sees.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Dans votre terminal interactif (tout fonctionne)
+echo $PATH | tr ':' '\n' | grep -v '^/usr' | sort</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Typical result:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">/home/cheroliv/apps
+/home/cheroliv/.nvm/versions/node/v22.19.0/bin
+/home/cheroliv/.sdkman/candidates/java/current/bin
+/home/cheroliv/.sdkman/candidates/gradle/current/bin
+/home/cheroliv/.local/share/pnpm
+/home/cheroliv/.local/bin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, let&#8217;s simulate what the agent sees — a non-interactive shell:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Shell non-interactif : pas de .zshrc
+zsh -c 'echo $PATH' | tr ':' '\n' | grep -v '^/usr' | sort</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Result:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">/home/cheroliv/.local/bin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Five out of six paths have disappeared.</strong>The agent is amputated from 83% of its environment. It&#8217;s like being asked to cook without half of your utensils — you could boil water, but not much else.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The command`zsh -c 'echo $PATH'`is your<strong>number 1 diagnostic tool</strong>. If a tool you use daily is missing from the result, your AI agent won&#8217;t see it either. Test it before and after every modification of`.zshenv`.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_identify_what_is_in_zshrc_but_not_in_zshenv">2. Identify what is in .zshrc but not in .zshenv</h3>
+<div class="paragraph">
+<p>Now, we look for the culprit in`.zshrc`. We filter the lines that mention our tools:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">grep -n 'apps\|SDKMAN\|NVM\|PNPM\|PATH' ~/.zshrc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We typically find:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">119: PATH="/usr/bin/python3:$HOME/apps:$PATH"           # ← pas exporté !
+171: export NVM_DIR="$HOME/.nvm"
+172: [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; \. "$NVM_DIR/nvm.sh"   # ← NVM init
+176: nvm use --lts --silent                              # ← active une version
+179: export PNPM_HOME="/home/cheroliv/.local/share/pnpm"
+187: export SDKMAN_DIR="$HOME/.sdkman"
+188: [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] &amp;&amp; source "$HOME/.sdkman/bin/sdkman-init.sh"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All of this is<strong>invisible</strong>to OpenCode. And the`PATH`on line 119 isn&#8217;t even`export`exported — it never leaves the current shell. This is a crucial technical detail: a variable without`export`remains local to the shell that defines it. Sub-shells — like those launched by OpenCode — never inherit it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_check_if_zshenv_exists">3. Check if .zshenv exists</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat ~/.zshenv 2&gt;/dev/null || echo "FICHIER ABSENT"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the answer is "FILE NOT FOUND", that&#8217;s where everything happens.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_solution_zshenv_the_right_paths">The solution: .zshenv + the right paths</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The strategy is simple, but requires precision: put in`.zshenv` <strong>only</strong>the essential paths, without sourcing heavy initialization scripts. We don&#8217;t move`.zshrc`into`.zshenv`— we extract the essentials.</p>
+</div>
+<div class="sect2">
+<h3 id="_create_zshenv_with_all_essential_paths">Create .zshenv with all essential paths</h3>
+<div class="paragraph">
+<p>`.zshenv`is the<strong>only file</strong>that Zsh guarantees to source in<strong>all</strong>contexts. This is where the PATH should go.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export SDKMAN_DIR="$HOME/.sdkman"
+export NVM_DIR="$HOME/.nvm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$HOME/apps:$HOME/.sdkman/candidates/java/current/bin:$HOME/.sdkman/candidates/gradle/current/bin:$HOME/.nvm/current/bin:$PNPM_HOME:$HOME/.local/bin:$HOME/.local/share/JetBrains/Toolbox/scripts:/usr/bin/python3:$PATH"</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>We use`$HOME/.nvm/current/bin`and not`$HOME/.nvm/versions/node/v22.19.0/bin`. The reason: Node versions change. A hardcoded path becomes false at the next`nvm install`. More details in the next section.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_why_not_source_sdkman_init_sh_in_zshenv">Why not <code>source sdkman-init.sh</code> in .zshenv?</h3>
+<div class="paragraph">
+<p>The most tempting approach would be to simply reproduce in`.zshenv`what we do in`.zshrc`— source the initialization scripts. One<strong>might</strong>be tempted to do:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ❌ MAUVAISE IDÉE
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] &amp;&amp; source "$HOME/.sdkman/bin/sdkman-init.sh"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Problems:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Slow</strong>:`sdkman-init.sh`does network resolutions and checks every shell. In a non-interactive shell, this is an unnecessary cost.</p>
+</li>
+<li>
+<p><strong>Fragile</strong>: SDKMAN expects an interactive context. Its initialization can fail silently in a pipe or a sub-shell.</p>
+</li>
+<li>
+<p><strong>Useless</strong>: SDKMAN places its candidates in`~/.sdkman/candidates/&lt;tool&gt;/current/bin`— stable symlinks pointing to the active version. We can use them<strong>directly</strong>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The right approach: bypass SDKMAN initialization and point directly to the`current`symlinks. This is the key to the whole solution:<strong>use the file structure as a contract, rather than the initialization code</strong>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/sdkman-approach.svg" alt="sdkman approach" width="338" height="321">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_nvm_case_when_the_version_manager_forgets_to_leave_a_trace">The NVM case: when the version manager forgets to leave a trace</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_nvm_problem">The NVM problem</h3>
+<div class="paragraph">
+<p>This is where the investigation led me the furthest. SDKMAN has an elegant design: when we do`sdk install java 25.0.2-tem`, it creates a symlink:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">~/.sdkman/candidates/java/current -&gt; ~/.sdkman/candidates/java/25.0.2-tem</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This symlink is<strong>always up to date</strong>. Point to it in`.zshenv`and you are covered, regardless of the shell. Beautiful.</p>
+</div>
+<div class="paragraph">
+<p>NVM, however, creates<strong>nothing</strong>of the sort. No`current`symlink. No stable anchor point. We have to point to a hardcoded versioned path, which looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">~/.nvm/versions/node/v22.19.0/bin/node</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At the next`nvm install 24`, this path is dead. Your`.zshenv`will point to a version that is no longer the active version. It&#8217;s a time bomb.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Why does NVM do this?</strong>NVM works by dynamically modifying the PATH at every`nvm use`. It&#8217;s designed for developers who change versions often, in an interactive shell. The`current`symlink was not in the initial specifications — it&#8217;s a design oversight that we will correct ourselves.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/nvm-vs-sdkman.svg" alt="nvm vs sdkman" width="1869" height="217">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_solution_create_the_current_symlink_for_nvm">The solution: create the <code>current</code> symlink for NVM</h3>
+<div class="paragraph">
+<p>Since NVM doesn&#8217;t do it, we do it ourselves. The principle is the same as SDKMAN — a`current`symlink that always points to the active version. We create it once, then automate it so it updates itself.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Créer le symlink initial
+ln -sfn "$HOME/.nvm/versions/node/v22.19.0" "$HOME/.nvm/current"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, in`.zshenv`, we use:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$HOME/.nvm/current/bin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Rather than:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ❌ Chemin en dur — cassé au prochain changement de version
+$HOME/.nvm/versions/node/v22.19.0/bin</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_automating_the_symlink_update">Automating the symlink update</h3>
+<div class="paragraph">
+<p>A symlink is worthless if it doesn&#8217;t update. The`current`symlink must update when we do`nvm use` ou <code>nvm install</code>. The solution: a<strong>wrapper</strong>— a function that wraps the real`nvm`command and updates the symlink after each call.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># À la fin de .zshrc, APRÈS le chargement de NVM
+nvm use --lts --silent
+ln -sfn "$(nvm_version_path "$(nvm current)")" "$NVM_DIR/current"
+
+_nvm() {
+  command nvm "$@"
+  local rc=$?
+  ln -sfn "$(nvm_version_path "$(nvm current)")" "$NVM_DIR/current"
+  return $rc
+}
+alias nvm='_nvm'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>How it works, in detail:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/nvm-wrapper-flow.svg" alt="nvm wrapper flow" width="676" height="393">
+</div>
+</div>
+<div class="paragraph">
+<p>The wrapper`_nvm`calls the real command`nvm`, then updates the symlink. The alias`nvm='_nvm'`ensures that by typing`nvm`, we go through the wrapper. And at shell initialization, we do the same after`nvm use --lts`.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>`nvm_version_path`is an internal NVM function that resolves the full path of a version. This avoids rebuilding the path manually.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary_table_of_paths">Summary table of paths</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before moving to the pitfalls, a visual summary of the transformation. On the left, what you had (everything in`.zshrc`, invisible to the agent). On the right, what you have now (essential paths in`.zshenv`, visible everywhere).</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tool</th>
+<th class="tableblock halign-left valign-top">Before (.zshrc only)</th>
+<th class="tableblock halign-left valign-top">After (.zshenv + symlink)</th>
+<th class="tableblock halign-left valign-top">Visible to OpenCode?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>~/apps</code>(gh, vscode)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PATH not exported in .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/apps`in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SDKMAN Java</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sdkman-init.sh`sourced in .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.sdkman/candidates/java/current/bin`in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SDKMAN Gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sdkman-init.sh`sourced in .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.sdkman/candidates/gradle/current/bin`in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NVM Node</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`nvm use --lts`in .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.nvm/current/bin`in .zshenv (symlink)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pnpm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$PNPM_HOME`in .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$PNPM_HOME`in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JetBrains Toolbox</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-added by Toolbox in .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.local/share/JetBrains/Toolbox/scripts`in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Python 3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`/usr/bin/python3`in PATH .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Explicitly in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pitfalls_and_mitigations">Pitfalls and mitigations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Not everything is perfect with this approach. Here are the problems I encountered and how to bypass them.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Pitfall</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Duplicate PATH</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If .zshenv and .zshrc add the same path, it appears twice</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`.zshenv`is sourced<strong>before</strong>.zshrc. Both are read in an interactive shell. The PATH can duplicate. It&#8217;s cosmetic, not functional. To avoid it: only put paths in .zshenv that are <em>absent</em> from the default PATH.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NVM: hardcoded version in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Putting`~/.nvm/versions/node/v22.19.0/bin`hardcoded becomes false at the next`nvm install`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the`$HOME/.nvm/current/bin`symlink + the`_nvm`wrapper in .zshrc</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SDKMAN: source sdkman-init.sh in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slow, fragile, useless in a non-interactive shell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use`candidates/&lt;tool&gt;/current/bin`symlinks directly</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Missing alias after modification</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The`nvm='_nvm'`wrapper in .zshrc only takes effect after reloading</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restart the shell or`source ~/.zshrc`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenCode doesn&#8217;t see changes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The agent has already launched its sub-shells with the old .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restart OpenCode after modifying .zshenv</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.zshenv too bloated</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Putting heavy functions or interactive initializations in .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.zshenv = environment variables + PATH only. No`source`, no heavy functions, no prompts.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lessons_learned">Lessons learned</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong><code>.zshrc</code> is interactive, <code>.zshenv</code> is universal</strong>— If a variable must exist in <em>all</em> shells (AI agents, cron, scripts, IDE), it goes in`.zshenv`. The living room is comfortable, but the entrance hall is the only place where everyone passes.</p>
+</li>
+<li>
+<p><strong>Version managers are not created equal</strong>— SDKMAN creates`current`symlinks by design. NVM does not. This gap must be filled manually. This is an important lesson: before configuring your PATH, check if your manager offers a stable anchor point.</p>
+</li>
+<li>
+<p><strong>Do not source init scripts in .zshenv</strong>—<code>sdkman-init.sh</code> et `nvm.sh`are designed for an interactive shell. They are slow and fragile in a non-interactive context.`current`symlinks are sufficient and instantaneous.</p>
+</li>
+<li>
+<p><strong>Always test in a non-interactive shell</strong>—`zsh -c 'echo $PATH'`simulates exactly what an agent sees. This is the validation test. Without this test, you don&#8217;t know if your configuration works for agents.</p>
+</li>
+<li>
+<p><strong>The wrapper pattern is reusable</strong>— The same`_nvm`+`alias nvm='_nvm'`pattern applies to any tool that modifies the PATH dynamically without leaving a stable trace. It&#8217;s another tool in your idea box.</p>
+</li>
+</ol>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/avant-apres.svg" alt="avant apres" width="238" height="306">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_final_verification">Final verification</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After creating`.zshenv`and the NVM symlink, validate that everything works — in both contexts:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Shell interactif (votre terminal)
+gh --version &amp;&amp; java -version &amp;&amp; node --version</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Shell non-interactif (simulation OpenCode)
+zsh -c 'gh --version &amp;&amp; java -version &amp;&amp; node --version'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both must succeed. If so, your AI agent will see the same tools as you. If not, go back to the step-by-step diagnostic — you probably forgot a path or the NVM symlink is not up to date.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Automate this test.</strong>Add this check to a healthcheck script that you run after every update of your tools. A`zsh -c 'which java &amp;&amp; which node &amp;&amp; which gh'`in CI is insurance against surprises.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><em><em>_ A non-interactive shell is like a silent guest: it only reads what is posted on the front door. If the PATH is in the living room, it will never see it. </em>_</em></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_links">Links</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_official_documentation">Official Documentation</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://zsh.sourceforge.io/Doc/Release/Files.html">Zsh documentation: Startup Files</a>— The official reference on Zsh initialization files. This is where everything is explained, even if we often forget.</p>
+</li>
+<li>
+<p><a href="https://opencode.ai/docs/config/">OpenCode: configuration</a>— How to configure OpenCode and its execution environment.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mentioned_tools">Mentioned Tools</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/nvm-sh/nvm">NVM on GitHub</a>— Node Version Manager. Node.js version manager.</p>
+</li>
+<li>
+<p><a href="https://sdkman.io">SDKMAN — official site</a>— SDKMAN! The version manager for the JVM (Java, Kotlin, Gradle&#8230;&#8203;)</p>
+</li>
+<li>
+<p><a href="https://sdkman.io/install">SDKMAN: installation</a>— SDKMAN installation guide.</p>
+</li>
+<li>
+<p><a href="https://cli.github.com"><code>gh</code> — GitHub CLI</a>— The GitHub command line tool, indispensable for any developer.</p>
+</li>
+<li>
+<p><a href="https://gradle.org">Gradle — official site</a>— The build system we install via SDKMAN.</p>
+</li>
+<li>
+<p><a href="https://pnpm.io">pnpm — official site</a>— The fast and space-efficient Node.js package manager.</p>
+</li>
+<li>
+<p><a href="https://www.jetbrains.com/toolbox-app/">JetBrains Toolbox</a>— The JetBrains IDE manager, which adds its scripts to the PATH.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_further_reading">Further Reading</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://blog.andy2003.org/posts/2022/zsh-dotfiles/">Zsh dotfiles: a complete guide</a>— An in-depth article on managing Zsh dotfiles.</p>
+</li>
+<li>
+<p><a href="https://wiki.archlinux.org/title/Zsh">Zsh on ArchWiki</a>— One of the best community documentations on Zsh.</p>
+</li>
+<li>
+<p><a href="https://github.com/nvm-sh/nvm/issues">NVM GitHub issues</a>— To see discussions around the`current`symlink and PATH issues.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0106_opencode_path_sdkman_nvm_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

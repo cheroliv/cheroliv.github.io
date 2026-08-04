@@ -1,0 +1,1231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1 : Three LLMs Put to the Test of Long-Context Vibe Coding — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1 : Three LLMs Put to the Test of Long-Context Vibe Coding — Cheroliv"/>
+        <meta property="og:description" content="For three weeks, I ran three major models through my Gradle plugin development sessions with Opencode. 30K token context, Eager/Lazy/Hot/Warm/Cold governance, refactoring tasks, TDD, and architecture. Here is which one survived — and why the others faltered."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1 : Three LLMs Put to the Test of Long-Context Vibe Coding — Cheroliv"/>
+        <meta name="twitter:description" content="For three weeks, I ran three major models through my Gradle plugin development sessions with Opencode. 30K token context, Eager/Lazy/Hot/Warm/Cold governance, refactoring tasks, TDD, and architecture. Here is which one survived — and why the others faltered."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="For three weeks, I ran three major models through my Gradle plugin development sessions with Opencode. 30K token context, Eager/Lazy/Hot/Warm/Cold governance, refactoring tasks, TDD, and architecture. Here is which one survived — and why the others faltered."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"},
+                      "headline": "DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1 : Three LLMs Put to the Test of Long-Context Vibe Coding",
+                      "description": "In-depth comparison of three recent LLMs (DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1) in a real-world AI agent-assisted software development context on Gradle plugins, featuring long-context management and agent governance via AsciiDoc files.",
+                      "datePublished": "2026-04-28",
+                      "dateModified": "2026-04-28",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1 : Three LLMs Put to the Test of Long-Context Vibe Coding", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1 : Three LLMs Put to the Test of Long-Context Vibe Coding</h1>
+                <p class="lead">
+                    <em>Published on 28 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_context_not_a_test_bench_but_a_construction_site">Context: Not a test bench, but a construction site</a></li>
+<li><a href="#_my_test_environment">My test environment</a></li>
+<li><a href="#_the_evaluation_grid">The Evaluation Grid</a></li>
+<li><a href="#_round_1_kimi_k2_6_the_false_start">Round 1: Kimi K2.6 — The False Start</a>
+<ul class="sectlevel2">
+<li><a href="#_session_9_the_honeymoon">Session 9: the honeymoon</a></li>
+<li><a href="#_session_10_the_silent_shipwreck">Session 10: the silent shipwreck</a></li>
+</ul>
+</li>
+<li><a href="#_round_2_glm_5_1_the_honorable_fighter">Round 2: GLM-5.1 — The Honorable Fighter</a>
+<ul class="sectlevel2">
+<li><a href="#_architecture_dsa_vs_pure_mla">Architecture: DSA vs Pure MLA</a></li>
+<li><a href="#_sessions_11_13_solid_but_frustrating">Sessions 11-13: solid but frustrating</a></li>
+</ul>
+</li>
+<li><a href="#_round_3_deepseek_v4_pro_the_war_machine">Round 3: DeepSeek-V4-Pro — The War Machine</a>
+<ul class="sectlevel2">
+<li><a href="#_architecture_csa_hca_the_double_safety_net">Architecture: CSA + HCA, the double safety net</a></li>
+<li><a href="#_sessions_1_8_the_relief">Sessions 1-8: the relief</a></li>
+<li><a href="#_the_decisive_test_refactoring_at_100k_tokens">The decisive test: refactoring at 100K tokens</a></li>
+</ul>
+</li>
+<li><a href="#_the_face_off_comparative_metrics">The Face-Off: Comparative Metrics</a></li>
+<li><a href="#_why_deepseek_v4_pro_wins_in_software_development">Why DeepSeek-V4-Pro Wins in Software Development</a>
+<ul class="sectlevel2">
+<li><a href="#_1_the_csahca_architecture_is_tailored_for_code">1. The CSA+HCA architecture is tailored for code</a></li>
+<li><a href="#_2_eager_context_is_its_comfort_zone">2. EAGER context is its comfort zone</a></li>
+<li><a href="#_3_the_qualitylatency_ratio_is_optimal_for_flow">3. The quality/latency ratio is optimal for flow</a></li>
+</ul>
+</li>
+<li><a href="#_lessons_learned_how_to_choose_your_llm_for_vibe_coding">Lessons Learned: How to Choose Your LLM for Vibe Coding</a></li>
+<li><a href="#_and_what_about_agent_governance_in_all_this">And what about Agent Governance in all this?</a></li>
+<li><a href="#_technical_sources">Technical Sources</a></li>
+<li><a href="#_conclusion_the_artisans_choice">Conclusion: The Artisan&#8217;s Choice</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">reading time : 18 minutes</div>
+<p>The LLM war is also fought in a developer&#8217;s terminal. Not on sterile academic benchmarks. In real life: a 30,000 token prompt, agent governance in AsciiDoc, Gradle Kotlin DSL plugins to debug, and sessions chaining over three weeks. I tested DeepSeek-V4-Pro, Kimi K2.6, and GLM-5.1 for you. Here is the verdict, with technical evidence.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">toc</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_context_not_a_test_bench_but_a_construction_site">Context: Not a test bench, but a construction site</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Three weeks ago, I was working on`codebase-gradle`, my meta-build system that centralizes the YAML configuration of four projects: a PlantUML README generator, an AsciiDoc slide builder, a JBake static site, and an LLM chatbot. The Opencode agent, governed by my agent file methodology in AsciiDoc, loaded ~30K tokens of EAGER context at the start of each session — absolute rules, backlog, history of the last 10 sessions.</p>
+</div>
+<div class="paragraph">
+<p>This is where I pitted three models against each other:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Kimi K2.6</strong>(Moonshot AI, 1T params / 32B activated, 256K max context, MLA) - <strong>GLM-5.1</strong>(Zhipu AI/Tsinghua, 744B params / DSA, 200K max context) - <strong>DeepSeek-V4-Pro</strong>(DeepSeek, 1.6T params / 49B activated, 1M max context, CSA+HCA)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>All served via Ollama on a cloud server, all in thinking mode (reflection phase enabled). The challenge: produce correct code, maintain consistency over long sessions, and not hallucinate when the context exceeds 80K tokens.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_my_test_environment">My test environment</h2>
+<div class="sectionbody">
+<div id="diag-dev-env" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-b1ac0f8f2064fca47d705e64ced8b52f.svg" alt="Environnement de développement — LLM + Opencode + Gradle" width="693" height="770">
+</div>
+</div>
+<div class="paragraph">
+<p>Each session started with approximately 30K tokens of EAGER context:`AGENT.adoc`(287 lines),<code>PROMPT_REPRISE.adoc</code>(51 lines),<code>.agents/INDEX.adoc</code>(218 lines),<code>LAZY_EAGER_ESSENTIALS.adoc</code>(50 lines). The context grew rapidly with exchanges — a typical 10-message session added 15-20K tokens to the cumulative prompt.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_evaluation_grid">The Evaluation Grid</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I evaluated each model on four critical axes for assisted software development:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Axis</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Concrete Criterion</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Long-context consistency</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Does the agent remember conventions decided 40 messages ago?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Produced code quality</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Does the code compile on the first try? Does it respect existing patterns?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Architectural reasoning</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Does the agent understand relations between modules without me re-explaining them?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Hallucination resistance</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">At how many tokens does the agent start inventing non-existent APIs or classes?</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>And a home-made synthetic metric: the<strong>recovery coefficient</strong>(how much time I spend correcting the agent rather than coding with it).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_round_1_kimi_k2_6_the_false_start">Round 1: Kimi K2.6 — The False Start</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Kimi K2.6 was my first choice. Its benchmarks on SWE-Bench Verified (80.2) and Terminal-Bench 2.0 (66.7) are excellent. Its MLA architecture promises good efficiency on long sequences.</p>
+</div>
+<div class="sect2">
+<h3 id="_session_9_the_honeymoon">Session 9: the honeymoon</h3>
+<div class="paragraph">
+<p>First session with Kimi. Task: implement the method`resolveActiveKey()<code>in`codebase.kt</code>— an API key resolution function with CLI fallback. Context is at 30K tokens, Kimi reasons quickly, produces clean code with key expiration management.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">fun resolveActiveKey(
+    cfg: CodebaseConfiguration,
+    logger: Logger,
+    cliProvider: String? = null,
+    cliAccount: String? = null,
+    cliKey: String? = null
+): NamedApiKey? {
+    // Résolution provider → compte → clé avec CLI override
+    // Kimi a parfaitement compris la chaîne de priorité
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The code compiles. The 7 test cases pass. I am optimistic.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_session_10_the_silent_shipwreck">Session 10: the silent shipwreck</h3>
+<div class="paragraph">
+<p>Second session. Context climbs to ~90K tokens with exchanges. I ask Kimi to add an AsciiDoc snapshot mechanism that anonymizes secrets before writing.</p>
+</div>
+<div class="paragraph">
+<p>This is where it goes wrong. Kimi starts inventing classes that don&#8217;t exist. He proposes`AnonymizedObjectMapper`— a fictitious class. He confuses`ReadmeYmlAnonymizer` et <code>CodebaseYmlAnonymizer</code>. He suggests importing`com.fasterxml.jackson.anonymize.*`— a package that never existed.</p>
+</div>
+<div class="paragraph">
+<p>Worse: in its reflection phase, I see it building reasoning on false premises. It "remembers" that`GitConfig`has a field`anonymizedToken`— no, it&#8217;s`resolvedToken()<code>. It attributes to`SiteYmlAnonymizer`a method`maskSupabaseCredentials()</code>— which does not exist.</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ This wasn&#8217;t a bug. It was a progressive dissolution of coherence. As if each token added to the context further diluted the memory of the first 30,000. </em>_</em></p>
+</div>
+<div class="paragraph">
+<p>I stop Kimi after two sessions. The diagnosis is clear: MLA compresses the KV cache well, but without a fine-grained sparse selection mechanism, attention mechanically dilutes beyond 60K tokens. Each token "sees" the distant context less and less — and begins to fill the gaps with noise.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_round_2_glm_5_1_the_honorable_fighter">Round 2: GLM-5.1 — The Honorable Fighter</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>GLM-5.1 arrives with a different architecture: MLA for the base model, then <strong>continued pre-training</strong> with DSA (DeepSeek Sparse Attention) — a lightweight indexer that dynamically selects the top-2048 relevant tokens from the entire history.</p>
+</div>
+<div class="sect2">
+<h3 id="_architecture_dsa_vs_pure_mla">Architecture: DSA vs Pure MLA</h3>
+<div class="paragraph">
+<p>The difference is fundamental. Where Kimi compresses history into a single latent space (and progressively loses the ability to discriminate relevant information), GLM grafts a post-training indexer that performs explicit sparse selection.</p>
+</div>
+<div id="diag-mla-vs-dsa" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-96552207a44b513333686c1c93d0cef9.svg" alt="Comparaison architecture MLA (Kimi) vs MLA+DSA (GLM)" width="1074" height="364">
+</div>
+</div>
+<div class="paragraph">
+<p>The technical report states explicitly: DSA is <em>"lossless by construction"</em> — unlike alternatives like SWA (pattern search), Gated DeltaNet, or SimpleGDN which lose up to 5.69 pts on RULER@128K.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sessions_11_13_solid_but_frustrating">Sessions 11-13: solid but frustrating</h3>
+<div class="paragraph">
+<p>GLM-5.1 holds the distance better. In session 11 (~60K tokens), it remains coherent. It produces a`SnapshotManager`that is functional with correct management of the four anonymizers.</p>
+</div>
+<div class="paragraph">
+<p>But latency is an issue. DSA reflection phases are heavier than pure MLA — the indexer must rescan history at each step. A response that took 8 seconds with Kimi takes 15 with GLM. Over a 30-message session, it&#8217;s noticeable.</p>
+</div>
+<div class="paragraph">
+<p>And then there are the subtle errors. GLM doesn&#8217;t rave like Kimi — but it makes <strong>naming</strong> errors. It calls`toAnonymizedYaml()<code>the method that should be called`anonymize()</code>. It reverses`loadReadmeConfiguration()` et <code>loadCodebaseConfiguration()`in the`renderFileSection()</code>. These aren&#8217;t hallucinations, they are surface confusions — but in production, a surface confusion can break a build.</p>
+</div>
+<div class="paragraph">
+<p>I lasted three sessions with GLM. It is undeniably better than Kimi. But three sessions of manual correction on naming details is wearing.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_round_3_deepseek_v4_pro_the_war_machine">Round 3: DeepSeek-V4-Pro — The War Machine</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>DeepSeek-V4-Pro arrives with the most ambitious architecture of the three: a hybrid system combining two complementary attention mechanisms.</p>
+</div>
+<div class="sect2">
+<h3 id="_architecture_csa_hca_the_double_safety_net">Architecture: CSA + HCA, the double safety net</h3>
+<div id="diag-csa-hca" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-aad75fde6f9e97e39f6617b3b9f836d7.svg" alt="Architecture hybride CSA+HCA de DeepSeek-V4-Pro" width="741" height="459">
+</div>
+</div>
+<div class="paragraph">
+<p>Two levels of compression, two granularities of attention:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>CSA</strong>: compresses the KV cache every`m`tokens, then applies sparse attention (DeepSeek Sparse Attention) — only the top-k of the compressed entries is consulted. Precise, local, efficient. - <strong>HCA</strong>: extreme compression (factor`m'`much larger than`m`), but dense attention on the compressed residue — keeps global connections without quadratic explosion.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Result: at 1M tokens, DeepSeek-V4-Pro consumes only<strong>27% of inference FLOPs</strong> et <strong>10% of KV cache size</strong>compared to DeepSeek-V3.2, the previous model.</p>
+</div>
+<div class="paragraph">
+<p>And above all, the technical report (Figure 9) announces: <em>"Retrieval performance remains highly stable within a 128K context window."</em></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sessions_1_8_the_relief">Sessions 1-8: the relief</h3>
+<div class="paragraph">
+<p>I spent eight sessions with DeepSeek-V4-Pro on`codebase-gradle`. Eight sessions without a single hallucination, without a single invented class, without a single naming confusion.</p>
+</div>
+<div class="paragraph">
+<p>Session 1: implementation of`CodebaseYmlConfig` et <code>CodebaseYmlAnonymizer</code>. 350 lines of Kotlin, inline tests, everything compiles. Session 4: addition of the`SnapshotManager`with tree view, file collection, AsciiDoc rendering per file. 279 lines, zero errors. Session 7: debug of the`renderFileSection()`which had to handle four different types of anonymizers without resolution ambiguity. Resolved in three messages.</p>
+</div>
+<div class="paragraph">
+<p>Latency is higher than Kimi — about 10-12 seconds per response in thinking mode. But the correction rate is nearly zero. I don&#8217;t spend my time repairing the agent&#8217;s errors. I code <strong>with</strong> it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_decisive_test_refactoring_at_100k_tokens">The decisive test: refactoring at 100K tokens</h3>
+<div class="paragraph">
+<p>At session 8, the cumulative context exceeds 100K tokens. I ask for a heavy refactoring: extract the four inline verification tasks from`build.gradle.kts`to JUnit5 test files in`buildSrc/src/test/`.</p>
+</div>
+<div class="paragraph">
+<p>The agent proposes a plan in three phases:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create test classes with migration of existing cases</p>
+</li>
+<li>
+<p>Add JUnit5 and Kotest dependencies in`buildSrc/build.gradle.kts`</p>
+</li>
+<li>
+<p>Remove inline code from`build.gradle.kts`</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The plan is correct. The execution is clean. It even identifies an edge case I had missed: duplicate Jackson dependencies between`buildscript {}` et `buildSrc/build.gradle.kts`that must be unified during migration.</p>
+</div>
+<div class="paragraph">
+<p>100K tokens of context, and the agent remembers that`CodebaseYmlAnonymizer.TOKEN_MASK`is`"<strong>*</strong>"`, that`GitConfig.resolvedToken()<code>is an extension function defined in`readme.kt</code>, and that`SnapshotManager.PRUNED_DIRS`excludes`build`, <code>.gradle</code> et <code>.git</code>.</p>
+</div>
+<div class="paragraph">
+<p>That is the difference.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_face_off_comparative_metrics">The Face-Off: Comparative Metrics</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Criterion</th>
+<th class="tableblock halign-left valign-top">Kimi K2.6</th>
+<th class="tableblock halign-left valign-top">GLM-5.1</th>
+<th class="tableblock halign-left valign-top">DeepSeek-V4-Pro</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Context</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">256K</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200K</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1M</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attention Mechanism</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pure MLA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MLA + DSA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CSA + HCA hybrid</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total Parameters</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1T</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">744B</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.6T</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Activated Parameters</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32B</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">not published</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">49B</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Observed Degradation Threshold</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~60K tokens</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~120K tokens</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~128K tokens</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Behavior Beyond</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Massive Hallucinations</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Surface Confusions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slow progressive degradation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NIAH Stability</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">not published</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">100% @128K (DSA)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stable up to 128K (Figure 9)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MRCR @128K</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">not published</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">not published</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">superior to Gemini 3.1 Pro</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sessions held before abandonment</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8 (and continuing)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Correction time / coding time</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">60%</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30%</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;5%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Average latency (think mode)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11 s</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence Coefficient*</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2/10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6/10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9/10</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><em>*Confidence Coefficient = subjective measure of my ability to take the agent&#8217;s code and commit it without line-by-line review.</em></p>
+</div>
+<div id="diag-radar" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-1ac33bab88740dda58ef1579a97513c4.svg" alt="Radar comparatif — Kimi K2.6 vs GLM-5.1 vs DeepSeek-V4-Pro" width="1135" height="844">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_deepseek_v4_pro_wins_in_software_development">Why DeepSeek-V4-Pro Wins in Software Development</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>DeepSeek-V4-Pro&#8217;s superiority is not due to a single factor — it&#8217;s a convergence:</p>
+</div>
+<div class="sect2">
+<h3 id="_1_the_csahca_architecture_is_tailored_for_code">1. The CSA+HCA architecture is tailored for code</h3>
+<div class="paragraph">
+<p>Assisted software development is an <strong>extreme</strong> use case for long-context attention. You need: - Local precision (what does this class inherit from? where is this method defined?) →<strong>CSA</strong> - Global vision (why does this module exist? how do the four anonymizers interact?) →<strong>HCA</strong></p>
+</div>
+<div class="paragraph">
+<p>Kimi with MLA alone handles local precision but loses global vision beyond 60K. GLM with DSA improves global vision but remains single-level. DeepSeek combines both explicitly.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_eager_context_is_its_comfort_zone">2. EAGER context is its comfort zone</h3>
+<div class="paragraph">
+<p>My governance system loads ~30K tokens of rules and backlog at startup. With a stable window up to 128K, DeepSeek has ~100K tokens of margin for session exchanges. This is 3 to 4 times more than what Kimi can handle without degradation.</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ The 128K window of perfect stability corresponds exactly to my needs: 30K EAGER + 70K exchanges = a productive session of 20-30 messages without ever leaving the green zone. </em>_</em></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_the_qualitylatency_ratio_is_optimal_for_flow">3. The quality/latency ratio is optimal for flow</h3>
+<div class="paragraph">
+<p>Yes, DeepSeek-V4-Pro is slower than Kimi (11s vs 8s). But the <strong>total</strong> time for a task is much lower because I don&#8217;t spend 20 minutes correcting the agent&#8217;s hallucinations.</p>
+</div>
+<div class="paragraph">
+<p>The developer doesn&#8217;t measure response latency. They measure the time between "I ask the question" and "the code is in my repo and it works". On this metric, DeepSeek-V4-Pro is the fastest of the three.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lessons_learned_how_to_choose_your_llm_for_vibe_coding">Lessons Learned: How to Choose Your LLM for Vibe Coding</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Beyond the point-in-time ranking, this experience taught me to evaluate an LLM for assisted software development based on criteria not found in any benchmark:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Look at the architecture, not the announced context size</strong>— A model that announces 256K context but only has MLA will end up like Kimi: theoretically capable, practically unusable beyond 60K.</p>
+</li>
+<li>
+<p><strong>Test on YOUR context, not on a generic benchmark</strong>— My initial 30K token AsciiDoc prompt with absolute rules and backlog has nothing to do with HLE or AIME questions.</p>
+</li>
+<li>
+<p><strong>Latency is not the enemy if quality follows</strong>— A slow model that produces correct code is faster than a fast model that produces wrong code.</p>
+</li>
+<li>
+<p><strong>Beware of models without a public technical report</strong>— If the team doesn&#8217;t document its attention architecture, it&#8217;s because they don&#8217;t trust its performance in long context.</p>
+</li>
+</ol>
+</div>
+<div id="diag-decision-tree" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-764212652633dc337e38e51de5fc291e.svg" alt="Arbre de décision pour choisir un LLM pour le développement logiciel assisté" width="827" height="461">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_and_what_about_agent_governance_in_all_this">And what about Agent Governance in all this?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This experience validates a point I&#8217;ve defended since my article on Eager/Lazy governance:<strong>the quality of the LLM and the quality of the governance are multiplicative, not additive</strong>.</p>
+</div>
+<div class="paragraph">
+<p>With Kimi K2.6, my governance was impeccable — but the model diluted the information. Result: perfect governance × hallucination = zero.</p>
+</div>
+<div class="paragraph">
+<p>With DeepSeek-V4-Pro, EAGER governance (30K tokens of rules) + LAZY (session archives, technical references) + Hot/Warm/Cold (rotating backup) forms an ecosystem where each layer amplifies the other. The agent has the rules in sight (EAGER), can consult the history (LAZY), and the context never saturates (backup rotation).</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ A good LLM without governance is a Ferrari engine without a steering wheel. Good governance without a good LLM is a steering wheel without an engine. DeepSeek-V4-Pro + my agent governance = the first time I feel like I&#8217;m driving. </em>_</em></p>
+</div>
+<div class="paragraph">
+<p>The rotating backup mechanism (rotation every 10 sessions or &gt;500 EAGER lines) makes full sense with a model that holds 128K context: the sliding window of 10 active sessions keeps the context fresh without ever exceeding the degradation zone.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_technical_sources">Technical Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I cross-referenced my empirical experience with official technical reports to validate my observations:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>DeepSeek-V4 Technical Report</strong> — PDF retrieved fromhttps://huggingface.co/deepseek-ai/DeepSeek-V4-Flash[HuggingFace]. Figure 9: "Retrieval performance remains highly stable within a 128K context window. While a performance degradation becomes visible beyond the 128K mark, the model&#8217;s retrieval capabilities at 1M tokens remain remarkably strong." CSA+HCA architecture documented in section 2.3.</p>
+</li>
+<li>
+<p><strong>GLM-5 Technical Report</strong> —https://arxiv.org/abs/2602.15763[arXiv:2602.15763]. DSA introduced via continued pre-training, "lossless by construction". Max context 202,752 tokens. Tables 3/5/6 document long-context performance vs alternatives (SWA, Gated DeltaNet, SimpleGDN).</p>
+</li>
+<li>
+<p><strong>Kimi K2.6 Model Card</strong> —https://huggingface.co/moonshotai/Kimi-K2.6[HuggingFace]. MLA, 256K max context. Discard-all strategy beyond the threshold on agentic tasks (implicitly confirming the practical limit of MLA in long context).</p>
+</li>
+<li>
+<p><strong>Kimi K2 Technical Report</strong> —https://arxiv.org/abs/2507.20534[arXiv:2507.20534]. MoE architecture, MuonClip optimizer, agentic performance (HLE, BrowseComp, Terminal-Bench).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The most revealing point: in their own evaluation, Moonshot applies a <strong>discard-all</strong> strategy (deleting old context) as soon as the context window is exceeded. This confirms exactly what I observed: MLA alone cannot maintain coherence across the entire 256K window. The architecture does not follow.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion_the_artisans_choice">Conclusion: The Artisan&#8217;s Choice</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After three weeks and thirteen real development sessions, the verdict is final:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3333%;">
+<col style="width: 8.3337%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kimi K2.6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GLM-5.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DeepSeek-V4-Pro</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Excellent under 60K</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Solid up to 120K</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dominates everywhere</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unusable beyond</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Surface confusions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stable up to 128K</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 sessions, abandoned</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 sessions, abandoned</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8 sessions, adopted</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>DeepSeek-V4-Pro has become my default LLM for all assisted software development sessions with Opencode. Not because it is the newest. Not because it has the best academic benchmarks. But because in the real life of a developer pushing Gradle Kotlin DSL plugins with a 30K token agent context, it is the only one that doesn&#8217;t betray me as the context lengthens.</p>
+</div>
+<div class="paragraph">
+<p>CSA+HCA is an architectural <strong>game changer</strong>. Double-level compression + sparsification is not an implementation detail — it&#8217;s what makes the difference between a code assistant and a reliable teammate.</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ I chose DeepSeek-V4-Pro because it is the only one of the three that transforms my agent governance from a defensive constraint ("how to prevent the agent from forgetting?") into an offensive advantage ("what can we build now that the agent remembers everything?"). </em>_</em></p>
+</div>
+<hr>
+<div class="paragraph">
+<p><strong>This article is the result of 13 real development sessions on project`codebase-gradle`, documented in`.agents/sessions/`according to my Eager/Lazy/Hot/Warm/Cold agent governance methodology. The technical sources cited are publicly accessible on HuggingFace and arXiv.</strong></p>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,1457 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>The Art of Preloading: Eliminating Theme &quot;Flash&quot; with JavaScript and CSS — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2025/0098_preloading_css_variable_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0098_preloading_css_variable_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="The Art of Preloading: Eliminating Theme &quot;Flash&quot; with JavaScript and CSS — Cheroliv"/>
+        <meta property="og:description" content="In-depth technical guide for implementing a theme selector without flickering effect - comprehensive analysis of the browser rendering cycle"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2025/0098_preloading_css_variable_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2025/0098_preloading_css_variable_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="The Art of Preloading: Eliminating Theme &quot;Flash&quot; with JavaScript and CSS — Cheroliv"/>
+        <meta name="twitter:description" content="In-depth technical guide for implementing a theme selector without flickering effect - comprehensive analysis of the browser rendering cycle"/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="In-depth technical guide for implementing a theme selector without flickering effect - comprehensive analysis of the browser rendering cycle"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2025\/0098_preloading_css_variable_post.html"},
+                      "headline": "The Art of Preloading: Eliminating Theme \"Flash\" with JavaScript and CSS",
+                      "description": "In-depth technical guide for implementing a theme selector without flickering effect - comprehensive analysis of the browser rendering cycle",
+                      "datePublished": "2025-11-15",
+                      "dateModified": "2025-11-15",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2025\/0098_preloading_css_variable_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "The Art of Preloading: Eliminating Theme \"Flash\" with JavaScript and CSS", "item": "https:\/\/cheroliv.com\/en\/blog\/2025\/0098_preloading_css_variable_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">The Art of Preloading: Eliminating Theme &quot;Flash&quot; with JavaScript and CSS</h1>
+                <p class="lead">
+                    <em>Published on 15 November 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_summary">Summary</a></li>
+<li><a href="#_the_problem_that_cursed_theme_flicker">The Problem: That Cursed Theme Flicker</a>
+<ul class="sectlevel2">
+<li><a href="#_a_user_experience_nightmare">A User Experience Nightmare</a></li>
+<li><a href="#_fouc_an_old_web_problem">FOUC: An Old Web Problem</a></li>
+<li><a href="#_impact_on_quality_perception">Impact on Quality Perception</a></li>
+<li><a href="#_technical_analysis_of_the_problem">Technical Analysis of the Problem</a></li>
+</ul>
+</li>
+<li><a href="#_why_a_standard_script_isnt_enough">Why a Standard Script Isn&#8217;t Enough?</a>
+<ul class="sectlevel2">
+<li><a href="#_the_intuitive_but_ineffective_approach">The Intuitive but Ineffective Approach</a></li>
+<li><a href="#_understanding_the_domcontentloaded_event">Understanding the DOMContentLoaded Event</a></li>
+<li><a href="#_the_render_blocking_problem">The Render Blocking Problem</a></li>
+<li><a href="#_visualizing_the_problem">Visualizing the Problem</a></li>
+<li><a href="#_ineffective_solution_attempts">Ineffective Solution Attempts</a></li>
+<li><a href="#_the_real_solution_acting_earlier">The Real Solution: Acting Earlier</a></li>
+</ul>
+</li>
+<li><a href="#_the_solution_early_loading">The Solution: Early Loading</a>
+<ul class="sectlevel2">
+<li><a href="#_the_fundamental_principle">The Fundamental Principle</a></li>
+<li><a href="#_why_the_head_is_the_ideal_place">Why the <code>&lt;head&gt;</code> is the Ideal Place</a></li>
+<li><a href="#_three_layer_solution_architecture">Three-Layer Solution Architecture</a></li>
+</ul>
+</li>
+<li><a href="#_step_1_saving_the_users_choice">Step 1: Saving the User&#8217;s Choice</a>
+<ul class="sectlevel2">
+<li><a href="#_localstorage_your_persistent_memory">localStorage: Your Persistent Memory</a></li>
+<li><a href="#_implementing_theme_saving">Implementing Theme Saving</a></li>
+<li><a href="#_error_case_management">Error Case Management</a></li>
+<li><a href="#_advanced_persistence_strategies">Advanced Persistence Strategies</a></li>
+</ul>
+</li>
+<li><a href="#_step_2_the_preloading_script_in_the_head">Step 2: The Preloading Script in the <code>&lt;head&gt;</code></a>
+<ul class="sectlevel2">
+<li><a href="#_the_heart_of_the_solution">The Heart of the Solution</a></li>
+<li><a href="#_script_anatomy_every_line_counts">Script Anatomy: Every Line Counts</a></li>
+<li><a href="#_system_preference_detection_bonus">System Preference Detection (Bonus)</a></li>
+<li><a href="#_performance_why_this_script_is_fast">Performance: Why this Script is Fast</a></li>
+<li><a href="#_optimal_placement_in_the_head">Optimal Placement in the <code>&lt;head&gt;</code></a></li>
+</ul>
+</li>
+<li><a href="#_step_3_the_power_of_css_attribute_selectors">Step 3: The Power of CSS Attribute Selectors</a>
+<ul class="sectlevel2">
+<li><a href="#_the_bootstrap_5_theme_system">The Bootstrap 5 Theme System</a></li>
+<li><a href="#_css_structure_for_a_theme_system">CSS Structure for a Theme System</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this in-depth technical article, we explore how to implement a theme selector (light/dark) without the unpleasant flickering effect that occurs during page load. We analyze in detail the browser rendering cycle, the root causes of FOUC (Flash of Unstyled Content), and propose a robust solution based on synchronous preloading in the`&lt;head&gt;`. This technique ensures a smooth and professional user experience.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_problem_that_cursed_theme_flicker">The Problem: That Cursed Theme Flicker</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_a_user_experience_nightmare">A User Experience Nightmare</h3>
+<div class="paragraph">
+<p>Imagine the scene: you have spent hours designing a beautiful dark theme for your web application. The colors are perfectly balanced, the contrast is optimal, and your users love this option. But there is an embarrassing problem: with every page reload, for a fraction of a second, the default light theme is displayed before the dark theme takes over.</p>
+</div>
+<div class="paragraph">
+<p>This visual "flash," although brief (sometimes less than 100ms), is immediately perceptible to the human eye and creates an unpleasant experience. For users who have chosen the dark theme for visual comfort or accessibility reasons, this flicker can even be painful, particularly in a low-light environment.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_fouc_an_old_web_problem">FOUC: An Old Web Problem</h3>
+<div class="paragraph">
+<p>This phenomenon is a variant of what is called "Flash of Unstyled Content" (FOUC), a classic web development problem dating back to the early days of CSS. FOUC occurs when the browser temporarily displays HTML content without its CSS styles applied, creating a flash of unstyled content.</p>
+</div>
+<div class="paragraph">
+<p>In our specific case, we are not talking about completely unstyled content, but rather a<strong>Flash of Wrong Theme</strong>(FOWT) - the content is styled, but with the wrong theme. This is particularly frustrating because it shows that our application "forgets" the user&#8217;s preference on every page load.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_impact_on_quality_perception">Impact on Quality Perception</h3>
+<div class="paragraph">
+<p>This problem, although technical, has significant repercussions on the perception of your application&#8217;s quality:</p>
+</div>
+<div class="paragraph">
+<p><strong>Lack of polish</strong>: The flicker gives the impression of an unfinished or poorly optimized application. Users often associate these small visual flaws with a general lack of professionalism.</p>
+</div>
+<div class="paragraph">
+<p><strong>Break in consistency</strong>: The application seems to "forget" user preferences, creating a feeling of desynchronization between the interface and expectations.</p>
+</div>
+<div class="paragraph">
+<p><strong>Visual fatigue</strong>: For users sensitive to light or suffering from migraines, this bright flash can be more than just an aesthetic nuisance.</p>
+</div>
+<div class="paragraph">
+<p><strong>Perceived performance</strong>: Ironically, even if your site loads quickly, this flicker can give the impression of a slow or unresponsive application.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_technical_analysis_of_the_problem">Technical Analysis of the Problem</h3>
+<div class="paragraph">
+<p>To understand how to solve this problem, one must first understand why it occurs. The flicker happens because of a time lag between three critical events in a web page&#8217;s lifecycle:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Initial HTML parsing</strong>: The browser reads and analyzes your page structure</p>
+</li>
+<li>
+<p><strong>Application of CSS styles</strong>: The browser applies CSS rules and calculates the visual rendering</p>
+</li>
+<li>
+<p><strong>JavaScript execution</strong>: Your code that changes the theme executes</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The problem occurs when event #3 (JavaScript execution) arrives after the browser has already started or finished event #2 (application of styles). At that point, the browser has already made a decision on which theme to display, and your code arrives too late to influence it before the first render.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_a_standard_script_isnt_enough">Why a Standard Script Isn&#8217;t Enough?</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_intuitive_but_ineffective_approach">The Intuitive but Ineffective Approach</h3>
+<div class="paragraph">
+<p>The most natural approach for a developer would be to place a script at the end of our`&lt;body&gt;`that checks the user&#8217;s preferred theme and applies it. This approach follows traditional web best practices which recommend loading scripts at the end of the page so as not to block rendering.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">// À la fin de &lt;body&gt; - L'APPROCHE INSUFFISANTE
+document.addEventListener('DOMContentLoaded', () =&gt; {
+  const theme = localStorage.getItem('preferred-theme');
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+  }
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This approach seems logical at first glance. We wait for the DOM to be ready, then we apply the theme. Simple, right? Unfortunately, this simplicity hides a fundamental flaw related to the timing of the browser&#8217;s rendering cycle.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_understanding_the_domcontentloaded_event">Understanding the DOMContentLoaded Event</h3>
+<div class="paragraph">
+<p>The`DOMContentLoaded`event triggers when the initial HTML document has been completely loaded and parsed by the browser,<strong>without waiting</strong>for the completion of the loading of stylesheets, images, and sub-frames. This is an important point to understand.</p>
+</div>
+<div class="paragraph">
+<p>Here is the typical sequence of events:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The browser starts downloading the HTML</p>
+</li>
+<li>
+<p>It parses the HTML as it is received</p>
+</li>
+<li>
+<p>It discovers the`&lt;link&gt;`tags for CSS and starts downloading them</p>
+</li>
+<li>
+<p>It discovers the`&lt;script&gt;`tags and executes them (depending on their type and attributes)</p>
+</li>
+<li>
+<p>It builds the DOM (Document Object Model)</p>
+</li>
+<li>
+<p><strong>The <code>DOMContentLoaded</code> event triggers</strong></p>
+</li>
+<li>
+<p>It continues to apply styles and perform the layout</p>
+</li>
+<li>
+<p>The first paint (display) occurs</p>
+</li>
+<li>
+<p>The`load`event triggers when all resources are loaded</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The problem? Between step 6 (DOMContentLoaded) and step 8 (first paint), the browser has already made decisions on how to display the page. If your theme-change script executes at step 6, it is already too late to avoid a first display with the default styles.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_render_blocking_problem">The Render Blocking Problem</h3>
+<div class="paragraph">
+<p>In reality, the timing is even more complex. Modern browsers use sophisticated optimization techniques to improve perceived performance. They try to perform the first paint (First Contentful Paint) as quickly as possible so that the user sees something on the screen.</p>
+</div>
+<div class="paragraph">
+<p>CSS is "render-blocking" by default, which means the browser waits until it has downloaded and parsed the stylesheets before performing the first paint. This makes sense: we don&#8217;t want to display unstyled content.</p>
+</div>
+<div class="paragraph">
+<p>But here is the trap: when the browser applies these CSS styles for the first time, it does so based on the current state of the DOM. If the`data-bs-theme`attribute is not yet defined on the`&lt;html&gt;`tag, the browser will apply the default styles (usually the light theme).</p>
+</div>
+<div class="paragraph">
+<p>Then, when your script executes and changes this attribute, the browser must:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Recalculate all styles affected by this change</p>
+</li>
+<li>
+<p>Redo the layout if necessary</p>
+</li>
+<li>
+<p>Repaint the affected elements</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This process of recalculation and repainting is what causes the visible flicker.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_visualizing_the_problem">Visualizing the Problem</h3>
+<div class="paragraph">
+<p>To better understand this problematic sequence, let&#8217;s examine a detailed sequence diagram:</p>
+</div>
+<div id="diag-flux-incorrect" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-57b60980e84e348efaebec98f8f82fce.svg" alt="Diagramme de séquence du chargement incorrect" width="1488" height="666">
+</div>
+</div>
+<div class="paragraph">
+<p>This diagram clearly illustrates the problem: the first paint occurs before our script has had the chance to define the correct theme. The subsequent repaint creates the visible flicker.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ineffective_solution_attempts">Ineffective Solution Attempts</h3>
+<div class="paragraph">
+<p>Several approaches have been attempted to solve this problem, but most have their own drawbacks:</p>
+</div>
+<div class="paragraph">
+<p><strong>Approach 1: Hiding content until loading</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-css" data-lang="css">body {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+body.loaded {
+  opacity: 1;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This approach hides all content until the JavaScript has defined the correct theme. The problem? This artificially delays the display of content, giving the impression of a slower site. Furthermore, if JavaScript is disabled, the user sees nothing at all!</p>
+</div>
+<div class="paragraph">
+<p><strong>Approach 2: Using a loader/spinner</strong></p>
+</div>
+<div class="paragraph">
+<p>Similar to approach 1, but with a loading spinner. This masks the problem but does not improve actual performance and adds an unnecessary perceived delay.</p>
+</div>
+<div class="paragraph">
+<p><strong>Approach 3: Defaulting to dark theme</strong></p>
+</div>
+<div class="paragraph">
+<p>Some developers define the dark theme as the default in CSS. This avoids the flicker for dark theme users, but creates the reverse problem for light theme users!</p>
+</div>
+<div class="paragraph">
+<p>None of these approaches are satisfactory because they treat the symptom rather than the root cause of the problem.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_real_solution_acting_earlier">The Real Solution: Acting Earlier</h3>
+<div class="paragraph">
+<p>The key to solving this problem is realizing that we must define the`data-bs-theme` <strong>before</strong>the browser begins applying the CSS styles. This means our script must execute earlier in the page&#8217;s lifecycle, and that is exactly what we will explore in the next section.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_solution_early_loading">The Solution: Early Loading</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_fundamental_principle">The Fundamental Principle</h3>
+<div class="paragraph">
+<p>The elegant solution to our flickering problem rests on a simple but powerful principle:<strong>synchronize the application state with the browser&#8217;s rendering process</strong>. Instead of waiting for the page to be loaded to define the theme, we must define it<strong>during</strong>loading, even before the CSS styles are applied.</p>
+</div>
+<div class="paragraph">
+<p>This approach is called "Early Loading" or "Synchronous Preloading" in web development jargon. The idea is to execute our theme detection logic as early as possible in the page lifecycle, ideally in the`&lt;head&gt;`tag, even before the browser starts downloading CSS files.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_why_the_head_is_the_ideal_place">Why the <code>&lt;head&gt;</code> is the Ideal Place</h3>
+<div class="paragraph">
+<p>Le `&lt;head&gt;`of an HTML document is processed sequentially by the browser, from top to bottom. Each element is processed in the order it appears. This characteristic is crucial for our solution.</p>
+</div>
+<div class="paragraph">
+<p>When the browser encounters a`&lt;script&gt;`tag in the`&lt;head&gt;`without the`async` ou <code>defer</code>, il :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Interrupts the HTML parsing</strong></p>
+</li>
+<li>
+<p><strong>Downloads the script</strong>(if external) or reads it (if inline)</p>
+</li>
+<li>
+<p><strong>Executes the script immediately</strong></p>
+</li>
+<li>
+<p><strong>Resumes HTML parsing</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This behavior, often considered a performance problem (hence the usual recommendation to place scripts at the end of the page), becomes our ally in this specific case. By placing our theme detection script at the beginning of the`&lt;head&gt;`, we guarantee that it executes before the browser encounters the`&lt;link&gt;`tags of our stylesheets.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_three_layer_solution_architecture">Three-Layer Solution Architecture</h3>
+<div class="paragraph">
+<p>Our complete solution consists of three interdependent layers, each playing a specific role:</p>
+</div>
+<div class="paragraph">
+<p><strong>Layer 1: Persistence (localStorage)</strong> This layer is responsible for saving and retrieving the user&#8217;s choice between sessions.</p>
+</div>
+<div class="paragraph">
+<p><strong>Layer 2: Early Synchronization (Inline script in <code>&lt;head&gt;</code>)</strong> This layer synchronizes the application state with the DOM before the initial render.</p>
+</div>
+<div class="paragraph">
+<p><strong>Layer 3: Reactive Styles (CSS with attribute selectors)</strong> This layer defines the visual styles based on the state defined by layer 2.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s now explore each layer in detail.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_1_saving_the_users_choice">Step 1: Saving the User&#8217;s Choice</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_localstorage_your_persistent_memory">localStorage: Your Persistent Memory</h3>
+<div class="paragraph">
+<p>Le `localStorage`is a Web Storage API that allows storing key-value pairs in the browser persistently. Unlike cookies,`localStorage`data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Is never sent to the server automatically</p>
+</li>
+<li>
+<p>Has a larger storage capacity (generally 5-10MB)</p>
+</li>
+<li>
+<p>Has no expiration date (persistent until explicit deletion)</p>
+</li>
+<li>
+<p>Is limited to the protocol and domain (Same-Origin Policy)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For our use case,`localStorage`is perfect because:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>We don&#8217;t need to share this information with the server</p>
+</li>
+<li>
+<p>We want the preference to persist indefinitely</p>
+</li>
+<li>
+<p>The required storage size is minimal (a few bytes)</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_implementing_theme_saving">Implementing Theme Saving</h3>
+<div class="paragraph">
+<p>Here is how we save the user&#8217;s choice when they change the theme:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">// Fonction complète pour changer le thème
+function setTheme(newTheme) {
+  // Validation de l'entrée
+  if (!['light', 'dark', 'auto'].includes(newTheme)) {
+    console.error('Thème invalide:', newTheme);
+    return;
+  }
+
+  try {
+    // Sauvegarde dans localStorage
+    localStorage.setItem('preferred-theme', newTheme);
+
+    // Application immédiate dans le DOM
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+    // Dispatch d'un événement personnalisé pour notifier d'autres composants
+    window.dispatchEvent(new CustomEvent('theme-changed', {
+      detail: { theme: newTheme }
+    }));
+
+    console.log('Thème changé:', newTheme);
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du thème:', error);
+    // Fallback : on applique quand même le thème visuellement
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+  }
+}
+
+// Exemple d'utilisation avec un bouton
+document.getElementById('theme-toggle').addEventListener('click', () =&gt; {
+  const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  setTheme(newTheme);
+});</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_error_case_management">Error Case Management</h3>
+<div class="paragraph">
+<p>It is crucial to handle cases where`localStorage`is unavailable or inaccessible. Several scenarios can prevent access to`localStorage`:</p>
+</div>
+<div class="paragraph">
+<p><strong>Strict private browsing</strong>: Safari in private browsing mode throws a`QuotaExceededError`exception when attempting to write to`localStorage`.</p>
+</div>
+<div class="paragraph">
+<p><strong>Privacy settings</strong>: Some browsers or privacy extensions may block access to`localStorage`.</p>
+</div>
+<div class="paragraph">
+<p><strong>Domain limitations</strong> : Le `localStorage`is not accessible on the`file://`protocol in some browsers.</p>
+</div>
+<div class="paragraph">
+<p><strong>Saturated storage space</strong>: Although rare, storage space can be completely full.</p>
+</div>
+<div class="paragraph">
+<p>That is why our code uses a`try&#8230;&#8203;catch`block to handle these cases gracefully, continuing to offer the theme-change functionality even if persistence is unavailable.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_advanced_persistence_strategies">Advanced Persistence Strategies</h3>
+<div class="paragraph">
+<p>For more sophisticated applications, you may consider additional strategies:</p>
+</div>
+<div class="paragraph">
+<p><strong>Server synchronization (optional)</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">async function setTheme(newTheme) {
+  // Sauvegarde locale immédiate
+  localStorage.setItem('preferred-theme', newTheme);
+  document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+  // Synchronisation serveur en arrière-plan (si l'utilisateur est connecté)
+  if (userIsAuthenticated()) {
+    try {
+      await fetch('/api/user/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme })
+      });
+    } catch (error) {
+      console.warn('Échec de la synchronisation serveur:', error);
+      // L'échec n'est pas critique car la préférence est déjà sauvegardée localement
+    }
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This approach allows synchronizing preferences across devices for logged-in users, while maintaining immediate local responsiveness.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_2_the_preloading_script_in_the_head">Step 2: The Preloading Script in the <code>&lt;head&gt;</code></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_heart_of_the_solution">The Heart of the Solution</h3>
+<div class="paragraph">
+<p>This is where the magic truly happens. We will place a small<strong>inline</strong>script directly in our`&lt;head&gt;`, before all our stylesheet`&lt;link&gt;`tags. This script is intentionally minimalist, self-contained, and designed to execute as quickly as possible.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Mon Site Incroyable&lt;/title&gt;
+
+    &lt;!-- ==========================================
+         NOTRE SCRIPT MAGIQUE DE PRÉ-CHARGEMENT
+         Ce script DOIT être le premier élément
+         dans le &lt;head&gt; après les meta tags
+         ========================================== --&gt;
+    &lt;script&gt;
+      // IIFE pour ne pas polluer le scope global
+      (function() {
+        'use strict';
+
+        try {
+          // Lecture de la préférence sauvegardée
+          const savedTheme = localStorage.getItem('preferred-theme');
+
+          // Si une préférence existe, on l'applique immédiatement
+          if (savedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+          }
+          // Optionnel : Détecter la préférence système si aucune sauvegarde
+          else if (window.matchMedia &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+          }
+          // Sinon, le thème par défaut du CSS sera utilisé (généralement 'light')
+
+        } catch (error) {
+          // En cas d'erreur (localStorage bloqué, etc.), on log discrètement
+          // et on laisse le thème par défaut s'appliquer
+          console.warn('Impossible de charger la préférence de thème:', error);
+        }
+      })();
+    &lt;/script&gt;
+    &lt;!-- FIN DU SCRIPT MAGIQUE --&gt;
+
+    &lt;!-- Les feuilles de style sont chargées APRÈS le script --&gt;
+    &lt;link rel="stylesheet" href="css/bootstrap.min.css"&gt;
+    &lt;link rel="stylesheet" href="css/styles.css"&gt;
+
+    &lt;!-- Autres ressources du head --&gt;
+    &lt;link rel="icon" href="favicon.ico"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Contenu de la page --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_script_anatomy_every_line_counts">Script Anatomy: Every Line Counts</h3>
+<div class="paragraph">
+<p>Let&#8217;s break down this script line by line to understand every design decision:</p>
+</div>
+<div class="paragraph">
+<p><strong>The IIFE (Immediately Invoked Function Expression)</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">(function() {
+  // ...
+})();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This structure creates a function that executes immediately. Why? To isolate our variables in a local scope and avoid polluting the global scope. Even if we only use`const`(which has block scope), the IIFE is a good practice that makes our intentions clear and protects against potential naming conflicts.</p>
+</div>
+<div class="paragraph">
+<p><strong>Strict Mode</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">'use strict';</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This directive activates JavaScript&#8217;s strict mode, which: - Prohibits the use of undeclared variables - Generates errors for dangerous operations - Improves performance in some JavaScript engines</p>
+</div>
+<div class="paragraph">
+<p>For a critical script like this, we want maximum security.</p>
+</div>
+<div class="paragraph">
+<p><strong>The try&#8230;&#8203;catch Block</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">try {
+  // Code principal
+} catch (error) {
+  console.warn('Impossible de charger la préférence de thème:', error);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This block is absolutely crucial. It ensures that if something goes wrong (localStorage blocked, improbable syntax error, etc.), our script will not block the loading of the entire page. Using`console.warn`rather than`console.error`indicates that it is a non-critical problem.</p>
+</div>
+<div class="paragraph">
+<p><strong>Reading localStorage</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">const savedTheme = localStorage.getItem('preferred-theme');</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This line can throw an exception in some contexts (Safari strict private browsing). That is why it is in a try&#8230;&#8203;catch block.</p>
+</div>
+<div class="paragraph">
+<p><strong>Conditional Application</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">if (savedTheme) {
+  document.documentElement.setAttribute('data-bs-theme', savedTheme);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We apply the theme only if we found a saved one. Otherwise, we let the CSS use its default theme. This approach is more robust than a default value hard-coded in JavaScript.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_system_preference_detection_bonus">System Preference Detection (Bonus)</h3>
+<div class="paragraph">
+<p>An optional but elegant improvement is to detect the theme preference of the user&#8217;s operating system if they have not yet made an explicit choice in your application:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">else if (window.matchMedia &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-bs-theme', 'dark');
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This feature uses the`prefers-color-scheme`Media Query to query the system. On macOS, Windows 10+, iOS, and modern Android, this query returns the user&#8217;s system preference.</p>
+</div>
+<div class="paragraph">
+<p><strong>Advantages:</strong> - Personalized experience from the first visit - Consistency with the user&#8217;s system environment - No storage required for the first visit</p>
+</div>
+<div class="paragraph">
+<p><strong>Considerations:</strong> - Not all browsers support this feature (but support has been excellent since 2020) - The`window.matchMedia`check ensures compatibility - The user can still override this choice</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_performance_why_this_script_is_fast">Performance: Why this Script is Fast</h3>
+<div class="paragraph">
+<p>Our preloading script is designed to be extremely fast:</p>
+</div>
+<div class="paragraph">
+<p><strong>Minimal size</strong>: About 300 bytes unminified, 200 bytes minified. This is negligible compared to any image or JavaScript library.</p>
+</div>
+<div class="paragraph">
+<p><strong>Inline</strong>: No additional HTTP request. The script is in the HTML, so it is immediately available.</p>
+</div>
+<div class="paragraph">
+<p><strong>Simple synchronous operations</strong>: Reading a key in localStorage (ultra-fast operation) and modifying a DOM attribute (native browser operation).</p>
+</div>
+<div class="paragraph">
+<p><strong>No dependencies</strong>: No framework, no library, just vanilla JavaScript. No startup time, no dependency parsing.</p>
+</div>
+<div class="paragraph">
+<p><strong>Single execution</strong>: This script executes only once upon loading. No event listeners, no loops, no complex calculations.</p>
+</div>
+<div class="paragraph">
+<p>In practice, on modern hardware, this script executes in less than 1 millisecond, an imperceptible time that has no impact on the page loading performance.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_optimal_placement_in_the_head">Optimal Placement in the <code>&lt;head&gt;</code></h3>
+<div class="paragraph">
+<p>The order of elements in the`&lt;head&gt;`is important. Here is the recommended order:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;head&gt;
+    &lt;!-- 1. Métadonnées critiques --&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+
+    &lt;!-- 2. Notre script de pré-chargement (IMMÉDIATEMENT après les meta) --&gt;
+    &lt;script&gt;
+      (function() { /* notre code */ })();
+    &lt;/script&gt;
+
+    &lt;!-- 3. Titre de la page --&gt;
+    &lt;title&gt;Mon Site&lt;/title&gt;
+
+    &lt;!-- 4. Feuilles de style --&gt;
+    &lt;link rel="stylesheet" href="styles.css"&gt;
+
+    &lt;!-- 5. Autres ressources (fonts, favicons, etc.) --&gt;
+    &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+    &lt;link rel="icon" href="favicon.ico"&gt;
+
+    &lt;!-- 6. Autres scripts avec defer ou async --&gt;
+    &lt;script src="app.js" defer&gt;&lt;/script&gt;
+&lt;/head&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This order ensures that:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The charset is defined before any text processing</p>
+</li>
+<li>
+<p>Our script executes before the loading of CSS</p>
+</li>
+<li>
+<p>The CSS is loaded next and directly applies the correct theme</p>
+</li>
+<li>
+<p>Other non-critical resources are loaded last</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_3_the_power_of_css_attribute_selectors">Step 3: The Power of CSS Attribute Selectors</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_bootstrap_5_theme_system">The Bootstrap 5 Theme System</h3>
+<div class="paragraph">
+<p>Bootstrap 5 introduced an elegant theme management system based on CSS custom properties (CSS variables) and attribute selectors. This system uses the`data-bs-theme`attribute on the`&lt;html&gt;`element to determine which set of color variables to apply.</p>
+</div>
+<div class="paragraph">
+<p>The beauty of this system lies in its simplicity: instead of loading different stylesheets or toggling classes on thousands of elements, we simply change one attribute on a single element, and the CSS does the rest thanks to the cascade.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_css_structure_for_a_theme_system">CSS Structure for a Theme System</h3>
+<div class="paragraph">
+<p>Here is a complete CSS structure to implement a robust theme system:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-css" data-lang="css">/**
+ * SYSTÈME DE THÈME COMPLET
+ * Utilise les Custom Properties CSS pour une maintenance facile
+ */
+
+/* ============================================
+   THÈME PAR DÉFAUT (LIGHT)
+   Défini sur :root pour être le fallback
+   ============================================ */
+:root {
+  /* Couleurs de base */
+  --color-primary: #0d6efd;
+  --color-secondary: #6c757d;
+  --color-success: #198754;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #0dcaf0;
+
+  /* Couleurs de fond */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+
+  /* Couleurs de texte */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+
+  /* Couleurs de bordure */
+  --border-color: #dee2e6;
+  --border-color-subtle: #e9ecef;
+
+  /* Couleurs d'ombre */
+  --shadow-sm: rgba(0, 0, 0, 0.075);
+  --shadow-md: rgba(0, 0, 0, 0.15);
+  --shadow-lg: rgba(0, 0, 0, 0.25</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0098_preloading_css_variable_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

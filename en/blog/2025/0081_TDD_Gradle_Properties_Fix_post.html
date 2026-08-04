@@ -1,0 +1,1017 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Solving the Gradle Unit Testing Challenge with `gradle.properties` — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2025/0081_TDD_Gradle_Properties_Fix_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0081_TDD_Gradle_Properties_Fix_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0081_TDD_Gradle_Properties_Fix_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0081_TDD_Gradle_Properties_Fix_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Solving the Gradle Unit Testing Challenge with `gradle.properties` — Cheroliv"/>
+        <meta property="og:description" content="Discover an effective technique for unit testing Gradle plugins that depend on `gradle.properties`. This article explains how to use `ExtraPropertiesExtension` to simulate properties, ensuring isolated, reliable, and maintainable tests, illustrated with PlantUML diagrams."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2025/0081_TDD_Gradle_Properties_Fix_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2025/0081_TDD_Gradle_Properties_Fix_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Solving the Gradle Unit Testing Challenge with `gradle.properties` — Cheroliv"/>
+        <meta name="twitter:description" content="Discover an effective technique for unit testing Gradle plugins that depend on `gradle.properties`. This article explains how to use `ExtraPropertiesExtension` to simulate properties, ensuring isolated, reliable, and maintainable tests, illustrated with PlantUML diagrams."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="Discover an effective technique for unit testing Gradle plugins that depend on `gradle.properties`. This article explains how to use `ExtraPropertiesExtension` to simulate properties, ensuring isolated, reliable, and maintainable tests, illustrated with PlantUML diagrams."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2025\/0081_TDD_Gradle_Properties_Fix_post.html"},
+                      "headline": "Solving the Gradle Unit Testing Challenge with `gradle.properties`",
+                      "description": "A technique to simulate the presence of Gradle properties in plugin unit tests, thereby improving test isolation and reliability.",
+                      "datePublished": "2025-07-13",
+                      "dateModified": "2025-07-13",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2025\/0081_TDD_Gradle_Properties_Fix_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Solving the Gradle Unit Testing Challenge with `gradle.properties`", "item": "https:\/\/cheroliv.com\/en\/blog\/2025\/0081_TDD_Gradle_Properties_Fix_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Solving the Gradle Unit Testing Challenge with `gradle.properties`</h1>
+                <p class="lead">
+                    <em>Published on 13 July 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_the_problem_isolating_unit_tests_for_a_gradle_plugin">The Problem: Isolating Unit Tests for a Gradle Plugin</a>
+<ul class="sectlevel2">
+<li><a href="#_problem_architecture">Problem Architecture</a></li>
+<li><a href="#_the_temptation_of_a_false_good_idea">The Temptation of a False Good Idea</a></li>
+</ul>
+</li>
+<li><a href="#_the_solution_simulating_the_property_with_extrapropertiesextension">The Solution: Simulating the Property with <code>ExtraPropertiesExtension</code></a>
+<ul class="sectlevel2">
+<li><a href="#_step_1_understanding_extrapropertiesextension">Step 1: Understanding ExtraPropertiesExtension</a></li>
+<li><a href="#_step_2_test_setup_preparation">Step 2: Test Setup - Preparation</a></li>
+<li><a href="#_step_3_property_injection">Step 3: Property Injection</a></li>
+<li><a href="#_step_4_solution_flow_diagram">Step 4: Solution Flow Diagram</a></li>
+<li><a href="#_step_5_beforeafter_comparison">Step 5: Before/After Comparison</a></li>
+<li><a href="#_step_6_managing_multiple_test_cases">Step 6: Managing Multiple Test Cases</a></li>
+<li><a href="#_final_solution_architecture">Final Solution Architecture</a></li>
+</ul>
+</li>
+<li><a href="#_advantages_of_this_approach">Advantages of this Approach</a></li>
+<li><a href="#_best_practices_and_tips">Best Practices and Tips</a>
+<ul class="sectlevel2">
+<li><a href="#_creating_a_utility_method">Creating a Utility Method</a></li>
+<li><a href="#_property_validation">Property Validation</a></li>
+</ul>
+</li>
+<li><a href="#_conclusion">Conclusion</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_the_problem_isolating_unit_tests_for_a_gradle_plugin">The Problem: Isolating Unit Tests for a Gradle Plugin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When writing unit tests for a Gradle plugin, a common challenge is managing dependencies on project configuration, such as properties defined in the <code>gradle.properties</code> file.`gradle.properties`In our case, the plugin`jbake.ghpages`had to read a property`site_config_path`to function correctly. The unit test for the task`initialize`needed to verify the plugin&#8217;s behavior in the presence of this property.</p>
+</div>
+<div class="paragraph">
+<p>The fundamental problem is that unit tests, by design, must be <strong>isolated</strong>. Using`ProjectBuilder`from Gradle creates an instance of`Project`in memory, completely disconnected from a real project on the file system. Consequently, this test instance does not automatically read the <code>gradle.properties</code> file`gradle.properties`and therefore has no knowledge of the property`site_config_path`.</p>
+</div>
+<div class="sect2">
+<h3 id="_problem_architecture">Problem Architecture</h3>
+<div class="paragraph">
+<p>The following diagram illustrates the disconnection between the test environment and the file system:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/test-isolation-problem.svg" alt="test isolation problem" width="833" height="295">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_temptation_of_a_false_good_idea">The Temptation of a False Good Idea</h3>
+<div class="paragraph">
+<p>An initial approach might be to create a dummy <code>gradle.properties</code> file`gradle.properties`in the test resources.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">// src/test/resources/gradle.properties
+site_config_path=src/jbake/settings/site.yml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However, this method is doomed to fail because`ProjectBuilder`is not designed to scan the file system for configuration files. The test would remain isolated and ignore this file.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_solution_simulating_the_property_with_extrapropertiesextension">The Solution: Simulating the Property with <code>ExtraPropertiesExtension</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The elegant solution to this problem is not to <strong>read</strong> the file, but to <strong>simulate</strong> the presence of the property directly within the`Project`test object. Gradle provides a powerful mechanism for this: <strong>extra properties</strong>.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_understanding_extrapropertiesextension">Step 1: Understanding ExtraPropertiesExtension</h3>
+<div class="paragraph">
+<p>`ExtraPropertiesExtension`is a key-value container attached to every Gradle model object. It allows adding properties dynamically to a project, a task, or any other Gradle extension.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/extra-properties-architecture.svg" alt="extra properties architecture" width="533" height="436">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_test_setup_preparation">Step 2: Test Setup - Preparation</h3>
+<div class="paragraph">
+<p>Let&#8217;s start by creating the basic structure of our unit test:</p>
+</div>
+<div class="listingblock">
+<div class="title">JbakeGhPagesPluginTest.kt - Structure de base</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class JbakeGhPagesPluginTest {
+
+    @TempDir
+    lateinit var testProjectDir: File
+
+    @Test
+    fun `check initialize and config yaml file if not existing`() {
+        // Étape 1 : Créer un projet de test isolé
+        val project = ProjectBuilder.builder()
+            .withProjectDir(testProjectDir)
+            .build()
+
+        // Suite des étapes...
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_property_injection">Step 3: Property Injection</h3>
+<div class="paragraph">
+<p>Here is the detailed process for injecting the property into the test project:</p>
+</div>
+<div class="listingblock">
+<div class="title">JbakeGhPagesPluginTest.kt - Injection complète</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `check initialize and config yaml file if not existing`() {
+    // Étape 1 : Créer un projet de test isolé en mémoire
+    val project = ProjectBuilder.builder()
+        .withProjectDir(testProjectDir)
+        .build()
+
+    // Étape 2 : Récupérer le gestionnaire de propriétés supplémentaires
+    val extra = project.extensions.getByType(ExtraPropertiesExtension::class.java)
+
+    // Étape 3 : Définir la propriété requise pour ce test
+    extra.set("site_config_path", "src/jbake/settings/site.yml")
+
+    // Étape 4 : Vérifier que la propriété est bien injectée
+    assertTrue(project.hasProperty("site_config_path"))
+
+    // Étape 5 : Appliquer le plugin qui pourra maintenant accéder à la propriété
+    project.plugins.apply("jbake.ghpages")
+
+    // Étape 6 : Exécuter la tâche et vérifier son comportement
+    val task: Task = project.tasks.findByName("initialize")
+        .apply(::assertNotNull)!!
+
+    // Étape 7 : Exécuter les actions de la tâche
+    task.actions.forEach { it.execute(task) }
+
+    // Étape 8 : Assertions finales
+    assertEquals(
+        "src/jbake/settings/site.yml",
+        project.properties["site_config_path"],
+        "La propriété devrait être accessible dans le projet"
+    )
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_solution_flow_diagram">Step 4: Solution Flow Diagram</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/solution-flow.svg" alt="solution flow" width="242" height="807">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_5_beforeafter_comparison">Step 5: Before/After Comparison</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/before-after-comparison.svg" alt="before after comparison" width="1304" height="399">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_6_managing_multiple_test_cases">Step 6: Managing Multiple Test Cases</h3>
+<div class="paragraph">
+<p>To test different scenarios, let&#8217;s create several tests with varied configurations:</p>
+</div>
+<div class="listingblock">
+<div class="title">Tests multiples avec configurations différentes</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class JbakeGhPagesPluginTest {
+
+    @TempDir
+    lateinit var testProjectDir: File
+
+    private fun createProjectWithProperty(propertyValue: String?): Project {
+        val project = ProjectBuilder.builder()
+            .withProjectDir(testProjectDir)
+            .build()
+
+        // Injection conditionnelle de la propriété
+        propertyValue?.let { value -&gt;
+            val extra = project.extensions.getByType(ExtraPropertiesExtension::class.java)
+            extra.set("site_config_path", value)
+        }
+
+        return project
+    }
+
+    @Test
+    fun `should work with valid property`() {
+        val project = createProjectWithProperty("src/jbake/settings/site.yml")
+        project.plugins.apply("jbake.ghpages")
+
+        val task = project.tasks.findByName("initialize")!!
+        task.actions.forEach { it.execute(task) }
+
+        // Assertions pour le cas normal
+        assertEquals("src/jbake/settings/site.yml", project.properties["site_config_path"])
+    }
+
+    @Test
+    fun `should handle missing property gracefully`() {
+        val project = createProjectWithProperty(null) // Pas de propriété
+        project.plugins.apply("jbake.ghpages")
+
+        val task = project.tasks.findByName("initialize")!!
+
+        // Le plugin devrait gérer l'absence de propriété
+        assertDoesNotThrow {
+            task.actions.forEach { it.execute(task) }
+        }
+    }
+
+    @Test
+    fun `should handle invalid property path`() {
+        val project = createProjectWithProperty("invalid/path/to/config.yml")
+        project.plugins.apply("jbake.ghpages")
+
+        val task = project.tasks.findByName("initialize")!!
+
+        // Test du comportement avec un chemin invalide
+        assertThrows&lt;FileNotFoundException&gt; {
+            task.actions.forEach { it.execute(task) }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_final_solution_architecture">Final Solution Architecture</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/final-architecture.svg" alt="final architecture" width="754" height="631">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_advantages_of_this_approach">Advantages of this Approach</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Complete Isolation</strong>: The test does not depend on any external file. It is self-contained and can run reliably in any environment (local, CI/CD, etc.).</p>
+</li>
+<li>
+<p><strong>Clarity and Intent</strong>: The test explicitly declares the prerequisites for its execution. Anyone reading the test immediately sees that the plugin requires the property`site_config_path`to function.</p>
+</li>
+<li>
+<p><strong>Maintainability</strong>: If the property name changes, it only needs to be updated in one place in the test, without having to manipulate test configuration files.</p>
+</li>
+<li>
+<p><strong>Flexibility</strong>: It becomes trivial to test different scenarios by simply changing the value of the property injected into each test (valid value, invalid, absent, etc.).</p>
+</li>
+<li>
+<p><strong>Performance</strong>: No file reading; everything happens in memory, making the tests faster.</p>
+</li>
+<li>
+<p><strong>Reproducibility</strong>: Tests are deterministic because they do not depend on the state of the file system.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_best_practices_and_tips">Best Practices and Tips</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_creating_a_utility_method">Creating a Utility Method</h3>
+<div class="listingblock">
+<div class="title">Méthode utilitaire pour la réutilisation</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class GradleTestUtils {
+    companion object {
+        fun createProjectWithProperties(
+            projectDir: File,
+            properties: Map&lt;String, String&gt;
+        ): Project {
+            val project = ProjectBuilder.builder()
+                .withProjectDir(projectDir)
+                .build()
+
+            val extra = project.extensions.getByType(ExtraPropertiesExtension::class.java)
+            properties.forEach { (key, value) -&gt;
+                extra.set(key, value)
+            }
+
+            return project
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_property_validation">Property Validation</h3>
+<div class="listingblock">
+<div class="title">Validation robuste</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `should validate property injection`() {
+    val project = createProjectWithProperty("test-value")
+
+    // Vérifications multiples
+    assertTrue(project.hasProperty("site_config_path"))
+    assertEquals("test-value", project.property("site_config_path"))
+    assertNotNull(project.properties["site_config_path"])
+
+    // Vérification que la propriété est accessible par le plugin
+    project.plugins.apply("jbake.ghpages")
+    // ... reste du test
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Rather than struggling to make a unit test environment read configuration files, the best practice is to simulate the required state. Using`ExtraPropertiesExtension`to programmatically define Gradle properties is the cleanest and most robust method for performing effective and reliable plugin unit tests.</p>
+</div>
+<div class="paragraph">
+<p>This technique transforms an external dependency problem into a simple dependency injection, at the very heart of the Test-Driven Development (TDD) philosophy. It offers total control over the test environment while maintaining the isolation necessary for high-quality unit tests.</p>
+</div>
+<div class="paragraph">
+<p>The diagrams and examples presented in this article show how this approach can be implemented progressively and methodically, allowing for the creation of a robust and maintainable test suite for your Gradle plugins.</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0081_TDD_Gradle_Properties_Fix_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

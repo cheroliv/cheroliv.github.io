@@ -1,0 +1,1362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>When Gradle 9, Docker 29, and Testcontainers clash: debugging a JHipster build — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="When Gradle 9, Docker 29, and Testcontainers clash: debugging a JHipster build — Cheroliv"/>
+        <meta property="og:description" content="A `./gradlew build` that fails with eleven successive errors, from a non-existent `reportsDir` variable to Docker Engine 29 rejecting the docker-java 1.32 client. Here is the complete debugging log of a JHipster build on Gradle 9, Java 21, and Testcontainers 2.0.5."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="When Gradle 9, Docker 29, and Testcontainers clash: debugging a JHipster build — Cheroliv"/>
+        <meta name="twitter:description" content="A `./gradlew build` that fails with eleven successive errors, from a non-existent `reportsDir` variable to Docker Engine 29 rejecting the docker-java 1.32 client. Here is the complete debugging log of a JHipster build on Gradle 9, Java 21, and Testcontainers 2.0.5."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="A `./gradlew build` that fails with eleven successive errors, from a non-existent `reportsDir` variable to Docker Engine 29 rejecting the docker-java 1.32 client. Here is the complete debugging log of a JHipster build on Gradle 9, Java 21, and Testcontainers 2.0.5."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"},
+                      "headline": "When Gradle 9, Docker 29, and Testcontainers clash: debugging a JHipster build",
+                      "description": "Feedback on debugging a JHipster Gradle build script after upgrading to Gradle 9.4.1, Java 21, and Docker Engine 29.4.1. From a misnamed variable in a buildSrc script to Docker API 1.32 incompatibility, a complete technical log.",
+                      "datePublished": "2026-04-25",
+                      "dateModified": "2026-04-25",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "When Gradle 9, Docker 29, and Testcontainers clash: debugging a JHipster build", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">When Gradle 9, Docker 29, and Testcontainers clash: debugging a JHipster build</h1>
+                <p class="lead">
+                    <em>Published on 25 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_the_scene_a_jhipster_project_a_build_that_no_longer_loads">The scene: a JHipster project, a build that no longer loads</a></li>
+<li><a href="#_error_1_the_phantom_variable_reportsdir">Error 1: the phantom variable <code>reportsDir</code></a></li>
+<li><a href="#_error_2_main_no_longer_exists_under_gradle_9">Error 2: <code>main = "&#8230;&#8203;"</code> no longer exists under Gradle 9</a></li>
+<li><a href="#_error_3_sourcecompatibility_is_no_longer_a_project_property">Error 3: <code>sourceCompatibility</code> is no longer a project property</a></li>
+<li><a href="#_error_4_the_three_operand_groovy_assertion">Error 4: the three-operand Groovy assertion</a></li>
+<li><a href="#_error_5_the_implicit_dependency_compilekotlin_openapigenerate">Error 5: the implicit dependency <code>compileKotlin</code> → <code>openApiGenerate</code></a></li>
+<li><a href="#_error_6_generategitproperties_breaks_on_filteroutputstream_write">Error 6: <code>generateGitProperties</code> breaks on <code>FilterOutputStream.write()</code></a></li>
+<li><a href="#_finally_testcontainers_enters_the_scene">Finally: Testcontainers enters the scene</a></li>
+<li><a href="#_phase_1_the_docker_java_lead">Phase 1: the docker-java lead</a></li>
+<li><a href="#_phase_2_web_search_and_github_breadcrumbs">Phase 2: web search and GitHub breadcrumbs</a></li>
+<li><a href="#_phase_3_the_trap_of_renamed_artifacts">Phase 3: the trap of renamed artifacts</a></li>
+<li><a href="#_phase_4_forcing_the_resolution">Phase 4: forcing the resolution</a></li>
+<li><a href="#_final_result">Final result</a></li>
+<li><a href="#_summary_table_of_corrections">Summary table of corrections</a></li>
+<li><a href="#_conclusion">Conclusion</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">reading time: 15 minutes</div>
+<p>Have you ever had that moment where a simple`./gradlew build`that you run a hundred times a day suddenly starts crashing with an error you&#8217;ve never seen? Multiply that by eleven successive errors, add a healthy dose of Docker Engine 29 incompatibility, sprinkle in some Gradle 9 making APIs you&#8217;ve used for ten years disappear. Here is the complete log.</p>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">Diagram 1 — Gradle 9 Migration (error chain)</div>
+<p>Goal: show the series of incompatibilities.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-6215da1a3f4f27918205b5c8ff34a48c.png" alt="Diagram" width="579" height="106">
+</div>
+<div class="title">Figure 1. 👉 Clear, focused on Gradle.</div>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">Diagram 2 — Incompatible JHipster Plugins</div>
+<p>Goal: isolate the broken plugins.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-07ed01d932957e366cd8fed4b8aee2a3.png" alt="Diagram" width="569" height="123">
+</div>
+<div class="title">Figure 2. 👉 Clean view of dependencies.</div>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">Diagram 3 — Docker 29 / Testcontainers</div>
+<p>Goal: runtime problem.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-544e3a93289a5db5b898714292d384f4.png" alt="Diagram" width="788" height="123">
+</div>
+<div class="title">Figure 3. 👉 Clear history of the runtime.</div>
+</div>
+<hr>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-5d4d1754844f7121ef284aa0cc588011.png" alt="Diagram" width="1072" height="193">
+</div>
+<div class="title">Figure 4. another way to represent it</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_scene_a_jhipster_project_a_build_that_no_longer_loads">The scene: a JHipster project, a build that no longer loads</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The project`edster`is a JHipster application generated in 2024. The root build script`build.gradle`remained stable for months. Then we decided to upgrade:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1436%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Component</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Target Version</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9.4.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Java</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21.0.11-tem (Eclipse Temurin)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JHipster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.x (framework`tech.jhipster:jhipster-framework:8.11.0`)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Spring Boot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kotlin</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.3.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker Engine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">29.4.1 (API 1.54)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The Java version change is handled via SDKMAN:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sdk use java 21.0.11-tem</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>First run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew build --no-daemon
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file '/home/.../edster/build.gradle' line: 18
+
+* What went wrong:
+An exception occurred applying plugin request [id: 'jhipster.cucumber-conventions']
+&gt; Failed to apply plugin 'jhipster.cucumber-conventions'.
+   &gt; Could not create task ':cucumberTest'.
+      &gt; Could not create task ':consoleLauncherTest'.
+         &gt; Could not set unknown property 'reportsDir' for task ':consoleLauncherTest'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We don&#8217;t even get past the build script loading. The problem is in`buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_1_the_phantom_variable_reportsdir">Error 1: the phantom variable <code>reportsDir</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The script`jhipster.cucumber-conventions.gradle`contains:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">tasks.register('consoleLauncherTest', JavaExec) {
+    dependsOn(testClasses)
+    String cucumberReportsDir = file("$buildDir/reports/tests")
+    outputs.dir(reportsDir)           // &lt;-- reportsDir n'existe PAS
+    classpath = sourceSets["test"].runtimeClasspath
+    main = "org.junit.platform.console.ConsoleLauncher"
+    // ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The defined variable is`cucumberReportsDir`. The one used is`reportsDir`-- which is not defined anywhere.</p>
+</div>
+<div class="paragraph">
+<p><strong>Correction</strong>:`outputs.dir(cucumberReportsDir)`</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_2_main_no_longer_exists_under_gradle_9">Error 2: <code>main = "&#8230;&#8203;"</code> no longer exists under Gradle 9</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Immediate restart:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not set unknown property 'main' for task ':consoleLauncherTest' of type org.gradle.api.tasks.JavaExec.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 removes the property`main`in favor of`mainClass`on`JavaExec`tasks.</p>
+</div>
+<div class="paragraph">
+<p><strong>Correction</strong>:`mainClass = "org.junit.platform.console.ConsoleLauncher"`</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_3_sourcecompatibility_is_no_longer_a_project_property">Error 3: <code>sourceCompatibility</code> is no longer a project property</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>New error:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not set unknown property 'sourceCompatibility' for root project 'edster' of type org.gradle.api.Project.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The root script had:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">sourceCompatibility=17
+targetCompatibility=17</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 removes these properties at the root level. They must reside in a`java`block.</p>
+</div>
+<div class="paragraph">
+<p><strong>Correction</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_4_the_three_operand_groovy_assertion">Error 4: the three-operand Groovy assertion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The old script contained:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">assert System.properties["java.specification.version"] == "17" || "21" || "24"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In Groovy,<code>"21"</code> et <code>"24"`are truthy strings. The expression resolves to</code>(&#8230;&#8203; == "17") || true || true`, which is always true&#8201;&#8212;&#8201;but the syntax is invalid for the desired strict assertion.</p>
+</div>
+<div class="paragraph">
+<p><strong>Correction</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">assert System.properties["java.specification.version"] in ["17", "21", "23", "24"]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_5_the_implicit_dependency_compilekotlin_openapigenerate">Error 5: the implicit dependency <code>compileKotlin</code> → <code>openApiGenerate</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The build progresses. Kotlin compilation successful. Then:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Task ':compileKotlin' uses this output of task ':openApiGenerate'
+without declaring an explicit or implicit dependency.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 refuses implicit dependencies between tasks. Since`compileKotlin`reads the sources generated by`openApiGenerate`, the link must be declared.</p>
+</div>
+<div class="paragraph">
+<p><strong>Correction</strong>in`build.gradle`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">afterEvaluate {
+    tasks.named("compileKotlin").configure {
+        dependsOn(tasks.named("openApiGenerate"))
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `afterEvaluate`is necessary because`openApiGenerate`is an extension (openAPI Generator plugin) and not a task directly accessible during the configuration phase.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_6_generategitproperties_breaks_on_filteroutputstream_write">Error 6: <code>generateGitProperties</code> breaks on <code>FilterOutputStream.write()</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Java compilation passes. Resources are processed. Then:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&gt; Task :generateGitProperties FAILED
+
+No signature of method: java.io.FilterOutputStream.write() is applicable for argument types: (Integer) values: [103]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The`gradle-git-properties`plugin version 2.5.0 is incompatible with Java 21 / Gradle 9. An internal bug attempts to call`write(int)`via Groovy on a stream that has been closed.</p>
+</div>
+<div class="paragraph">
+<p><strong>Correction</strong>in`gradle.properties`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">gitPropertiesPluginVersion=2.5.7</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_finally_testcontainers_enters_the_scene">Finally: Testcontainers enters the scene</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Until now, it was pure "build script debugging." Each error was a Gradle 9 or Java 21 incompatibility in the build scripts. After the six corrections above, the`./gradlew assemble`passes successfully.</p>
+</div>
+<div class="paragraph">
+<p>But`./gradlew build`also executes tests, and Cucumber tests use Testcontainers to launch an ephemeral PostgreSQL.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not find a valid Docker environment.
+
+EnvironmentAndSystemPropertyClientProviderStrategy: failed with exception BadRequestException
+(Status 400: {"message":"client version 1.32 is too old. Minimum supported API version is 1.40"}
+UnixSocketClientProviderStrategy: failed with exception BadRequestException
+(Status 400: {"message":"client version 1.32 is too old. Minimum supported API version is 1.40"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Testcontainers is unable to communicate with Docker. Two different strategies (environment variables + Unix socket) fail with the same error.</p>
+</div>
+<div id="diag-docker-handshake" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-f31d9e10795d818ce3068413fb5fdd1e.svg" alt="Handshake Docker API refusé par le daemon" width="731" height="616">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_1_the_docker_java_lead">Phase 1: the docker-java lead</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First reflex: the Java Docker client used by Testcontainers sends API version`1.32`in its HTTP handshake, but Docker Engine 29.4.1 requires a minimum of`1.40`. The problem is at the client level, not the daemon.</p>
+</div>
+<div class="paragraph">
+<p>Verification of the docker-java version resolved by Testcontainers 1.20.6:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew dependencies --configuration testRuntimeClasspath | grep docker-java
+
++--- com.github.docker-java:docker-java-api:3.4.1
++--- com.github.docker-java:docker-java-transport:3.4.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>docker-java 3.4.1, dating from Testcontainers 1.20.6. The latest public version of docker-java is 3.5.1. Let&#8217;s try to force the version upgrade via`resolutionStrategy`in the`configurations` de `build.gradle`block:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">configurations {
+    all {
+        resolutionStrategy.eachDependency { details -&gt;
+            if (details.requested.group == "com.github.docker-java"
+                &amp;&amp; details.requested.name.startsWith("docker-java")) {
+                details.useVersion("3.5.1")
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Rerunning the build. Same error:`client version 1.32 is too old`.</p>
+</div>
+<div class="paragraph">
+<p>Verifying the Gradle cache: the JARs were indeed re-downloaded, but the error persists. docker-java 3.5.1 still sends`1.32`. This version is therefore NOT sufficient for Docker Engine 29.4.1.</p>
+</div>
+<div class="paragraph">
+<p><strong>Purification action</strong>: completely clear the Gradle cache, just to be sure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">rm -rf ~/.gradle/caches
+rm -rf /path/to/project/.gradle</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Complete restart after purge. Same error.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_2_web_search_and_github_breadcrumbs">Phase 2: web search and GitHub breadcrumbs</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>docker-java 3.5.1 is insufficient. Nothing left but to search if someone has encountered this exact problem.</p>
+</div>
+<div class="paragraph">
+<p>Targeted search on testcontainers-java and docker-java issues:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">site:github.com/testcontainers "client version 1.32 is too old"
+site:github.com/docker-java "client version 1.32" Docker Engine 29</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Immediate first results:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11210">testcontainers-java#11210</a>—<code>[Bug]: client version 1.32 is too old. Minimum supported API version is 1.44</code></p>
+</li>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11212">testcontainers-java#11212</a>—<code>[Bug]: Docker 29.0.0 could not find a valid Docker environment</code></p>
+</li>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11491">testcontainers-java#11491</a>—<code>[Bug]: Incompatibility in Ubuntu Github runners with Docker Engine 29.1.*</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The breadcrumbs are clear: Docker Engine 29.x raised its minimum API version from`1.24`(former default) to`1.40`. Testcontainers 1.20.x uses docker-java 3.4.x which negotiates the API version by sending`1.32`. The daemon politely but firmly refuses.</p>
+</div>
+<div class="paragraph">
+<p>In issue #11491, a maintainer responds:</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ Hi, I have a project running with version 2.0.3 on a GH runner with engine 29.1 and it works. Can you all please check there is no version conflict? Please, remember all modules were prefixed with`testcontainers-<code>. So, starting with version 2.x we went from`postgresql</code> to <code>testcontainers-postgresql</code> </em>_</em></p>
+</div>
+<div class="paragraph">
+<p>This response contains<strong>two critical pieces of information</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Testcontainers 2.0.3+ resolves the problem</p>
+</li>
+<li>
+<p>The modules have been<strong>renamed with the <code>testcontainers-</code> prefix</strong></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_3_the_trap_of_renamed_artifacts">Phase 3: the trap of renamed artifacts</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The renaming is brutal. In Testcontainers 2.x, none of the old names work under that name anymore:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Old name (1.x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">New name (2.x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:postgresql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-postgresql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:jdbc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-jdbc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:junit-jupiter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-junit-jupiter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unchanged</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>First attempt: apply the Testcontainers 2.0.5 BOM and the new artifact names in`build.gradle`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencies {
+    testImplementation platform("org.testcontainers:testcontainers-bom:2.0.5")
+    testImplementation "org.testcontainers:testcontainers-postgresql"
+    testImplementation "org.testcontainers:testcontainers-jdbc"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>./gradlew build</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">FAILURE: Could not find org.testcontainers:jdbc:2.0.5.
+Could not find org.testcontainers:junit-jupiter:2.0.5.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>The testcontainers-bom BOM is not enough.</strong>Why? Because Spring Boot 3.4.5 exposes its own dependency management BOM (<code>spring-boot-dependencies</code>) which<strong>wins</strong>over the Testcontainers BOM in transitive resolution. Spring Boot fixes`testcontainers` à <code>1.20.6</code>, and thus all artifacts not explicitly in the Spring Boot BOM (like the new`testcontainers-*<code>) resolve to the old names`1.20.6</code>-- which no longer exist in this version.</p>
+</div>
+<div class="paragraph">
+<p>Inspecting the`dependencies --configuration testRuntimeClasspath`, we find:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">+--- org.testcontainers:testcontainers -&gt; 1.20.6 (*)
+|    \--- org.testcontainers:testcontainers:2.0.5 -&gt; 1.20.6</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le <code>&#8594;`indicates the substitution: Testcontainers 2.0.5 is <strong>requested</strong>, but Spring Boot forces`1.20.6</code>.</p>
+</div>
+<div id="diag-bom-war" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-714056a094f875d4bd0cf8db572918d3.svg" alt="Conflit entre le BOM Spring Boot et le BOM Testcontainers" width="1111" height="321">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_4_forcing_the_resolution">Phase 4: forcing the resolution</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The strategy becomes twofold:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Force docker-java to its 3.7.1 version (tested as compatible with Docker Engine 29)</p>
+</li>
+<li>
+<p>Force Testcontainers core to 2.0.5 by bypassing the Spring Boot BOM</p>
+</li>
+</ol>
+</div>
+<div id="diag-resolution-override" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-0e6edf1a58135d9df65ae14483179ddf.svg" alt="resolutionStrategy.eachDependency court-circuite le BOM Spring Boot" width="1103" height="468">
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Final correction</strong>in`build.gradle`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">configurations {
+    all {
+        resolutionStrategy.eachDependency { details -&gt;
+            if (details.requested.group == "com.github.docker-java"
+                &amp;&amp; details.requested.name.startsWith("docker-java")) {
+                details.useVersion("3.7.1")
+            }
+            if (details.requested.group == "org.testcontainers"
+                &amp;&amp; details.requested.name == "testcontainers") {
+                details.useVersion("2.0.5")
+            }
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform("org.testcontainers:testcontainers-bom:2.0.5")
+    testImplementation "org.testcontainers:testcontainers-jdbc"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers-postgresql"
+    testImplementation "org.testcontainers:testcontainers"
+    // ... autres dépendances Spring Boot
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `resolutionStrategy.eachDependency`is the only way to override the`spring-boot-dependencies`BOM managed by the Spring Boot plugin. The equality test on`details.requested.name == "testcontainers"`is intentionally restrictive: we only force the core module. The`testcontainers-*`modules follow the Testcontainers 2.0.5 BOM that we explicitly declared.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_final_result">Final result</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew build --no-daemon
+
+&gt; Task :consoleLauncherTest
+[2 containers found]
+[2 containers started]
+[2 containers successful]
+
+BUILD SUCCESSFUL in 1m 16s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Testcontainers 2.0.5 + docker-java 3.7.1 finally manage to create their PostgreSQL containers via Docker Engine 29.4.1. The final business error (HTTP 500 on the Cucumber test) is an application problem totally independent of the build script.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary_table_of_corrections">Summary table of corrections</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">#</th>
+<th class="tableblock halign-left valign-top">File</th>
+<th class="tableblock halign-left valign-top">Problem</th>
+<th class="tableblock halign-left valign-top">Correction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Non-existent`reportsDir`variable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs.dir(cucumberReportsDir)</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`main`Gradle 9 deprecated</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mainClass</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sourceCompatibility`top-level forbidden Gradle 9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bloc <code>java { sourceCompatibility = JavaVersion.VERSION_21 }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Syntactically invalid Groovy assertion</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>assert &#8230;&#8203; in ["17", "21", "23", "24"]</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Implicit dependency`compileKotlin`→<code>openApiGenerate</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>afterEvaluate { tasks.named("compileKotlin").dependsOn("openApiGenerate") }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradle.properties</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`gitPropertiesPluginVersion`Java 21 incompatible</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2.5.7</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle cache</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">docker-java 3.5.1 tested, resolved but insufficient</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Purge + move to docker-java 3.7.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Testcontainers 1.20.6 incompatible with Docker Engine 29</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Force Testcontainers 2.0.5 + prefix`testcontainers-*`+ resolutionStrategy vs Spring Boot BOM</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If your JHipster/Gradle build crashes after upgrading to Gradle 9 + Docker Engine 29, the errors fall into two categories:</p>
+</div>
+<div class="paragraph">
+<p><strong>Build script errors</strong>(the first 6): Gradle 9 removes properties and syntaxes that had worked for years (<code>sourceCompatibility=</code>, <code>main =</code>, <code>reportsDir</code>). These are mechanical migrations once you know the new API.</p>
+</div>
+<div class="paragraph">
+<p><strong>Docker runtime errors</strong>(the last 2): Docker Engine 29.4.1 rejects API clients &lt; 1.40. Testcontainers 1.20.6 (imposed by Spring Boot 3.4.5) uses docker-java 3.4.1 which sends 1.32. Only Testcontainers 2.0.5 + docker-java 3.7.1 resolves the problem, with artifact renaming and version forcing via`resolutionStrategy.eachDependency`as the only way to bypass the implicit Spring Boot BOM.</p>
+</div>
+<div class="paragraph">
+<p>The Gradle build script at the project root is now clean.`./gradlew build`passes on Java 21, Gradle 9.4.1, Spring Boot 3.4.5, and Docker Engine 29.4.1.</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

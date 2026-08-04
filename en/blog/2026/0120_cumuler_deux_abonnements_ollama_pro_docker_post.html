@@ -1,0 +1,1114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Running Two Ollama Pro Subscriptions on the Same Machine with Docker — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Running Two Ollama Pro Subscriptions on the Same Machine with Docker — Cheroliv"/>
+        <meta property="og:description" content="Docker allows you to duplicate an Ollama Pro subscription on the same machine by isolating identity keys and network ports. Here is how to do it, step by step."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Running Two Ollama Pro Subscriptions on the Same Machine with Docker — Cheroliv"/>
+        <meta name="twitter:description" content="Docker allows you to duplicate an Ollama Pro subscription on the same machine by isolating identity keys and network ports. Here is how to do it, step by step."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="Docker allows you to duplicate an Ollama Pro subscription on the same machine by isolating identity keys and network ports. Here is how to do it, step by step."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"},
+                      "headline": "Running Two Ollama Pro Subscriptions on the Same Machine with Docker",
+                      "description": "How to make two Ollama Pro subscriptions coexist on a single physical machine using a Docker container, isolating SSH identities and network ports. A complete practical guide with step-by-step verification.",
+                      "datePublished": "2026-05-08",
+                      "dateModified": "2026-05-08",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Running Two Ollama Pro Subscriptions on the Same Machine with Docker", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Running Two Ollama Pro Subscriptions on the Same Machine with Docker</h1>
+                <p class="lead">
+                    <em>Published on 08 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a></li>
+<li><a href="#_why_twice_the_same_thing">Why Twice the Same Thing?</a></li>
+<li><a href="#_the_heart_of_the_problem_the_device_key">The Heart of the Problem: The Device Key</a></li>
+<li><a href="#_setup_step_by_step">Setup — Step by Step</a>
+<ul class="sectlevel2">
+<li><a href="#_prerequisites">Prerequisites</a></li>
+<li><a href="#_step_1_create_the_volume">Step 1: Create the Volume</a></li>
+<li><a href="#_step_2_run_the_docker_container">Step 2: Run the Docker Container</a></li>
+<li><a href="#_step_3_retrieve_the_public_key">Step 3: Retrieve the Public Key</a></li>
+<li><a href="#_step_4_register_the_key_on_ollama_com">Step 4: Register the Key on Ollama.com</a></li>
+<li><a href="#_step_5_test_with_a_small_free_model">Step 5: Test with a Small Free Model</a></li>
+</ul>
+</li>
+<li><a href="#_the_v1models_api_trap">The <code>/v1/models</code> API Trap</a></li>
+<li><a href="#_result_two_sessions_two_accounts_zero_conflict">Result: Two Sessions, Two Accounts, Zero Conflict</a></li>
+<li><a href="#_lessons_learned">Lessons Learned</a></li>
+<li><a href="#_to_go_further">To Go Further</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">reading time: 14 minutes</div>
+<p>Two Pro subscriptions, one machine, one credit card, and zero network conflicts. How Docker allowed me to double my cloud inference capacity without buying a second PC.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I have been using Ollama Pro for several months to power my OpenCode sessions with cloud models. The thing is, even with a Pro subscription, you quickly hit <strong>rate limiting</strong> when running several agents in parallel. The obvious solution: a second subscription.</p>
+</div>
+<div class="paragraph">
+<p>But here is the drama.</p>
+</div>
+<div class="paragraph">
+<p>Ollama identifies each machine by a unique SSH key — its famous <strong>Device Key</strong>. Two instances on the same OS would share the same identity, and it is impossible to link two Pro accounts to the same device. And as you might guess, I wasn&#8217;t going to buy a second laptop just for that.</p>
+</div>
+<div class="paragraph">
+<p>The solution: cheat. Make Ollama believe it is running on two different machines, even though they share the same CPU, the same RAM, and the same network connection. Docker will provide us with a perfect isolation bubble.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/architecture-dual-ollama.svg" alt="architecture dual ollama" width="509" height="420">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_twice_the_same_thing">Why Twice the Same Thing?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before you call me a lunatic, let me explain the use case.</p>
+</div>
+<div class="paragraph">
+<p>With a single Pro subscription, I can run a model like`deepseek-v4-pro:cloud`in an OpenCode session. The problem arises when I want <strong>two</strong> simultaneous sessions. Rate limiting quotas mean the second session lags or is simply rejected.</p>
+</div>
+<div class="paragraph">
+<p>With two independent Pro subscriptions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenCode Session 1 → Pro Account A (<code>localhost:11434</code>)</p>
+</li>
+<li>
+<p>OpenCode Session 2 → Pro Account B (<code>localhost:11435</code>)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Each session has its own quota, its own context, and does not interfere with the other. It is human multi-processing.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Two Pro subscriptions = two different emails. The same credit card works — the Ollama payment system does not block multiple subscriptions from the same payment method. I&#8217;ve checked.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_heart_of_the_problem_the_device_key">The Heart of the Problem: The Device Key</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When you install Ollama, a pair of ed25519 SSH keys is generated in the identity directory:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ cat /usr/share/ollama/.ollama/id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This key is uploaded to Ollama&#8217;s servers during the`ollama signin`. This is what says "this machine belongs to such-and-such Pro account." If your two instances share the same`id_ed25519`file, they share the same identity. Game over.</p>
+</div>
+<div class="paragraph">
+<p>The workaround: give our second instance its own identity directory, isolated in a Docker volume.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_setup_step_by_step">Setup — Step by Step</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_prerequisites">Prerequisites</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>A functional native Ollama installation (official script`curl | sh`)</p>
+</li>
+<li>
+<p>Docker installed and functional</p>
+</li>
+<li>
+<p>Portainer or docker-compose for deployment</p>
+</li>
+<li>
+<p>Two Ollama accounts with two distinct emails</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I used version`0.20.2`— the one provided by the official script and the corresponding Docker image.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_1_create_the_volume">Step 1: Create the Volume</h3>
+<div class="paragraph">
+<p>A simple directory on the host will serve as a persistent volume for instance B&#8217;s identity:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mkdir -p ~/ollama-b-data</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This folder will be mounted in the Docker container as`/root/.ollama`, where Ollama stores its identity keys, history, and models.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_run_the_docker_container">Step 2: Run the Docker Container</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># docker-compose.yml
+services:
+  ollama-instance-b:
+    image: ollama/ollama:0.20.2
+    container_name: ollama-instance-b
+    ports:
+      - "11435:11434"
+    volumes:
+      - /home/cheroliv/ollama-b-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: always</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>What is happening here:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Host port<strong>11435</strong>is mapped to the container&#8217;s internal<strong>11434</strong>. Thus, the Docker instance listens on`:11435`without conflict with the native instance occupying`:11434`.</p>
+</li>
+<li>
+<p>Volume`~/ollama-b-data`is mounted on`/root/.ollama`— this is where the SSH identity will be stored.</p>
+</li>
+<li>
+<p>`OLLAMA_HOST=0.0.0.0`allows the container to accept external connections.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I deployed this stack via Portainer, but a simple`docker compose up -d`works just as well.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_retrieve_the_public_key">Step 3: Retrieve the Public Key</h3>
+<div class="paragraph">
+<p>Since the container is blank on the first start, Ollama automatically generates a new SSH key pair in the volume. We retrieve the public key:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ docker exec ollama-instance-b cat /root/.ollama/id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDQ+dvnfmuo49q5O8LOlvgZ39SKORFw47ry9k4H2jPc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>I verify that this key is <strong>different</strong> from the one in the native instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Instance native
+$ cat /usr/share/ollama/.ollama/id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGyF...(différente)
+
+# Instance Docker
+$ cat ~/ollama-b-data/id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDQ...(différente)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Two distinct keys, two separate identities. Done.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ℹ️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If your container restarts, it <strong>reuses</strong> the keys present in the volume. The identity is persistent. You will not lose the association with the Pro account.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_register_the_key_on_ollama_com">Step 4: Register the Key on Ollama.com</h3>
+<div class="paragraph">
+<p>Head to <a href="https://ollama.com/settings/keys" class="bare">https://ollama.com/settings/keys</a> → Add SSH Key. Paste the public key from the Docker instance and validate.</p>
+</div>
+<div class="paragraph">
+<p>Then, link this identity to Pro account B:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ docker exec -it ollama-instance-b ollama signin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The browser opens, we log in with the email of account B, and the token is associated with the container&#8217;s SSH key. We verify that everything is OK:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ docker exec -it ollama-instance-b ollama signin
+User: cherolivpro</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_5_test_with_a_small_free_model">Step 5: Test with a Small Free Model</h3>
+<div class="paragraph">
+<p>Before spending the price of a Pro subscription, I want to be sure the pipe is working. I pull a small local free model to validate connectivity:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ docker exec ollama-instance-b ollama pull qwen3:0.6b
+pulling manifest
+pulling 7f4030143c1c: 100% ▕██████████████████▏ 522 MB
+success
+
+$ curl -s http://localhost:11435/api/tags
+{"models":[{"name":"qwen3:0.6b","model":"qwen3:0.6b",...}]}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Port`11435`responds, the model is served. Instance B is alive.</p>
+</div>
+<div class="paragraph">
+<p>Once reassured, I move to pulling the actual Pro cloud model:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ docker exec ollama-instance-b ollama pull deepseek-v4-pro:cloud
+pulling manifest
+pulling 31c3059e137e: 100% ▕██████████████████▏  344 B
+success</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>344 bytes for a cloud model manifest — normal, the inference happens server-side, not locally. And here is the ultimate test:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl -s http://localhost:11435/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4-pro:cloud","messages":[{"role":"user","content":"Dis bonjour en une phrase courte."}]}'
+
+{
+  "id": "chatcmpl-480",
+  "model": "deepseek-v4-pro",
+  "choices": [{
+    "message": { "content": "Bonjour !" },
+    "finish_reason": "stop"
+  }],
+  "usage": { "total_tokens": 181 }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hello to you too, instance B.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_v1models_api_trap">The <code>/v1/models</code> API Trap</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I lost 20 minutes on a silly detail. When I configured the`ollama-b`provider in OpenCode, nothing appeared in the model selector. Nothing. Zip.</p>
+</div>
+<div class="paragraph">
+<p>The reason? The`/v1/models`API of instance B returned`{"object":"list","data":null}`instead of`{"object":"list","data":[]}`when no model was pulled. The`null`value crashed the parsing on the OpenCode side, which failed to display the provider.</p>
+</div>
+<div class="paragraph">
+<p>The solution: declare the models <strong>explicitly</strong> in the OpenCode configuration rather than relying on dynamic discovery.</p>
+</div>
+<div class="listingblock">
+<div class="title">~/.config/opencode/opencode.json</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": { "baseURL": "http://localhost:11434/v1" },
+      "models": {
+        "gemma4:e2b": { "name": "Gemma 4 E2B (local)" }
+      }
+    },
+    "ollama-b": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama Instance B (Docker)",
+      "options": { "baseURL": "http://localhost:11435/v1" },
+      "models": {
+        "qwen3:0.6b": { "name": "Qwen3 0.6B (B)" },
+        "deepseek-v4-pro:cloud": { "name": "DeepSeek V4 Pro (B)" }
+      }
+    }
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With this explicit declaration, OpenCode immediately sees provider B and its models. One session restart, and the`/models`selector shows both instances side by side.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="💡"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you don&#8217;t see your custom provider in`/models`, don&#8217;t waste three hours restarting your terminal. Declare the models manually in`opencode.json`— it fixes the problem instantly.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_result_two_sessions_two_accounts_zero_conflict">Result: Two Sessions, Two Accounts, Zero Conflict</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the end, I can run two OpenCode sessions simultaneously:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">Session 1 → /models → Ollama (local) → deepseek-v4-pro:cloud → Compte A
+Session 2 → /models → Ollama Instance B (Docker) → deepseek-v4-pro:cloud → Compte B</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each session has its own quota, its own rate limit, and they don&#8217;t step on each other&#8217;s toes. Same machine, same credit card, two different emails.</p>
+</div>
+<div class="paragraph">
+<p>And the best part? The Docker container is in`restart: always`. It survives system reboots without manual intervention.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lessons_learned">Lessons Learned</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Docker isolates everything, even identity</strong>— A simple volume bind mount is enough to give a container its own set of SSH keys, making it indistinguishable from a different physical machine in the eyes of Ollama.</p>
+</li>
+<li>
+<p><strong>Two emails, same CC</strong>— Ollama does not block multiple subscriptions from the same payment method. Only the email must be distinct.</p>
+</li>
+<li>
+<p><strong>Test for free before paying</strong> — Un <code>ollama pull qwen3:0.6b</code> (modèle libre, 522 Mo) permet de valider toute la chaîne réseau sans débourser un centime. Vous validez le plomberie d&#8217;abord, vous activez le Pro ensuite.</p>
+</li>
+<li>
+<p><strong><code>/v1/models</code> with <code>data: null</code> breaks OpenCode</strong>— If you configure a custom provider with`"models": {}`, OpenCode attempts to discover models via the API. If the API responds`data: null`, the provider does not appear. Declare models explicitly.</p>
+</li>
+<li>
+<p><strong>Two accounts is human multi-processing</strong>— One Pro account = one active OpenCode session. Two accounts = two parallel sessions. For someone juggling several Gradle projects simultaneously, it&#8217;s a game changer.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_to_go_further">To Go Further</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://ollama.com/settings/keys">Ollama Settings — SSH Key Management</a></p>
+</li>
+<li>
+<p><a href="https://docs.ollama.com/">Official Ollama Documentation</a></p>
+</li>
+<li>
+<p><a href="https://hub.docker.com/r/ollama/ollama">Ollama Docker Image on Docker Hub</a></p>
+</li>
+<li>
+<p><a href="https://opencode.ai/docs/providers/#ollama">OpenCode — Ollama Provider Configuration</a></p>
+</li>
+</ul>
+</div>
+<hr>
+<div class="paragraph">
+<p><em>Article published on 2026-05-08</em></p>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

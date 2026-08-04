@@ -1,0 +1,1300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Part 1: Setting up a simple CI/CD pipeline for Python and PyPI — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2025/0085_pypi_cicd_part_1_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0085_pypi_cicd_part_1_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0085_pypi_cicd_part_1_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0085_pypi_cicd_part_1_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Part 1: Setting up a simple CI/CD pipeline for Python and PyPI — Cheroliv"/>
+        <meta property="og:description" content="Part 1 - Complete guide to setting up a robust CI/CD pipeline with GitHub Actions, from linting and automated tests to automatic deployment on PyPI during releases."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2025/0085_pypi_cicd_part_1_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2025/0085_pypi_cicd_part_1_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Part 1: Setting up a simple CI/CD pipeline for Python and PyPI — Cheroliv"/>
+        <meta name="twitter:description" content="Part 1 - Complete guide to setting up a robust CI/CD pipeline with GitHub Actions, from linting and automated tests to automatic deployment on PyPI during releases."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="Part 1 - Complete guide to setting up a robust CI/CD pipeline with GitHub Actions, from linting and automated tests to automatic deployment on PyPI during releases."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2025\/0085_pypi_cicd_part_1_post.html"},
+                      "headline": "Part 1: Setting up a simple CI\/CD pipeline for Python and PyPI",
+                      "description": "Part 1 - Complete guide to setting up a robust CI\/CD pipeline with GitHub Actions, from linting and automated tests to automatic deployment on PyPI during releases.",
+                      "datePublished": "2025-07-17",
+                      "dateModified": "2025-07-17",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2025\/0085_pypi_cicd_part_1_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Part 1: Setting up a simple CI\/CD pipeline for Python and PyPI", "item": "https:\/\/cheroliv.com\/en\/blog\/2025\/0085_pypi_cicd_part_1_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Part 1: Setting up a simple CI/CD pipeline for Python and PyPI</h1>
+                <p class="lead">
+                    <em>Published on 17 July 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a></li>
+<li><a href="#_pipeline_architecture">Pipeline Architecture</a></li>
+<li><a href="#_continuous_integration_ci_pipeline_configuration">Continuous Integration (CI) Pipeline Configuration</a>
+<ul class="sectlevel2">
+<li><a href="#_ci_workflow_structure">CI Workflow Structure</a></li>
+<li><a href="#_ci_steps_analysis">CI Steps Analysis</a>
+<ul class="sectlevel3">
+<li><a href="#_1_triggers_on">1. Triggers (<code>on</code>)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">Objective: Guide the reader through the setup of a minimalist but functional CI/CD pipeline for a Python application, with automatic deployment to PyPI.</div>
+<p>Automating development processes has become essential in modern projects. A well-designed CI/CD pipeline not only allows for the early detection of regressions in the development cycle but also fully automates the deployment process.</p>
+</div>
+<div class="paragraph">
+<p>In this article, we will explore how to set up a complete pipeline with GitHub Actions for a Python application, from continuous integration (CI) to continuous deployment (CD) on PyPI.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pipeline_architecture">Pipeline Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Our pipeline consists of two distinct workflows:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>CI Pipeline</strong>: Executed on every push and pull request</p>
+</li>
+<li>
+<p><strong>CD Pipeline</strong>: Triggered only during GitHub releases</p>
+</li>
+</ol>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/ci-cd-overview.svg" alt="ci cd overview" width="394" height="648">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_continuous_integration_ci_pipeline_configuration">Continuous Integration (CI) Pipeline Configuration</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ci_workflow_structure">CI Workflow Structure</h3>
+<div class="paragraph">
+<p>The CI workflow is designed to validate every contribution to the code. Here is its complete configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="yaml">name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install ruff pytest pytest-mock
+
+    - name: Run Linting (Ruff)
+      run: ruff check .
+
+    - name: Run Tests (Pytest)
+      run: pytest</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ci_steps_analysis">CI Steps Analysis</h3>
+<div class="sect3">
+<h4 id="_1_triggers_on">1. Triggers (<code>on</code>)</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="yaml">----
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+----
+
+The pipeline triggers on: - Every push to the branch`main` - Every pull request to`main`
+
+This approach ensures that the main code remains stable and that every contribution is validated before integration.
+
+==== 2. Execution Environment
+
+```yaml
+----
+runs-on: ubuntu-latest
+----
+
+Ubuntu Latest offers a good compromise between performance, cost, and compatibility for most Python projects.
+
+==== 3. Code Checkout
+
+```yaml
+----
+- name: Checkout code
+  uses: actions/checkout@v4
+----
+
+The action`checkout@v4`retrieves the source code from the repository. Version v4 brings performance and security improvements.
+
+==== 4. Python Configuration
+
+```yaml
+----
+- name: Set up Python
+  uses: actions/setup-python@v5
+  with:
+    python-version: '3.x'
+----
+
+Using`'3.x'`allows for the automatic use of the latest stable version of Python 3, simplifying maintenance.
+
+==== 5. Dependency Installation
+
+```yaml
+----
+- name: Install dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    pip install ruff pytest pytest-mock
+----
+
+This step: - Updates pip to the latest version - Installs project dependencies - Adds development tools (linting and tests)
+
+==== 6. Linting with Ruff
+
+```yaml
+----
+- name: Run Linting (Ruff)
+  run: ruff check .
+----
+
+**Ruff**is an ultra-fast Python linter written in Rust. It combines the features of several tools (Flake8, Black, isort) into a single high-performance tool.
+
+==== 7. Running Tests
+
+```yaml
+----
+- name: Run Tests (Pytest)
+  run: pytest
+----
+
+Pytest executes the entire test suite, ensuring that changes do not introduce regressions.
+
+== Deployment (CD) Pipeline Configuration
+
+=== CD Workflow Structure
+
+The CD workflow triggers only during GitHub releases and automates publication to PyPI:
+
+[source,yaml]
+----
+name: Publish to PyPI
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload dist/*
+----
+
+=== CD Steps Analysis
+
+==== 1. Release Trigger
+
+```yaml
+----
+on:
+  release:
+    types:
+      - published
+----
+
+The CD pipeline only triggers upon the publication of a GitHub release. This approach ensures precise control over deployments.
+
+==== 2. Build Tools Installation
+
+```yaml
+----
+pip install setuptools wheel twine
+----
+
+- **setuptools**: Python packaging tools - **wheel**: Modern Python distribution format - **twine**: Secure tool for uploading to PyPI
+
+==== 3. Authentication Configuration
+
+```yaml
+----
+env:
+  TWINE_USERNAME: __token__
+  TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+----
+
+Authentication uses a PyPI API token stored as a GitHub secret, which is more secure than classic credentials.
+
+==== 4. Build and Publication
+
+```yaml
+----
+run: |
+  python setup.py sdist bdist_wheel
+  twine upload dist/*
+----
+
+- `sdist`: Creates a source distribution - `bdist_wheel`: Creates a wheel (binary distribution) - `twine upload`: Publishes the distributions to PyPI
+
+== Python Package Configuration
+
+=== setup.py Structure
+
+For the pipeline to work, your project must include a`setup.py`file:
+
+[source,python]
+----
+from setuptools import setup, find_packages
+
+with open("README.adoc", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+setup(
+    name="playlist-downloader",
+    version="1.0.0",
+    author="Votre Nom",
+    author_email="votre.email@example.com",
+    description="CLI tool for managing YouTube playlists",
+    long_description=long_description,
+    long_description_content_type="text/plain",
+    url="https://github.com/cheroliv/playlist-downloader",
+    packages=find_packages(),
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+    ],
+    python_requires="&gt;=3.8",
+    install_requires=[
+        "typer&gt;=0.9.0",
+        "yt-dlp&gt;=2023.1.6",
+        "google-api-python-client&gt;=2.70.0",
+        "google-auth-oauthlib&gt;=0.7.1",
+        "pymonad&gt;=2.4.0",
+        "pyyaml&gt;=6.0",
+    ],
+    entry_points={
+        "console_scripts": [
+            "playlist-downloader=cli:app",
+        ],
+    },
+)
+----
+
+=== Key Points of setup.py
+
+1. **Metadata**: Name, version, author, description
+2. **Dependencies**: List of required packages
+3. **Entry Points**: Exposed CLI commands
+4. **Classifiers**: Metadata for PyPI
+
+== Securing with GitHub Secrets
+
+=== PyPI Token Configuration
+
+1. **Create an API token on PyPI**:
+
+- Log in to PyPI - Go to Account Settings &gt; API tokens - Create a new token with the appropriate permissions
+
+1. **Add the secret in GitHub**:
+
+- Repository Settings &gt; Secrets and variables &gt; Actions - Create a new secret named`PYPI_API_TOKEN` - Paste your PyPI token
+
+[plantuml, secrets-flow, svg]
+----
+@startuml
+!theme plain
+
+actor Developer as dev
+participant "GitHub Repository" as repo
+participant "GitHub Actions" as actions
+participant PyPI
+
+dev -&gt; repo : Configure PYPI_API_TOKEN secret
+repo -&gt; actions : Trigger CD pipeline on release
+actions -&gt; actions : Access secret securely
+actions -&gt; PyPI : Authenticate with token
+PyPI -&gt; PyPI : Validate and publish package
+
+note over actions, PyPI
+  Token never exposed in logs
+  Automatic rotation possible
+end note
+
+@enduml
+----
+
+== Complete Deployment Workflow
+
+=== Deployment Sequence
+
+[plantuml, deployment-sequence, svg]
+----
+@startuml
+!theme plain
+
+actor Developer as dev
+participant "Local Git" as git
+participant "GitHub" as github
+participant "GitHub Actions" as actions
+participant PyPI
+participant "End Users" as users
+
+dev -&gt; git : git tag v1.0.0
+dev -&gt; git : git push origin v1.0.0
+git -&gt; github : Push tag
+dev -&gt; github : Create release from tag
+github -&gt; actions : Trigger CD pipeline
+actions -&gt; actions : Checkout code
+actions -&gt; actions : Setup Python environment
+actions -&gt; actions : Install build tools
+actions -&gt; actions : Build distributions (sdist + wheel)
+actions -&gt; PyPI : Upload to PyPI with token
+PyPI -&gt; PyPI : Validate and publish
+users -&gt; PyPI : pip install playlist-downloader
+
+note over dev, github
+  Release creation can be automated
+  or done manually through GitHub UI
+end note
+
+@enduml
+----
+
+=== Pipeline States
+
+[plantuml, pipeline-states, svg]
+----
+@startuml
+!theme plain
+
+[*] --&gt; Idle
+
+Idle --&gt; CI_Running : Push/PR created
+CI_Running --&gt; CI_Success : All checks pass
+CI_Running --&gt; CI_Failed : Linting/Tests fail
+CI_Success --&gt; Idle : Merge completed
+CI_Failed --&gt; Idle : Fix and retry
+
+Idle --&gt; CD_Running : Release published
+CD_Running --&gt; CD_Success : Package published
+CD_Running --&gt; CD_Failed : Build/Upload error
+CD_Success --&gt; Idle : Package available on PyPI
+CD_Failed --&gt; Idle : Fix and retry release
+
+note on link #red : Blocks merge
+note on link #green : Allows deployment
+
+@enduml
+----
+
+== Best Practices and Optimizations
+
+=== 1. Version Management
+
+Use semantic Git tags:
+
+```bash
+----
+git tag -a v1.2.3 -m "Release version 1.2.3"
+git push origin v1.2.3
+----
+
+=== 2. Matrix Tests
+
+To test on multiple Python versions:
+
+```yaml
+----
+strategy:
+  matrix:
+    python-version: [3.8, 3.9, "3.10", "3.11"]
+----
+
+=== 3. Dependency Caching
+
+Speed up builds with caching:
+
+```yaml
+----
+- name: Cache pip dependencies
+  uses: actions/cache@v3
+  with:
+    path: ~/.cache/pip
+    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+----
+
+=== 4. Deployment Environments
+
+Use GitHub environments for controlled deployments:
+
+```yaml
+----
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+----
+
+== Use Case and Architecture
+
+=== Use Case Diagram
+
+[plantuml, use-cases, svg]
+----
+@startuml
+!theme plain
+
+left to right direction
+
+actor "Developer" as dev
+actor "GitHub Actions" as ga
+actor "End User" as user
+
+package "CI/CD System" {
+  usecase "Run Linting" as lint
+  usecase "Execute Tests" as test
+  usecase "Build Package" as build
+  usecase "Publish to PyPI" as publish
+  usecase "Create Release" as release
+}
+
+dev --&gt; lint : Pushes code
+dev --&gt; test : Pushes code
+dev --&gt; release : Creates release
+ga --&gt; build : On release trigger
+ga --&gt; publish : After successful build
+user --&gt; publish : Downloads package
+
+lint .&gt; test : triggers
+test .&gt; build : on success
+build .&gt; publish : on success
+
+@enduml
+----
+
+=== Deployment Architecture
+
+[plantuml, deployment-architecture, svg]
+----
+@startuml
+!theme plain
+
+cloud "GitHub" {
+  [Source Repository]
+  [GitHub Actions]
+  [Secrets Store]
+}
+
+cloud "PyPI" {
+  [Package Registry]
+  [Distribution Files]
+}
+
+node "CI/CD Pipeline" {
+  [Linting]
+  [Testing]
+  [Building]
+  [Publishing]
+}
+
+[Source Repository] --&gt; [GitHub Actions] : Triggers
+[GitHub Actions] --&gt; [Linting]
+[Linting] --&gt; [Testing]
+[Testing] --&gt; [Building]
+[Building] --&gt; [Publishing]
+[Publishing] --&gt; [Package Registry] : Uploads
+[Secrets Store] --&gt; [Publishing] : Provides token
+
+note as N1
+  Secure token-based
+  authentication
+end note
+
+[Secrets Store] .. N1
+
+@enduml
+----
+
+== Monitoring and Debugging
+
+=== Logs and Monitoring
+
+GitHub Actions provides detailed logs for each step. To debug:
+
+1. **Examine the logs**of each step
+2. **Enable debug**with`ACTIONS_STEP_DEBUG`
+3. **Use artifacts**to save build files
+
+```yaml
+----
+- name: Upload build artifacts
+  uses: actions/upload-artifact@v3
+  if: failure()
+  with:
+    name: build-logs
+    path: build/
+----
+
+=== Notifications
+
+Add Slack or email notifications:
+
+```yaml
+----
+- name: Notify on failure
+  if: failure()
+  uses: 8398a7/action-slack@v3
+  with:
+    status: ${{ job.status }}
+    webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+----
+
+== Conclusion
+
+Setting up a robust CI/CD pipeline with GitHub Actions radically transforms the development experience. By automating linting, testing, and deployment, you:
+
+- **Reduce errors**in production - **Accelerate cycles**of development - **Improve confidence**in your releases - **Facilitate collaboration**within the team
+
+This pipeline can be adapted to different types of Python projects by adjusting the linting tools, test frameworks, or deployment destinations.
+
+The initial investment in configuring these workflows is quickly offset by the time saved and the reduction of manual errors during deployments.
+
+== Additional Resources
+
+- https://docs.github.com/en/actions[GitHub Actions Documentation] - https://packaging.python.org/[Python Packaging Guide] - https://docs.pytest.org/[Pytest Documentation] - https://docs.astral.sh/ruff/[Ruff Documentation] - https://twine.readthedocs.io/[Twine Documentation]
+
+✅ Functional pipeline achieved! You now have a simple CI/CD pipeline that allows you to automate your tests and publish your Python package to PyPI directly from GitHub Actions.
+
+However, this pipeline remains intentionally minimalist. It does not yet cover certain aspects essential in a professional context:
+
+Multi-version Python tests,
+
+Automatic security analysis,
+
+Progressive deployment via Test PyPI,
+
+Pipeline monitoring and metrics,
+
+Versioning automation and integration of modern best practices (pyproject.toml).
+
+In the next part, we will move to the next level. You will learn how to transform this basic pipeline into a true industrial deployment chain, robust and secure, ready for production Python projects.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0085_pypi_cicd_part_1_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>

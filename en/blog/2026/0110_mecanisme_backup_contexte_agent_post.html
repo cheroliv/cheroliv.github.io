@@ -1,0 +1,1133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sliding Window and Cold Wave: When Agent Context Explodes and You Need to Archive Without Losing — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Sliding Window and Cold Wave: When Agent Context Explodes and You Need to Archive Without Losing — Cheroliv"/>
+        <meta property="og:description" content="After months of Opencode sessions, governance files are exploding. 5200 lines loaded automatically. I am conceptualizing a sliding window and &quot;identical cold wave&quot; mechanism to maintain a light active context without losing anything."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0110_mecanisme_backup_contexte_agent_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Sliding Window and Cold Wave: When Agent Context Explodes and You Need to Archive Without Losing — Cheroliv"/>
+        <meta name="twitter:description" content="After months of Opencode sessions, governance files are exploding. 5200 lines loaded automatically. I am conceptualizing a sliding window and &quot;identical cold wave&quot; mechanism to maintain a light active context without losing anything."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="After months of Opencode sessions, governance files are exploding. 5200 lines loaded automatically. I am conceptualizing a sliding window and &quot;identical cold wave&quot; mechanism to maintain a light active context without losing anything."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertises</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../index.html" data-lang="fr">
+                            <span class="me-2">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="../../index.html" data-lang="en">
+                            <span class="me-2">🇬🇧</span>English
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html"},
+                      "headline": "Sliding Window and Cold Wave: When Agent Context Explodes and You Need to Archive Without Losing",
+                      "description": "Following my agent governance strategy. When 150+ sessions make the context explode, I am conceptualizing a backup mechanism based on the Hot\/Warm\/Cold Storage pattern \u2014 without losing anything, without distorting the dataset.",
+                      "datePublished": "2026-04-26",
+                      "dateModified": "2026-04-26",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Sliding Window and Cold Wave: When Agent Context Explodes and You Need to Archive Without Losing", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Sliding Window and Cold Wave: When Agent Context Explodes and You Need to Archive Without Losing</h1>
+                <p class="lead">
+                    <em>Published on 26 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After 48 sessions on a single project and 150+ in total, the Eager/Lazy governance system I had carefully built began to choke. The agent files, meant to be light, weighed 5200 cumulative lines. The auto-loaded context was growing faster than my ability to control it. This article tells how I conceptualized a backup mechanism — between a sliding window and an identical cold wave — to maintain a light active context without ever losing anything.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_signal_5200_lines">The Signal: 5200 Lines</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I am in the middle of session 048 on`magic-stick`, my project to build a live Linux ISO. Opencode is watching me. As always, it automatically loaded my Eager files at the start of the session —<code>AGENT.adoc</code>, <code>PROMPT_REPRISE.adoc</code>, <code>.agents/INDEX.adoc</code>. Nothing unusual.</p>
+</div>
+<div class="paragraph">
+<p>Except that something is wrong. The responses are slower. The reasoning is more diluted. The agent forgets details that were right in front of it two messages ago.</p>
+</div>
+<div class="paragraph">
+<p>I open a terminal and type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">wc -l .agents/INDEX.adoc .agents/SESSIONS_HISTORY.adoc \
+  .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>260 lines for INDEX. 55 for SESSIONS_HISTORY.<strong>1756 for COMPLETED_TASKS_ARCHIVE</strong>.</p>
+</div>
+<div class="paragraph">
+<p>The`sessions/`folder adds another ~3200 lines. Total:<strong>5200 lines</strong>of context loading, one way or another, into the agent&#8217;s temporary brain.</p>
+</div>
+<div class="paragraph">
+<p>The Eager/Lazy strategy I theorized in the previous article works — but it has a birth defect I hadn&#8217;t anticipated: it has<strong>no aging mechanism</strong>. Every session adds a line to INDEX, a paragraph to COMPLETED_TASKS, a file in sessions/. Nothing ever leaves. The context is a snowball that grows with every new session.</p>
+</div>
+<div id="diag-growth" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-95c83a721c5c943661137fb4c7f9bc23.svg" alt="Courbe de croissance des fichiers agents — de la session 1 à 48" width="427" height="591">
+</div>
+</div>
+<div class="paragraph">
+<p>This is not a bug; it is a direct consequence of the end-of-session procedure that meticulously archives every detail. The system is a victim of its own success.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_diagnosis_triple_redundancy">The Diagnosis: Triple Redundancy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I ask the agent to diagnose the problem. Its response is immediate and surgical.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lines</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Role</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Problem</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.agents/INDEX.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">260+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EAGER (auto-loaded)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table of all sessions since 001 —<strong>+1 line per session</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.agents/SESSIONS_HISTORY.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">55</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EAGER</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Summary table —<strong>redundancy with INDEX</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>COMPLETED_TASKS_ARCHIVE_2026-04.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1756</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EAGER (implicit)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full details of all April sessions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.agents/sessions/*.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~5200 total</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LAZY (supposed)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Individual archives, but<strong>not used</strong>because everything is already in COMPLETED_TASKS</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The agent identifies four root causes:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>COMPLETED_TASKS_ARCHIVE absorbs everything</strong>— Instead of pointing to the`.sessions/`archives, it fully copies each session.</p>
+</li>
+<li>
+<p><strong>INDEX.adoc acts as a full history</strong>— The "Recent Sessions" table contains 30+ entries.</p>
+</li>
+<li>
+<p><strong>SESSIONS_HISTORY.adoc is redundant</strong>— Same info as INDEX, different format.</p>
+</li>
+<li>
+<p><strong>The LAZY rule is not respected</strong>— COMPLETED_TASKS is implicitly EAGER because it contains everything.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Its proposal is radical: limit INDEX to 10 sessions, empty COMPLETED_TASKS, move SESSIONS_HISTORY to pure LAZY. Immediate gain:<strong>~1900 lines saved</strong>.</p>
+</div>
+<div class="paragraph">
+<p>It&#8217;s clean, efficient, logical. But I have a problem with this approach.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_i_refused_the_obvious_solution">Why I Refused the Obvious Solution</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The agent&#8217;s solution is that of an engineer optimizing a cache. Limit. Truncate. Remove redundancies.</p>
+</div>
+<div class="paragraph">
+<p>But these "redundancies" are not redundancies. Each governance file captures a<strong>different angle</strong>on the same reality:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>INDEX</strong>= macro view, executive dashboard</p>
+</li>
+<li>
+<p><strong>SESSIONS_HISTORY</strong>= linear chronological table, scored</p>
+</li>
+<li>
+<p><strong>COMPLETED_TASKS_ARCHIVE</strong>= detailed narrative with metrics</p>
+</li>
+<li>
+<p><strong>sessions/*.adoc</strong> = individual archives, full context</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This is not mindless duplication. This is<strong>structured multiple perspective</strong>. This is exactly what is needed for distillation — so that later, a human (or a future better-trained LLM) can cross-reference angles and extract patterns.</p>
+</div>
+<div class="paragraph">
+<p>Imagine a data scientist telling you: "Let&#8217;s delete 3 out of 6 columns, they are correlated." What do you tell them? That correlation is not redundancy when each column captures a different dimension of the same phenomenon. That this dimensional richness is precisely what makes the dataset exploitable.</p>
+</div>
+<div class="paragraph">
+<p>This is my intuition. And I defend it against the agent&#8217;s cold rationality.</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ I don&#8217;t see a silent "catch-all" in my idea. We aren&#8217;t throwing everything in; we are moving the structured result of the end-of-session procedure — each file with its angle, its redundancies which are actually an enrichment. This multidimensional material will be better for distillation. </em>_</em></p>
+</div>
+<div class="paragraph">
+<p>The agent takes the hit. And corrects itself.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_proposal_identical_cold_wave">The Proposal: Identical Cold Wave</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The agent then proposes a finer mechanism, which respects my intuition of a rich dataset while solving the technical problem of exploding context.</p>
+</div>
+<div class="paragraph">
+<p>The principle is simple and directly inspired by the<strong>Hot/Warm/Cold Storage</strong>pattern applied to archive management:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Hot (EAGER)</strong>= last 10 sessions in INDEX, PROMPT_REPRISE of session N+1, last 2 session files</p>
+</li>
+<li>
+<p><strong>Warm (LAZY)</strong>= recent SESSIONS_HISTORY, SCRIPT_VERIFICATION, all reference documentation</p>
+</li>
+<li>
+<p><strong>Cold (backup/)</strong>= everything else, moved<strong>intact</strong>, without transformation, without re-indexing</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>----
+.agents/
+├── INDEX.adoc                         → Sessions N-9 à N (10 dernières)
+├── SESSIONS_HISTORY.adoc              → Sessions N-9 à N
+├── SCRIPT_VERIFICATION.adoc           → Dernière vérif (pas d'historique)
+├── PROMPT_REPRISE.adoc                → Session N+1 uniquement
+├── sessions/                          → Sessions N-1 à N uniquement
+└── backup/
+    └── Y2026-sessions-001-039/          ← Vague froide, COPIE INTÉGRALE
+        ├── INDEX.adoc                  → Sessions 001 à 039 (complet)
+        ├── SESSIONS_HISTORY.adoc       → Sessions 001 à 039 (complet)
+        ├── COMPLETED_TASKS_ARCHIVE.adoc → Sessions 001 à 039 (complet)
+        └── sessions/                   → 001.adoc, 002.adoc...
+----
+
+The key to the mechanism:**the backup is not a central index, it is a faithful copy of the past wave**. When we exceed the 10-active-session horizon, we delete nothing. We re-index nothing. We merge nothing. We take the packet of agent files as they were at session N-10, and we move them to`backup/`.
+
+The active files, however, are truncated:
+
+* INDEX: only the last 10 lines (sliding window)
+* SESSIONS_HISTORY: same
+* COMPLETED_TASKS_ARCHIVE: new file for the current period
+* sessions/: only the last 2 sessions
+
+[plantuml, format=svg, id=diag-hot-warm-cold, alt="Architecture Hot/Warm/Cold du contexte agent — EAGER/LAZY/backup"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+
+title Architecture Hot / Warm / Cold du Contexte Agent
+
+package "HOT (EAGER)\nChargé automatiquement\n~300 lignes" as HOT #FFCDD2 {
+  file "INDEX.adoc\n(10 sessions)" as IDX_HOT
+  file "PROMPT_REPRISE\n(session N+1)" as PRO_HOT
+  file "AGENT.adoc\n(règles absolues)" as AG_HOT
+}
+
+package "WARM (LAZY)\nChargé sur demande\n~500 lignes" as WARM #FFF9C4 {
+  file "SESSIONS_HISTORY\n(10 dernières)" as HIS_WARM
+  file "SCRIPT_VERIFICATION\n(dernière)" as VER_WARM
+  file "PROCEDURES.adoc\n(templates)" as PRO_WARM
+  file "*_REFERENCE.adoc\n(doc technique)" as REF_WARM
+}
+
+package "COLD (backup/)\nJamais chargé\nLecture humaine uniquement" as COLD #BBDEFB {
+  folder "Y2026-001-039/" as WAVE {
+    file "INDEX (complet)" as IDX_COLD
+    file "SESSIONS_HISTORY\n(complet)" as HIS_COLD
+    file "COMPLETED_TASKS\n(complet)" as ARCH_COLD
+    folder "sessions/ (001-039)" as SESS_COLD
+  }
+  folder "Y2026-040-???\n(future)" as FUTURE
+}
+
+HOT --&gt; WARM : "Agent remonte\nsi besoin"
+WARM --&gt; COLD : "Jamais automatique\nL'humain y va seul"
+
+note bottom of COLD
+  Règle : COPIE INTÉGRALE
+  Pas de transformation
+  Pas de réindexation
+  Read-only après archivage
+end note
+
+@enduml
+----
+
+The immediate gain is massive: the EAGER context goes from**~5200 lines to ~300 lines**. A division by 17. Without having lost a single line of historical data.
+
+== Why This Is Not a Catch-All
+
+The agent, in its first iteration, feared that`backup/`would become a black box — a folder where files are thrown and never read again. This is a legitimate fear. But it is based on a confusion.
+
+A catch-all is when you throw files**without structure, without convention, without grouping logic**. Here, the backup is structured by period (Y2026-001-039), and each backup folder contains**the same structure**as the`.agents/`active folder: INDEX, SESSIONS_HISTORY, COMPLETED_TASKS_ARCHIVE, sessions/.
+
+This is not a catch-all. It is a**timestamped snapshot**. One could even say it is a simplified versioning mechanism — with the caveat that it doesn't version files individually, but the entire governance packet at time T.
+
+When you want to find old information, you don't need a central index. You have two options:
+
+1. **Targeted `grep`**:`grep -r "zsh" backup/Y2026-001-039/`— and you find everything that mentions zsh in that period, regardless of the angle (INDEX, SESSIONS_HISTORY, session archive).
+2. **Manual reintegration**: you temporarily copy the backup folder into the active context, and you ask the agent to analyze that specific period.
+
+The index is implicit. It is in the very structure of the files — each being already an index from its own angle.
+
+== The Shelving Metaphor
+
+To make the mechanism intuitive, I conceptualized it as three shelves:
+
+* **Shelf 1 (EAGER)**— the workbench. What I need *now*. Recent INDEX, PROMPT_REPRISE, absolute rules. Light, immediate, critical.
+* **Shelf 2 (LAZY)**— the reference library. What I can go look for on demand. Technical references, recent history, procedures. More voluminous, but not loaded into memory.
+* **Basement (backup/)**— the cold archives. Everything that is past but that I don't want to throw away. The agent never enters. The human goes down when they want to distill.
+
+The agent initially proposed a fourth shelf — a`index-backup.adoc`that would be LAZY and contain a table of contents for the entire backup. I refused. That would be one more redundancy in a system already suffering from linear growth. The structure of the archived files is already an index.
+
+== The Two-Trigger Sensor
+
+The conceptualization was solid, but one blind spot remained:**when exactly to trigger the rotation?**The initial article identified this as an open question. Two days later, the answer is codified in the governance files of six projects: a two-trigger sensor.
+
+=== The Automatic Trigger — `N % 10 == 0`
+
+The first trigger is mathematical. When the session number is a multiple of 10 — session 10, 20, 30, 40 — the backup rotation executes automatically within the end-of-session procedure, just after step 6.
+
+Why 10? It is the compromise between two opposing forces: a window too short (5 sessions) loses the context necessary for continuity; a window too long (20 sessions) does not solve the context bloating problem. Ten sessions, at a rate of one to two sessions per day, cover about a week of work — enough for the agent to remember recent decisions, not enough for the context to explode.
+
+=== The Threshold Trigger — 500 EAGER Lines
+
+The second trigger is dynamic. Regardless of the session number, if the cumulative EAGER files exceed**500 lines**, the rotation triggers.
+
+This threshold protects against the scenario where sessions are exceptionally productive — a lot of content written in few sessions. A session producing 120 lines of editorial content makes COMPLETED_TASKS_ARCHIVE grow much faster than a debug session correcting two lines. The 500-line threshold, measured via`wc -l .agents/INDEX.adoc .agents/archives/COMPLETED_TASKS_ARCHIVE_*.adoc PROMPT_REPRISE.adoc`, captures this asymmetry.
+
+=== The Manual Trigger — "rotation backup"
+
+Finally, the human keeps control. The keywords`rotation backup`, `backup rotation` ou `lance la rotation backup`trigger the procedure on demand, regardless of the end of the session. Useful when you feel the context is becoming heavy but you aren't yet at a multiple of 10, or when you want to archive a work phase before starting a new one.
+
+[plantuml, format=svg, id=diag-capteur-trigger, alt="Les trois déclencheurs du capteur de rotation backup — automatique, seuil, manuel"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+
+title Capteur de Rotation Backup — Les Trois Déclencheurs
+
+start
+
+:Procédure de fin de session;
+note right: Mots-clés "fin de session"\nou "on arrête là"
+
+:Étapes 1 à 6\n(archivage standard);
+note right
+  1. Archive sessions/N.adoc
+  2. MAJ PROMPT_REPRISE
+  3. MAJ SESSIONS_HISTORY
+  4. MAJ INDEX.adoc
+  5. MAJ TEST_COVERAGE
+  6. MAJ COMPLETED_TASKS
+end note
+
+if (N % 10 == 0\nOU\nEAGER cumulé &gt; 500 lignes ?) then (oui)
+  :⚙️ Rotation Backup\n(étape 7);
+  note right
+    1. Créer backup/Y20XX-sessions-X-Y/
+    2. Copier intégrale INDEX + HISTORY
+       + COMPLETED_TASKS + sessions/
+    3. Tronquer actifs à 10 sessions
+    4. Ajouter _Localisation active_
+  end note
+else (non)
+  :Pas de rotation;
+endif
+
+:Checklist [✅] x 7\n(si applicable);
+
+stop
+
+@enduml
+----
+
+This diagram shows the exact insertion of the sensor into the end-of-session procedure. Step 7 is optional — it only executes if one of the two conditions is true — but it is systematically *checked*. The final checklist includes`[✅] 7. Backup roté (si applicable)`.
+
+=== The Closed Loop
+
+This sensor closes the loop opened by the previous article. Eager/Lazy governance solved the agent memory problem between two sessions. The Hot/Warm/Cold mechanism solved the problem of growing memory. The two-trigger sensor solves the *when* problem — removing the mental load of monitoring context size from the human.
+
+[plantuml, format=svg, id=diag-boucle-fermee, alt="Les trois couches de la gouvernance agent — Eager/Lazy, Hot/Warm/Cold, Capteur"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title Les Trois Couches de la Gouvernance Agent
+
+left to right direction
+
+package "Couche 1 — Mémoire\n(Article 0108)" as C1 #E8F5E9 {
+  rectangle "**EAGER**\nTableau de bord\nChargé auto" as EAG
+  rectangle "**LAZY**\nManuel propriétaire\nChargé sur demande" as LAZ
+  EAG -[hidden]right-&gt; LAZ
+}
+
+package "Couche 2 — Vieillissement\n(Article 0110)" as C2 #FFF9C4 {
+  rectangle "**HOT**\n10 sessions actives\n~300 lignes" as HOT
+  rectangle "**WARM**\nRéférences\nProcédures" as WRM
+  rectangle "**COLD**\nbackup/\nVague froide" as CLD
+  HOT -[hidden]right-&gt; WRM
+  WRM -[hidden]right-&gt; CLD
+}
+
+package "Couche 3 — Déclencheur\n(Aujourd'hui)" as C3 #BBDEFB {
+  rectangle "**Auto**\nN % 10 == 0" as AUTO
+  rectangle "**Seuil**\n&gt; 500 lignes" as SEUIL
+  rectangle "**Manuel**\nrotation backup" as MAN
+  AUTO -[hidden]right-&gt; SEUIL
+  SEUIL -[hidden]right-&gt; MAN
+}
+
+C1 --&gt; C2 : "La mémoire grandit\n→ il faut un mécanisme\nde vieillissement"
+C2 --&gt; C3 : "Le vieillissement\n→ il faut un déclencheur\npour l'exécuter"
+
+note bottom of C3
+  ✅ Déployé sur 6 projets
+  magic-stick · bakery-gradle
+  plantuml-gradle · cheroliv.com
+  jhipster-gradle-plugins
+  quizz-benchmark-gradle
+end note
+
+@enduml
+----
+
+The three layers stack logically. The first gives the agent a memory. The second prevents this memory from choking the agent. The third automates the maintenance of this memory so the human doesn't have to think about it.
+
+=== Effective Migration on cheroliv.com
+
+The mechanism did not remain theoretical. On`cheroliv.com`, the first backup rotation was executed on April 29, 2026 — sessions -6 to 2 migrated to`.agents/backup/Y2026-sessions-neg6-a-002/`:
+
+|===
+|File |Before rotation |After rotation |Gain |`.agents/INDEX.adoc` |19 sessions listed |10 sessions (3-12) |-9 entries |`.agents/SESSIONS_HISTORY.adoc` |18 sessions |10 sessions |-8 entries |`COMPLETED_TASKS_ARCHIVE` |161 lines (sessions 1-12) |135 lines (sessions 3-12) |-26 lines |`sessions/` |20 files |10 files |-10 files |**backup/** |Non-existent |1 cold wave (10 sessions archived) |+1 cold packet
+|===
+
+The line gain was modest — the project is young, 12 sessions — but the important thing is that the**mechanism is in place**. The next automatic rotation will trigger at session 20, or sooner if 500 EAGER lines are reached.
+
+== The Human-Agent Lesson
+
+This session 048 taught me something fundamental about collaborating with an AI agent.
+
+The agent has a natural bias: it seeks to**optimize**, à **simplify**, à **eliminate redundancies**. This is the bias of a system trained to produce clean and concise responses. Faced with a rich and multidimensional dataset, its first reflex is to reduce it to its simplest expression.
+
+The human, however, has a different intuition: they sense that structured redundancy is an**asset**, not a flaw. That the diversity of angles on the same reality is precisely what will allow high-quality distillation later.
+
+It's not that the agent is wrong. It's that its "optimum" is not mine. The agent optimizes for the**present**— the immediate context, the quick answer to the question asked. The human optimizes for the**future**— the ability to retrieve, cross-reference, and distill in three months or three years.
+
+____ What I want is the raw material. Your reflections, your hesitations, your answers to my questions. Not your synthesis. I know how to synthesize better than you. I want the raw matter. ____
+
+This sentence I said to it at the end of the session summarizes everything. The agent is a production tool. The human is the distillation tool. Governance is not made so the agent understands everything on its own — it is made so the human can, later, work the produced material.
+
+The identical cold wave is the architectural translation of this philosophy: we throw nothing away, we merge nothing, we re-index nothing. We move the packet intact. Distillation will come later, by hand, by the human.
+
+== The Logical Sequel to the Previous Article
+
+If you have readlink:/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[the article on the Eager/Lazy strategy], you will recognize the natural progression:
+
+1. **Article 0108**— Eager/Lazy governance: *how* to structure agent context into two levels of availability
+2. **This article 0110**— The backup mechanism: *how* to age this context without losing it when it becomes too voluminous
+
+The first article answered the question: "The agent remembers nothing between two sessions, how do we give it a memory?"
+
+This one answers the question that inevitably follows the first: "The memory grows every session, how do we prevent it from choking the agent without erasing it?"
+
+The answer lies in one pattern:**Hot/Warm/Cold**, applied to governance files. And in one principle:**never lose anything, always relocate everything**.
+
+== Links
+
+* Previous article:link:/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[Governing an AI Agent with AsciiDoc]
+* My site: https://cheroliv.com
+* The`magic-stick`project: https://github.com/cheroliv/magic-stick
+
+---
+
+*A good governance system never deletes data. It organizes it.*</code></pre>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transforming AsciiDoc into MP4 Video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditing my LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Blows the Global Market Away</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &quot;Independent Plugin + Consumer Root&quot; Architecture: Why My Gradle Builds Are Doubling</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a Recommendation Engine: How I Killed Chronological &quot;Related Articles&quot;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase JS SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+</div>
+</body>
+</html>
