@@ -1,0 +1,1508 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>प्रीलोड करने की कला: जावास्क्रिप्ट और CSS के साथ थीम का &quot;Flash&quot; हटाएँ — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0098_preloading_css_variable_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="प्रीलोड करने की कला: जावास्क्रिप्ट और CSS के साथ थीम का &quot;Flash&quot; हटाएँ — Cheroliv"/>
+        <meta property="og:description" content="थीम चयनकर्ता को ब्लिंक प्रभाव के बिना लागू करने का विस्तृत तकनीकी मार्गदर्शक - ब्राउज़र रेंडरिंग चक्र का पूर्ण विश्लेषण"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0098_preloading_css_variable_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="प्रीलोड करने की कला: जावास्क्रिप्ट और CSS के साथ थीम का &quot;Flash&quot; हटाएँ — Cheroliv"/>
+        <meta name="twitter:description" content="थीम चयनकर्ता को ब्लिंक प्रभाव के बिना लागू करने का विस्तृत तकनीकी मार्गदर्शक - ब्राउज़र रेंडरिंग चक्र का पूर्ण विश्लेषण"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0098_preloading_css_variable_post.png"/>
+        <meta name="description" content="थीम चयनकर्ता को ब्लिंक प्रभाव के बिना लागू करने का विस्तृत तकनीकी मार्गदर्शक - ब्राउज़र रेंडरिंग चक्र का पूर्ण विश्लेषण"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS फ़ीड" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="नेविगेशन टॉगल करें">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">स्वागत</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">विशेषज्ञताएँ</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ब्लॉग</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">संपर्क</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="इंटरफ़ेस थीम चुनें">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">प्रकाश</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>प्रकाश
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>गहरा
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>उच्च कंट्रास्ट
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="भाषा चुनें">
+                        <span class="me-1">🇮🇳</span>
+                        <span class="ms-1">HI</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0098_preloading_css_variable_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0098_preloading_css_variable_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0098_preloading_css_variable_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0098_preloading_css_variable_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0098_preloading_css_variable_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0098_preloading_css_variable_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0098_preloading_css_variable_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0098_preloading_css_variable_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0098_preloading_css_variable_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0098_preloading_css_variable_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0098_preloading_css_variable_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0098_preloading_css_variable_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0098_preloading_css_variable_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0098_preloading_css_variable_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0098_preloading_css_variable_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0098_preloading_css_variable_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0098_preloading_css_variable_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0098_preloading_css_variable_post.html"},
+                      "headline": "\u092A\u094D\u0930\u0940\u0932\u094B\u0921 \u0915\u0930\u0928\u0947 \u0915\u0940 \u0915\u0932\u093E: \u091C\u093E\u0935\u093E\u0938\u094D\u0915\u094D\u0930\u093F\u092A\u094D\u091F \u0914\u0930 CSS \u0915\u0947 \u0938\u093E\u0925 \u0925\u0940\u092E \u0915\u093E \"Flash\" \u0939\u091F\u093E\u090F\u0901",
+                      "description": "\u0925\u0940\u092E \u091A\u092F\u0928\u0915\u0930\u094D\u0924\u093E \u0915\u094B \u092C\u094D\u0932\u093F\u0902\u0915 \u092A\u094D\u0930\u092D\u093E\u0935 \u0915\u0947 \u092C\u093F\u0928\u093E \u0932\u093E\u0917\u0942 \u0915\u0930\u0928\u0947 \u0915\u093E \u0935\u093F\u0938\u094D\u0924\u0943\u0924 \u0924\u0915\u0928\u0940\u0915\u0940 \u092E\u093E\u0930\u094D\u0917\u0926\u0930\u094D\u0936\u0915 - \u092C\u094D\u0930\u093E\u0909\u091C\u093C\u0930 \u0930\u0947\u0902\u0921\u0930\u093F\u0902\u0917 \u091A\u0915\u094D\u0930 \u0915\u093E \u092A\u0942\u0930\u094D\u0923 \u0935\u093F\u0936\u094D\u0932\u0947\u0937\u0923",
+                      "datePublished": "2025-11-15",
+                      "dateModified": "2025-11-15",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0098_preloading_css_variable_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u092A\u094D\u0930\u0940\u0932\u094B\u0921 \u0915\u0930\u0928\u0947 \u0915\u0940 \u0915\u0932\u093E: \u091C\u093E\u0935\u093E\u0938\u094D\u0915\u094D\u0930\u093F\u092A\u094D\u091F \u0914\u0930 CSS \u0915\u0947 \u0938\u093E\u0925 \u0925\u0940\u092E \u0915\u093E \"Flash\" \u0939\u091F\u093E\u090F\u0901", "item": "https:\/\/cheroliv.com\/blog\/2025\/0098_preloading_css_variable_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">प्रीलोड करने की कला: जावास्क्रिप्ट और CSS के साथ थीम का &quot;Flash&quot; हटाएँ</h1>
+                <p class="lead">
+                    <em>Publié le 15 November 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_रिज़्यूमे">रिज़्यूमे</a></li>
+<li><a href="#_समस्या_इस_अभिशप्त_थीम_का_झिलमिलाना">समस्या: इस अभिशप्त थीम का झिलमिलाना</a>
+<ul class="sectlevel2">
+<li><a href="#_उपयोगकर्ता_अनुभव_के_लिए_एक_दुःस्वप्न">उपयोगकर्ता अनुभव के लिए एक दुःस्वप्न</a></li>
+<li><a href="#_फ़ouc_एक_पुराना_वेब_समस्या">फ़OUC : एक पुराना वेब समस्या</a></li>
+<li><a href="#_गुणवत्ता_की_धारणा_पर_प्रभाव">गुणवत्ता की धारणा पर प्रभाव</a></li>
+<li><a href="#_समस्या_का_तकनीकी_विश्लेषण">समस्या का तकनीकी विश्लेषण</a></li>
+</ul>
+</li>
+<li><a href="#_क्लासिक_स्क्रिप्ट_क्यों_पर्याप्त_नहीं_है">क्लासिक स्क्रिप्ट क्यों पर्याप्त नहीं है?</a>
+<ul class="sectlevel2">
+<li><a href="#_अनुभवी_लेकिन_अप्रभावी_दृष्टिकोण">अनुभवी लेकिन अप्रभावी दृष्टिकोण</a></li>
+<li><a href="#_domcontentloaded_इवेंट_को_समझें">DOMContentLoaded इवेंट को समझें</a></li>
+<li><a href="#_रेंडर_ब्लॉकिंग_की_समस्या">रेंडर ब्लॉकिंग की समस्या</a></li>
+<li><a href="#_समस्या_का_दृश्यीकरण">समस्या का दृश्यीकरण</a></li>
+<li><a href="#_असफल_समाधान_प्रयास">असफल समाधान प्रयास</a></li>
+<li><a href="#_वास्तविक_समाधान_जल्दी_कार्य_करें">वास्तविक समाधान : जल्दी कार्य करें</a></li>
+</ul>
+</li>
+<li><a href="#_समाधान_पूर्व_लोडिंग_early_loading">समाधान : पूर्व लोडिंग (Early Loading)</a>
+<ul class="sectlevel2">
+<li><a href="#_मूल_सिद्धांत">मूल सिद्धांत</a></li>
+<li><a href="#_क्यों_head_आदर्श_स्थान_है">क्यों <code>&lt;head&gt;</code> आदर्श स्थान है</a></li>
+<li><a href="#_समाधान_की_तीन_स्तरीय_आर्किटेक्चर">समाधान की तीन-स्तरीय आर्किटेक्चर</a></li>
+</ul>
+</li>
+<li><a href="#_चरण_1_उपयोगकर्ता_की_पसंद_को_सेव_करना">चरण 1 : उपयोगकर्ता की पसंद को सेव करना</a>
+<ul class="sectlevel2">
+<li><a href="#_localstorage_आपकी_स्थायी_स्मृति">localStorage : आपकी स्थायी स्मृति</a></li>
+<li><a href="#_थीम_बैकअप_का_कार्यान्वयन">थीम बैकअप का कार्यान्वयन</a></li>
+<li><a href="#_त्रुटि_मामलों_का_प्रबंधन">त्रुटि मामलों का प्रबंधन</a></li>
+<li><a href="#_अधिक_उन्नत_निरंतरता_रणनीतियाँ">अधिक उन्नत निरंतरता रणनीतियाँ</a></li>
+</ul>
+</li>
+<li><a href="#_चरण_2_प्री_लोडिंग_स्क्रिप्ट_में_head">चरण 2 : प्री-लोडिंग स्क्रिप्ट में `&lt;head&gt;</a>
+<ul class="sectlevel2">
+<li><a href="#_समाधान_का_दिल">समाधान का दिल</a></li>
+<li><a href="#_स्क्रिप्ट_की_अनाटॉमी_हर_पंक्ति_मायने_रखती_है">स्क्रिप्ट की अनाटॉमी : हर पंक्ति मायने रखती है</a></li>
+<li><a href="#_सिस्टम_प्राथमिकता_का_पता_लगाना_बोनस">सिस्टम प्राथमिकता का पता लगाना (बोनस)</a></li>
+<li><a href="#_प्रदर्शन_यह_स्क्रिप्ट_तेज़_क्यों_है">प्रदर्शन : यह स्क्रिप्ट तेज़ क्यों है</a></li>
+<li><a href="#_head_में_इष्टतम_स्थान">&lt;head&gt;` में इष्टतम स्थान</a></li>
+</ul>
+</li>
+<li><a href="#_चरण_3_css_एट्रिब्यूट_सेलेक्टर्स_की_शक्ति">चरण 3 : CSS एट्रिब्यूट सेलेक्टर्स की शक्ति</a>
+<ul class="sectlevel2">
+<li><a href="#_बूटस्ट्रैप_5_थीम_सिस्टम">बूटस्ट्रैप 5 थीम सिस्टम</a></li>
+<li><a href="#_css_संरचना_एक_थीम_सिस्टम_के_लिए">CSS संरचना एक थीम सिस्टम के लिए</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_रिज़्यूमे">रिज़्यूमे</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>इस गहन तकनीकी लेख में, हम देखते हैं कि कैसे पेज लोड होने पर होने वाले कष्टप्रद चमकते प्रभाव के बिना एक थीम (लाइट/डार्क) सेलेक्टर को लागू किया जाए। हम ब्राउज़र रेंडरिंग चक्र का विस्तृत विश्लेषण करते हैं, FOUC (फ़्लैश ऑफ़ 언स्टाइल्ड कंटेंट) के मूल कारणों की पहचान करते हैं, और सिंक्रोनस प्री-लोडिंग पर आधारित एक मज़बूत समाधान प्रस्तुत करते हैं।<code>&lt;head&gt;</code>। यह तकनीक एक सुचारू और पेशेवर उपयोगकर्ता अनुभव सुनिश्चित करती है।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_समस्या_इस_अभिशप्त_थीम_का_झिलमिलाना">समस्या: इस अभिशप्त थीम का झिलमिलाना</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_उपयोगकर्ता_अनुभव_के_लिए_एक_दुःस्वप्न">उपयोगकर्ता अनुभव के लिए एक दुःस्वप्न</h3>
+<div class="paragraph">
+<p>कल्पना कीजिए कि आपने अपने वेब एप्लिकेशन के लिए एक सुंदर डार्क थीम बनाने में घंटों बिता दिए हैं। रंग पूरी तरह संतुलित हैं, विपरीतता अनुकूल है, और आपके उपयोगकर्ता इस विकल्प से प्यार करते हैं। लेकिन एक शर्मिंदगी भरी समस्या है: हर बार पेज रीलोड होने पर, एक क्षण के लिए डिफ़ॉल्ट लाइट थीम दिखाई देती है, इससे पहले कि डार्क थीम सक्रिय हो।</p>
+</div>
+<div class="paragraph">
+<p>यह "फ़्लैश" दृश्य, यद्यपि संक्षिप्त (कभी‑कभी 100ms से कम), मानव आंख द्वारा तुरंत अनुभव किया जाता है और एक असहज अनुभव उत्पन्न करता है। उन उपयोगकर्ताओं के लिए जो दृष्टि सुविधा या पहुँच के कारण डार्क थीम चुनते हैं, यह झिलमिलाहट दर्दनाक भी हो सकती है, विशेष रूप से कम रोशनी वाले वातावरण में।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_फ़ouc_एक_पुराना_वेब_समस्या">फ़OUC : एक पुराना वेब समस्या</h3>
+<div class="paragraph">
+<p>यह घटना वह चीज की एक विविधता है जिसको 'फ़्लैश ऑफ़ अनस्टाइल्ड कंटेंट' (FOUC) कहा जाता है, जो वेब विकास की एक क्लासिक समस्या है जो सीएसएस के प्रारंभिक दिनों तक वापस जाती है। FOUC तब होता है जब ब्राउज़र अस्थायी रूप से CSS शैलियों के बिना HTML सामग्री प्रदर्शित करता है, जिससे अनस्टाइल्ड सामग्री का फ़्लैश बनता है।</p>
+</div>
+<div class="paragraph">
+<p>हमारे विशिष्ट मामले में, हम पूरी तरह से अनस्टाइल्ड सामग्री के बारे में बात नहीं कर रहे हैं, बल्कि एक के बारे में हैं<strong>गलत थीम का फ्लैश</strong>(FOWT) - सामग्री स्टाइल की गई है, लेकिन गलत थीम के साथ। यह विशेष रूप से निराशाजनक है क्योंकि यह दर्शाता है कि हमारा एप्लिकेशन "भूल" जाती है कि उपयोगकर्ता की प्राथमिकता प्रत्येक पृष्ठ लोड पर।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_गुणवत्ता_की_धारणा_पर_प्रभाव">गुणवत्ता की धारणा पर प्रभाव</h3>
+<div class="paragraph">
+<p>यह समस्या, हालांकि तकनीकी है, आपके अनुप्रयोग की गुणवत्ता की धारणा पर महत्वपूर्ण प्रभाव डालती है:</p>
+</div>
+<div class="paragraph">
+<p><strong>पॉलिश की कमी</strong>: झिलमिलाहट से ऐसा प्रतीत होता है कि एप्लिकेशन अपूर्ण है या अनुकूलित नहीं की गई है। उपयोगकर्ता अक्सर इन छोटे दृश्य दोषों को समग्र रूप से पेशेवरता की कमी से जोड़ते हैं।</p>
+</div>
+<div class="paragraph">
+<p><strong>संगतता का भंग</strong>: एप्लिकेशन प्रतीत होता है कि वह उपयोगकर्ता की प्राथमिकताओं को "भूल" रही है, जिससे इंटरफ़ेस और अपेक्षाओं के बीच असंतुलन की भावना उत्पन्न होती है।</p>
+</div>
+<div class="paragraph">
+<p><strong>आँखों की थकान</strong>: रोशनी के प्रति संवेदनशील उपयोगकर्ताओं या माइग्रेन से पीड़ित लोगों के लिए, यह रोशनी भरी फ़्लैश सिर्फ़ एक साधारण सौंदर्य संबंधित असुविधा से अधिक हो सकता है।</p>
+</div>
+<div class="paragraph">
+<p><strong>अनुभूत प्रदर्शन</strong>: विडंबना यह है कि, भले ही आपकी साइट तेज़ी से लोड हो, इस ब्लिंकिंग से ऐसा प्रतीत हो सकता है कि एप्लिकेशन धीमी या अप्रतिक्रियाशील है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_समस्या_का_तकनीकी_विश्लेषण">समस्या का तकनीकी विश्लेषण</h3>
+<div class="paragraph">
+<p>समस्या को हल करने के तरीके को समझने के लिए, सबसे पहले यह समझना होगा कि यह क्यों होता है। झिलमिलाहट एक वेब पृष्ठ के जीवन चक्र में तीन महत्वपूर्ण घटनाओं के बीच समय में अंतराल के कारण होती है:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>HTML का प्रारम्भिक पर्सिंग</strong>ब्राउज़र आपके पेज की संरचना को पढ़ता और विश्लेषण करता है</p>
+</li>
+<li>
+<p><strong>सीएसएस शैलियों का अनुप्रयोग</strong>ब्राउज़र CSS नियम लागू करता है और दृश्य प्रस्तुति की गणना करता है</p>
+</li>
+<li>
+<p><strong>जावास्क्रिप्ट का निष्पादन</strong>: आपका कोड जो थीम बदलता है चल रहा है</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>समस्या तब होती है जब घटना क्रमांक 3 (JavaScript का निष्पादन) ब्राउज़र द्वारा पहले से ही शुरू किए गए या समाप्त किए गए घटना क्रमांक 2 (स्टाइलिंग लागू करने की प्रक्रिया) के बाद होती है। उस समय, ब्राउज़र पहले से ही यह निर्णय ले चुका होता है कि कौन सी थीम दिखाएँ, और आपका कोड पहले रेंडर से पहले इसे प्रभावित करने के लिए बहुत देर से आता है।</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_क्लासिक_स्क्रिप्ट_क्यों_पर्याप्त_नहीं_है">क्लासिक स्क्रिप्ट क्यों पर्याप्त नहीं है?</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_अनुभवी_लेकिन_अप्रभावी_दृष्टिकोण">अनुभवी लेकिन अप्रभावी दृष्टिकोण</h3>
+<div class="paragraph">
+<p>एक डेवलपर के लिए सबसे प्राकृतिक दृष्टिकोण यह होगा कि हम हमारे के अंत में एक स्क्रिप्ट रखें`&lt;body&gt;`जो उपयोगकर्ता के पसंदीदा विषय की जाँच करता है और उसे लागू करता है। यह दृष्टिकोण वेब की पारंपरिक सर्वोत्तम प्रथाओं का पालन करता है, जो पेज के अंत में स्क्रिप्ट लोड करने की सिफारिश करते हैं ताकि रेंडरिंग को ब्लॉक न किया जाए।</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">// À la fin de &lt;body&gt; - L'APPROCHE INSUFFISANTE
+document.addEventListener('DOMContentLoaded', () =&gt; {
+  const theme = localStorage.getItem('preferred-theme');
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+  }
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह दृष्टिकोण पहली नज़र में तर्कसंगत लगता है। हम DOM के तैयार होने का इंतज़ार करते हैं, फिर हम थीम लागू करते हैं। सरल, नहीं? दुर्भाग्य से, इस सरलता में ब्राउज़र के रेंडरिंग चक्र के टाइमिंग से संबंधित एक मौलिक दोष छिपा हुआ है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_domcontentloaded_इवेंट_को_समझें">DOMContentLoaded इवेंट को समझें</h3>
+<div class="paragraph">
+<p>घटना`DOMContentLoaded`यह तब ट्रिगर होता है जब प्रारंभिक HTML दस्तावेज़ पूरी तरह से लोड हो गया हो और ब्राउज़र द्वारा पार्स किया गया हो,<strong>इंतज़ार किए बिना</strong>स्टाइल शीट्स, इमेज और सब-फ़्रेम्स के लोडिंग का अंत। यह समझने के लिए एक महत्वपूर्ण बिंदु है।</p>
+</div>
+<div class="paragraph">
+<p>यहाँ घटनाओं का सामान्य अनुक्रम है :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>ब्राउज़र HTML डाउनलोड करना शुरू करता है</p>
+</li>
+<li>
+<p>यह HTML का विश्लेषण करता है जैसे ही इसे प्राप्त होता है</p>
+</li>
+<li>
+<p>वह टैग खोजता है`&lt;link&gt;`CSS के लिए और उन्हें डाउनलोड करना शुरू करें</p>
+</li>
+<li>
+<p>वह टैग खोजता है`&lt;script&gt;`और उन्हें निष्पादित करता है (उनके प्रकार और विशेषताओं के अनुसार)</p>
+</li>
+<li>
+<p>वह DOM (Document Object Model) बनाता है</p>
+</li>
+<li>
+<p><strong>घटना <code>DOMContentLoaded</code> ट्रिगर होती है</strong></p>
+</li>
+<li>
+<p>वह शैलियों को लागू करना जारी रखता है और लेआउट बनाता है</p>
+</li>
+<li>
+<p>पहला पेंट (प्रदर्शन) होता है</p>
+</li>
+<li>
+<p>घटना`load`जब सभी संसाधन लोड हो जाते हैं, तब यह ट्रिगर होता है</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>समस्या ? के बीच चरण 6 (DOMContentLoaded) और चरण 8 (premier paint), ब्राउज़र ने पहले ही निर्णय ले लिए हैं कि पेज को कैसे दिखाना है। यदि आपके थीम बदलने वाला स्क्रिप्ट चरण 6 पर चलता है, यह पहले ही बहुत देर हो चुकी है डिफ़ॉल्ट स्टाइल के साथ पहले प्रदर्शन से बचने के लिए।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_रेंडर_ब्लॉकिंग_की_समस्या">रेंडर ब्लॉकिंग की समस्या</h3>
+<div class="paragraph">
+<p>वास्तव में, टाइमिंग और भी जटिल है। आधुनिक ब्राउज़र अनुभव की गई प्रदर्शन को बेहतर बनाने के लिए परिष्कृत अनुकूलन तकनीकों का उपयोग करते हैं। वे उपयोगकर्ता को स्क्रीन पर कुछ दिखाने के लिए पहले पेंट (First Contentful Paint) को जितना संभव हो सके जल्दी करने की कोशिश करते हैं।</p>
+</div>
+<div class="paragraph">
+<p>CSS डिफ़ॉल्ट रूप से "render-blocking" होते हैं, जिसका अर्थ है कि ब्राउज़र पहला पेंट करने से पहले स्टाइलशीट डाउनलोड और पार्स करने की प्रतीक्षा करता है। यह तर्कसंगत है: हम असामयिक सामग्री प्रदर्शित नहीं करना चाहते।</p>
+</div>
+<div class="paragraph">
+<p>लेकिन यहाँ जाल है : जब ब्राउज़र इन CSS स्टाइल को पहली बार लागू करता है, तो वह वर्तमान DOM स्थिति के आधार पर ऐसा करता है। यदि विशेषता`data-bs-theme`अभी तक टैग पर परिभाषित नहीं है`&lt;html&gt;`, ब्राउज़र डिफ़ॉल्ट स्टाइल लागू करेगा (सामान्यतः हल्का थीम).</p>
+</div>
+<div class="paragraph">
+<p>फिर, जब आपका स्क्रिप्ट चलता है और इस विशेषता को बदलता है, ब्राउज़र को करना चाहिए :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>इस बदलाव से प्रभावित सभी शैलियों की गणना फिर से करें</p>
+</li>
+<li>
+<p>यदि आवश्यक हो तो लेआउट फिर से तैयार करें</p>
+</li>
+<li>
+<p>प्रभावित तत्वों को फिर से रंगें</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>यह पुनःगणना और फिर से चित्रण की प्रक्रिया है जो दृश्यमान चमक का कारण बनती है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_समस्या_का_दृश्यीकरण">समस्या का दृश्यीकरण</h3>
+<div class="paragraph">
+<p>इस समस्याग्रस्त अनुक्रम को बेहतर ढंग से समझने के लिए, एक विस्तृत अनुक्रम आरेख की जाँच करते हैं:</p>
+</div>
+<div id="diag-flux-incorrect" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-deed73a8dfdc5320a576263eb3e8285f.svg" alt="Diagramme de séquence du chargement incorrect" width="1595" height="666">
+</div>
+</div>
+<div class="paragraph">
+<p>यह आरेख स्पष्ट रूप से समस्या को दर्शाता है: पहला paint तब होता है जब हमारा स्क्रिप्ट सही विषय सेट करने का अवसर प्राप्त नहीं कर पाता। अनुक्रमिक repaint दृश्यमान झिलमिलाहट उत्पन्न करता है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_असफल_समाधान_प्रयास">असफल समाधान प्रयास</h3>
+<div class="paragraph">
+<p>कई दृष्टिकोण इस समस्या को हल करने के प्रयास में अपनाए गए थे, लेकिन अधिकांश में अपने स्वयं के नुकसान हैं :</p>
+</div>
+<div class="paragraph">
+<p><strong>पद्धति 1 : लोड होने तक सामग्री को छिपाएँ</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-css" data-lang="css">body {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+body.loaded {
+  opacity: 1;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह दृष्टिकोण तब तक सभी सामग्री को कैश करता है जब तक JavaScript सही विषय सेट नहीं कर देता। समस्या? यह कृत्रिम रूप से सामग्री के प्रदर्शन को देरी देता है, जिससे साइट धीमी लगती है। इसके अलावा, यदि JavaScript अक्षम है, तो उपयोगकर्ता कुछ भी नहीं देखता!</p>
+</div>
+<div class="paragraph">
+<p><strong>दृष्टिकोण 2 : एक लोडर/स्पिनर का उपयोग करें</strong></p>
+</div>
+<div class="paragraph">
+<p>प्रवेश 1 के समान, लेकिन एक लोडिंग स्पिनर के साथ। यह समस्या को छिपाता है लेकिन वास्तविक प्रदर्शन में सुधार नहीं करता और अनावश्यक अनुभवित देरी जोड़ता है।</p>
+</div>
+<div class="paragraph">
+<p><strong>पद्धति 3: डिफ़ॉल्ट रूप से डार्क थीम</strong></p>
+</div>
+<div class="paragraph">
+<p>कुछ डेवलपर्स CSS में डार्क थीम को डिफ़ॉल्ट के रूप में सेट करते हैं। यह डार्क थीम उपयोगकर्ताओं के लिए फ्लिकरिंग को रोकता है, लेकिन हल्की थीम उपयोगकर्ताओं के लिए विपरीत समस्या पैदा करता है !</p>
+</div>
+<div class="paragraph">
+<p>इनमें से कोई भी दृष्टिकोण संतोषजनक नहीं है, क्योंकि वे समस्या के लक्षण का इलाज करते हैं, जड़ कारण का नहीं।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_वास्तविक_समाधान_जल्दी_कार्य_करें">वास्तविक समाधान : जल्दी कार्य करें</h3>
+<div class="paragraph">
+<p>इस समस्या को हल करने की कुंजी यह समझना है कि हमें उस एट्रिब्यूट को परिभाषित करना होगा।<code>data-bs-theme</code> <strong>पहले</strong>कि ब्राउज़र CSS स्टाइल लगाना शुरू नहीं करता। इसका अर्थ है कि हमारा स्क्रिप्ट पृष्ठ के जीवन चक्र में पहले चलना चाहिए, और यही वह बात है जिसका हम अगले खंड में अन्वेषण करेंगे।</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_समाधान_पूर्व_लोडिंग_early_loading">समाधान : पूर्व लोडिंग (Early Loading)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_मूल_सिद्धांत">मूल सिद्धांत</h3>
+<div class="paragraph">
+<p>हमारी झिलमिलाहट समस्या का सुंदर समाधान एक सरल लेकिन शक्तिशाली सिद्धांत पर आधारित है:<strong>ब्राउज़र रेंडरिंग प्रक्रिया के साथ एप्लिकेशन की स्थिति को सिंक्रोनाइज़ करना</strong>. पेज लोड होने का इंतज़ार करने के बजाय, हमें थीम सेट कर देना चाहिए<strong>के दौरान</strong>लोड हो रहा है, इससे पहले भी कि CSS शैलियाँ लागू हो जाएँ।</p>
+</div>
+<div class="paragraph">
+<p>यह दृष्टिकोण "Early Loading" या "Synchronous Preloading" वेब विकास के शब्दजाल में कहा जाता है। इस विचार का उद्देश्य हमारे थीम डिटेक्शन लॉजिक को पृष्ठ के जीवन चक्र में हो सकने वाले सबसे पहले चरण में निष्पादित करना है, आदर्श रूप से टैग में।<code>&lt;head&gt;</code>, भले ही ब्राउज़र CSS फ़ाइलों को डाउनलोड करना शुरू न करे.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_क्यों_head_आदर्श_स्थान_है">क्यों <code>&lt;head&gt;</code> आदर्श स्थान है</h3>
+<div class="paragraph">
+<p>Le `&lt;head&gt;`एक HTML दस्तावेज़ को ब्राउज़र द्वारा क्रमिक रूप से ऊपर से नीचे तक प्रसंस्कृत किया जाता है। प्रत्येक तत्व उस क्रम में प्रसंस्कृत किया जाता है जिसमें वह दिखाई देता है। यह विशेषता हमारे समाधान के लिए अत्यंत महत्वपूर्ण है।</p>
+</div>
+<div class="paragraph">
+<p>जब ब्राउज़र एक टैग से मिलता है`&lt;script&gt;`में`&lt;head&gt;` sans les attributs <code>async</code> ou <code>defer</code>, il :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>HTML का पर्सिंग रोकें</strong></p>
+</li>
+<li>
+<p><strong>स्क्रिप्ट डाउनलोड करें</strong>(यदि बाह्य) या बिस्तर (यदि इनलाइन)</p>
+</li>
+<li>
+<p><strong>स्क्रिप्ट को तुरंत निष्पादित करें</strong></p>
+</li>
+<li>
+<p><strong>HTML का पार्सिंग फिर से शुरू करें</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>यह व्यवहार, अक्सर प्रदर्शन समस्या माना जाता है (जिस कारण से सामान्य सिफ़ारिश पेज के अंत में स्क्रिप्ट रखने की होती है), इस विशेष स्थिति में हमारा सहयोगी बन जाता है। अपना थीम डिटेक्शन स्क्रिप्ट पृष्ठ के शुरू में रखकर`&lt;head&gt;`, हम गारंटी देते हैं कि यह ब्राउज़र टैग्स से मिलने से पहले चलता है`&lt;link&gt;`हमारे स्टाइल शीट्स के.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_समाधान_की_तीन_स्तरीय_आर्किटेक्चर">समाधान की तीन-स्तरीय आर्किटेक्चर</h3>
+<div class="paragraph">
+<p>हमारा पूर्ण समाधान तीन परस्पर निर्भर परतों से बना है, प्रत्येक एक विशिष्ट भूमिका निभाती है :</p>
+</div>
+<div class="paragraph">
+<p><strong>परत 1 : स्थायित्व (localStorage)</strong> यह परत उपयोगकर्ता के चयन को सत्रों के बीच संग्रहीत और पुनः प्राप्त करने के लिए जिम्मेदार है।</p>
+</div>
+<div class="paragraph">
+<p><strong>लेयर 2: प्रारंभिक सिंक्रोनाइज़ेशन (इनलाइन स्क्रिप्ट <code>&lt;head&gt;</code> में)</strong> यह लेयर प्रारंभिक रेंडरिंग से पहले एप्लिकेशन की स्थिति को DOM के साथ सिंक्रनाइज़ करती है।</p>
+</div>
+<div class="paragraph">
+<p><strong>लेयर 3: रिएक्टिव स्टाइल (CSS एट्रिब्यूट चयनकर्ता के साथ)</strong> यह लेयर लेयर 2 द्वारा परिभाषित स्थिति के आधार पर दृश्य शैलियों को परिभाषित करती है।</p>
+</div>
+<div class="paragraph">
+<p>अब हम प्रत्येक परत का विस्तृत अन्वेषण करते हैं।</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_चरण_1_उपयोगकर्ता_की_पसंद_को_सेव_करना">चरण 1 : उपयोगकर्ता की पसंद को सेव करना</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_localstorage_आपकी_स्थायी_स्मृति">localStorage : आपकी स्थायी स्मृति</h3>
+<div class="paragraph">
+<p>Le <code>localStorage`यह एक Web Storage API है जो ब्राउज़र में लगातार आधार पर कुंजी‑मूल्य युग्मों को संग्रहीत करने की अनुमति देती है। कुकीज़ के विपरीत, डेटा`localStorage</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>इन्हें कभी भी सर्वर पर स्वचालित रूप से नहीं भेजा जाता</p>
+</li>
+<li>
+<p>उनके पास अधिक स्टोरेज क्षमता होती है (आमतौर पर 5-10 एमबी)</p>
+</li>
+<li>
+<p>उनकी समाप्ति तिथि नहीं होती (स्पष्ट रूप से हटाने तक निरंतर)</p>
+</li>
+<li>
+<p>इनका सीमित प्रोटोकॉल और डोमेन (Same-Origin Policy) तक सीमित है</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>हमारे उपयोग केस के लिए`localStorage`यह सही है क्योंकि :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>हमें इस जानकारी को सर्वर के साथ साझा करने की आवश्यकता नहीं है।</p>
+</li>
+<li>
+<p>हम चाहते हैं कि प्राथमिकता अनिश्चितकाल तक बनी रहे</p>
+</li>
+<li>
+<p>आवश्यक भंडारण आकार न्यूनतम है (कुछ बाइट्स)</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_थीम_बैकअप_का_कार्यान्वयन">थीम बैकअप का कार्यान्वयन</h3>
+<div class="paragraph">
+<p>यहाँ बताया गया है कि हम उपयोगकर्ता के विकल्प को कैसे सहेजते हैं जब वह थीम बदलता है :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">// Fonction complète pour changer le thème
+function setTheme(newTheme) {
+  // Validation de l'entrée
+  if (!['light', 'dark', 'auto'].includes(newTheme)) {
+    console.error('Thème invalide:', newTheme);
+    return;
+  }
+
+  try {
+    // Sauvegarde dans localStorage
+    localStorage.setItem('preferred-theme', newTheme);
+
+    // Application immédiate dans le DOM
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+    // Dispatch d'un événement personnalisé pour notifier d'autres composants
+    window.dispatchEvent(new CustomEvent('theme-changed', {
+      detail: { theme: newTheme }
+    }));
+
+    console.log('Thème changé:', newTheme);
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du thème:', error);
+    // Fallback : on applique quand même le thème visuellement
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+  }
+}
+
+// Exemple d'utilisation avec un bouton
+document.getElementById('theme-toggle').addEventListener('click', () =&gt; {
+  const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  setTheme(newTheme);
+});</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_त्रुटि_मामलों_का_प्रबंधन">त्रुटि मामलों का प्रबंधन</h3>
+<div class="paragraph">
+<p>यह महत्वपूर्ण है कि मामलों को प्रबंधित किया जाए जहाँ वह`localStorage`उपलब्ध या सुलभ नहीं है। कई परिदृश्य एक्सेस को रोक सकते हैं`localStorage`:</p>
+</div>
+<div class="paragraph">
+<p><strong>सख्त निजी नेविगेशन</strong>सफ़ारी निजी ब्राउज़िंग मोड में एक अपवाद फेंकता है`QuotaExceededError`लिखने के प्रयासों के दौरान में`localStorage`.</p>
+</div>
+<div class="paragraph">
+<p><strong>गोपनीयता सेटिंग्स</strong>: कुछ ब्राउज़र या गोपनीयता एक्सटेंशन एक्सेस को ब्लॉक कर सकते हैं`localStorage`.</p>
+</div>
+<div class="paragraph">
+<p><strong>डोमेन की सीमाएँ</strong> : Le `localStorage`यह प्रोटोकॉल पर सुलभ नहीं है`file://`कुछ ब्राउज़र में।</p>
+</div>
+<div class="paragraph">
+<p><strong>भंडारण स्थान भर गया</strong>हालांकि दुर्लभ, भंडारण स्थान पूरी तरह से भर सकता है।</p>
+</div>
+<div class="paragraph">
+<p>इसलिए हमारा कोड एक ब्लॉक का उपयोग करता है`try&#8230;&#8203;catch`इन स्थितियों को शालीनता से संभालने के लिए, भले ही स्थायित्व उपलब्ध न हो, थीम बदलने की सुविधा प्रदान करना जारी रखें।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_अधिक_उन्नत_निरंतरता_रणनीतियाँ">अधिक उन्नत निरंतरता रणनीतियाँ</h3>
+<div class="paragraph">
+<p>अधिक जटिल अनुप्रयोगों के लिए, आप अतिरिक्त रणनीतियों पर विचार कर सकते हैं :</p>
+</div>
+<div class="paragraph">
+<p><strong>सर्वर सिंक्रोनाइज़ेशन (वैकल्पिक)</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">async function setTheme(newTheme) {
+  // Sauvegarde locale immédiate
+  localStorage.setItem('preferred-theme', newTheme);
+  document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+  // Synchronisation serveur en arrière-plan (si l'utilisateur est connecté)
+  if (userIsAuthenticated()) {
+    try {
+      await fetch('/api/user/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme })
+      });
+    } catch (error) {
+      console.warn('Échec de la synchronisation serveur:', error);
+      // L'échec n'est pas critique car la préférence est déjà sauvegardée localement
+    }
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह दृष्टिकोण लॉग इन उपयोगकर्ताओं के लिए उपकरणों के बीच प्राथमिकताओं को सिंक्रनाइज़ करने की अनुमति देता है, जबकि तत्काल स्थानीय प्रतिक्रिया बनाए रखता है।</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_चरण_2_प्री_लोडिंग_स्क्रिप्ट_में_head">चरण 2 : प्री-लोडिंग स्क्रिप्ट में `&lt;head&gt;</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_समाधान_का_दिल">समाधान का दिल</h3>
+<div class="paragraph">
+<p>यहाँ वास्तव में जादू होता है। हम एक छोटा स्क्रिप्ट लगाएँगे।<strong>इनलाइन</strong>हमारे में सीधे`&lt;head&gt;`, सभी हमारे टैग से पहले`&lt;link&gt;`शैली शीट्स की. यह स्क्रिप्ट जानबूझकर न्यूनतम, स्वतंत्र, और सबसे तेज़ तरीके से चलाने के लिए डिज़ाइन किया गया है।</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Mon Site Incroyable&lt;/title&gt;
+
+    &lt;!-- ==========================================
+         NOTRE SCRIPT MAGIQUE DE PRÉ-CHARGEMENT
+         Ce script DOIT être le premier élément
+         dans le &lt;head&gt; après les meta tags
+         ========================================== --&gt;
+    &lt;script&gt;
+      // IIFE pour ne pas polluer le scope global
+      (function() {
+        'use strict';
+
+        try {
+          // Lecture de la préférence sauvegardée
+          const savedTheme = localStorage.getItem('preferred-theme');
+
+          // Si une préférence existe, on l'applique immédiatement
+          if (savedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+          }
+          // Optionnel : Détecter la préférence système si aucune sauvegarde
+          else if (window.matchMedia &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+          }
+          // Sinon, le thème par défaut du CSS sera utilisé (généralement 'light')
+
+        } catch (error) {
+          // En cas d'erreur (localStorage bloqué, etc.), on log discrètement
+          // et on laisse le thème par défaut s'appliquer
+          console.warn('Impossible de charger la préférence de thème:', error);
+        }
+      })();
+    &lt;/script&gt;
+    &lt;!-- FIN DU SCRIPT MAGIQUE --&gt;
+
+    &lt;!-- Les feuilles de style sont chargées APRÈS le script --&gt;
+    &lt;link rel="stylesheet" href="css/bootstrap.min.css"&gt;
+    &lt;link rel="stylesheet" href="css/styles.css"&gt;
+
+    &lt;!-- Autres ressources du head --&gt;
+    &lt;link rel="icon" href="favicon.ico"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Contenu de la page --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_स्क्रिप्ट_की_अनाटॉमी_हर_पंक्ति_मायने_रखती_है">स्क्रिप्ट की अनाटॉमी : हर पंक्ति मायने रखती है</h3>
+<div class="paragraph">
+<p>इस स्क्रिप्ट को प्रत्येक पंक्ति में तोड़कर समझते हैं कि प्रत्येक डिज़ाइन निर्णय क्यों लिया गया :</p>
+</div>
+<div class="paragraph">
+<p><strong>IIFE (तुरंत बुलाया गया फ़ंक्शन अभिव्यक्ति)</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">(function() {
+  // ...
+})();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह संरचना एक फ़ंक्शन बनाती है जो तुरंत निष्पादित होती है। क्यों? ताकि हम अपने चर को एक स्थानीय स्कोप में अलग कर सकें और वैश्विक स्कोप को प्रदूषित होने से बचा सकें। भले ही हम केवल उपयोग करें`const`(जिसका ब्लॉक स्कोप होता है), IIFE एक अच्छी प्रथा है जो हमारे इरादों को स्पष्ट करती है और संभावित नाम संघर्षों से बचाती है।</p>
+</div>
+<div class="paragraph">
+<p><strong>कड़ा मोड</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">'use strict';</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह निर्देश जावास्क्रिप्ट के कड़ाई मोड को सक्रिय करता है, जो : - अघोषित चर के उपयोग को प्रतिबंधित करता है - Génère des erreurs pour les opérations dangereuses कुछ जावास्क्रिप्ट इंजनों में प्रदर्शन में सुधार लाता है</p>
+</div>
+<div class="paragraph">
+<p>इस तरह के गंभीर स्क्रिप्ट के लिए, हम अधिकतम सुरक्षा चाहते हैं।</p>
+</div>
+<div class="paragraph">
+<p><strong>ब्लॉक try&#8230;&#8203;catch</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">try {
+  // Code principal
+} catch (error) {
+  console.warn('Impossible de charger la préférence de thème:', error);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह ब्लॉक अत्यंत महत्वपूर्ण है। यह सुनिश्चित करता है कि यदि कुछ गलत हो जाता है (localStorage ब्लॉक, असंभाव्य सिंटैक्स त्रुटि, आदि.), तो हमारा स्क्रिप्ट पूरी पृष्ठ लोड को अवरुद्ध नहीं करेगा। का उपयोग`console.warn`इसके बजाय`console.error`इंगित करता है कि यह एक गंभीर समस्या नहीं है।</p>
+</div>
+<div class="paragraph">
+<p><strong>localStorage की पढ़ाई</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">const savedTheme = localStorage.getItem('preferred-theme');</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह पंक्ति कुछ संदर्भों में (सफारी की सख्त निज़ी नेविगेशन) में एक अपवाद उठा सकती है। इसलिए यह एक try&#8230;&#8203;catch ब्लॉक में है।</p>
+</div>
+<div class="paragraph">
+<p><strong>शर्ती आवेदन</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">if (savedTheme) {
+  document.documentElement.setAttribute('data-bs-theme', savedTheme);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>हम केवल तभी थीम लागू करते हैं जब हमें एक संग्रहीत थीम मिली हो। अन्यथा, हम CSS को अपने डिफ़ॉल्ट थीम का उपयोग करने देते हैं। यह दृष्टिकोण जावास्क्रिप्ट में हार्ड-कोडेड डिफ़ॉल्ट मान की तुलना में अधिक मजबूत है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_सिस्टम_प्राथमिकता_का_पता_लगाना_बोनस">सिस्टम प्राथमिकता का पता लगाना (बोनस)</h3>
+<div class="paragraph">
+<p>एक वैकल्पिक लेकिन शालीन सुधार यह है कि यदि उपयोगकर्ता आपके एप्लिकेशन में अभी तक स्पष्ट विकल्प नहीं चुना है, तो ऑपरेटिंग सिस्टम की थीम प्राथमिकता का पता लगाया जाता है :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">else if (window.matchMedia &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-bs-theme', 'dark');
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह सुविधा मीडिया क्वेरी का उपयोग करती है`prefers-color-scheme`सिस्टम को पूछने के लिए। macOS, Windows 10+, iOS, और आधुनिक Android पर, यह प्रश्न उपयोगकर्ता की सिस्टम प्राथमिकता लौटाता है।</p>
+</div>
+<div class="paragraph">
+<p><strong>फ़ायदे :</strong> - व्यक्तिगत अनुभव पहली यात्रा से - संगतता के साथ उपयोगकर्ता का प्रणाली पर्यावरण - पहली यात्रा के लिए कोई भंडारण आवश्यक नहीं</p>
+</div>
+<div class="paragraph">
+<p><strong>विचार :</strong> सभी ब्राउज़र इस सुविधा का समर्थन नहीं करते हैं (लेकिन 2020 से समर्थन उत्कृष्ट रहा है) - सत्यापन`window.matchMedia`संगतता सुनिश्चित करता है - उपयोगकर्ता हमेशा इस विकल्प को ओवरराइड कर सकता है</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_प्रदर्शन_यह_स्क्रिप्ट_तेज़_क्यों_है">प्रदर्शन : यह स्क्रिप्ट तेज़ क्यों है</h3>
+<div class="paragraph">
+<p>हमारा प्री-लोड स्क्रिप्ट बेहद तेज़ होने के लिए डिज़ाइन किया गया है :</p>
+</div>
+<div class="paragraph">
+<p><strong>न्यूनतम आकार</strong>लगभग 300 बाइट्स अनमिनिफ़ाइड, 200 बाइट्स मिनिफ़ाइड। यह किसी भी इमेज या जावास्क्रिप्ट लाइब्रेरी की तुलना में नगण्य है।</p>
+</div>
+<div class="paragraph">
+<p><strong>इनलाइन</strong>को अतिरिक्त HTTP अनुरोध नहीं है। स्क्रिप्ट HTML में है, इसलिए यह तुरंत उपलब्ध है।</p>
+</div>
+<div class="paragraph">
+<p><strong>सादे समकालिक संचालन</strong>localStorage में एक कुंजी पढ़ना (अत्यंत तेज़ संचालन) और DOM विशेषता संशोधन (ब्राउज़र का मूल संचालन).</p>
+</div>
+<div class="paragraph">
+<p><strong>कोई निर्भरता नहीं</strong>: कोई फ्रेमवर्क नहीं, कोई लाइब्रेरी नहीं, केवल वैनिला JavaScript। कोई स्टार्टअप समय नहीं, कोई डिपेंडेंसी पार्सिंग नहीं।</p>
+</div>
+<div class="paragraph">
+<p><strong>एकल निष्पादन</strong>यह स्क्रिप्ट लोड होने पर केवल एक बार चलती है। कोई इवेंट लिस्नर नहीं, कोई लूप नहीं, कोई जटिल गणना नहीं।</p>
+</div>
+<div class="paragraph">
+<p>व्यावहारिक रूप से, आधुनिक हार्डवेयर पर, यह स्क्रिप्ट 1 मिलीसेकंड से कम समय में चलती है – एक अवलगनीय समय जो पृष्ठ लोड होने के प्रदर्शन पर कोई प्रभाव नहीं डालता।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_head_में_इष्टतम_स्थान">&lt;head&gt;` में इष्टतम स्थान</h3>
+<div class="paragraph">
+<p>तत्वों का क्रम में`&lt;head&gt;`est important. Voici l&#8217;ordre recommandé :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;head&gt;
+    &lt;!-- 1. Métadonnées critiques --&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+
+    &lt;!-- 2. Notre script de pré-chargement (IMMÉDIATEMENT après les meta) --&gt;
+    &lt;script&gt;
+      (function() { /* notre code */ })();
+    &lt;/script&gt;
+
+    &lt;!-- 3. Titre de la page --&gt;
+    &lt;title&gt;Mon Site&lt;/title&gt;
+
+    &lt;!-- 4. Feuilles de style --&gt;
+    &lt;link rel="stylesheet" href="styles.css"&gt;
+
+    &lt;!-- 5. Autres ressources (fonts, favicons, etc.) --&gt;
+    &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+    &lt;link rel="icon" href="favicon.ico"&gt;
+
+    &lt;!-- 6. Autres scripts avec defer ou async --&gt;
+    &lt;script src="app.js" defer&gt;&lt;/script&gt;
+&lt;/head&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह आदेश सुनिश्चित करता है कि :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>चारसेट किसी भी पाठ प्रसंस्करण से पहले परिभाषित किया जाता है</p>
+</li>
+<li>
+<p>हमारा स्क्रिप्ट CSS लोड होने से पहले चलता है</p>
+</li>
+<li>
+<p>CSS को बाद में लोड किया जाता है और फिर सही विषय को सीधे लागू किया जाता है</p>
+</li>
+<li>
+<p>अन्य गैर‑महत्वपूर्ण संसाधन अंत में लोड किए जाते हैं</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_चरण_3_css_एट्रिब्यूट_सेलेक्टर्स_की_शक्ति">चरण 3 : CSS एट्रिब्यूट सेलेक्टर्स की शक्ति</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_बूटस्ट्रैप_5_थीम_सिस्टम">बूटस्ट्रैप 5 थीम सिस्टम</h3>
+<div class="paragraph">
+<p>Bootstrap 5 ने CSS कस्टम प्रॉपर्टीज़ (CSS चर) और एट्रिब्यूट सेलेक्टर्स पर आधारित थीम प्रबंधन की एक शानदार प्रणाली पेश की। यह प्रणाली एट्रिब्यूट का उपयोग करती है`data-bs-theme`तत्व पर`&lt;html&gt;`निर्धारित करने के लिए कि कौन सा रंग चरों का सेट लागू करना है</p>
+</div>
+<div class="paragraph">
+<p>इस प्रणाली की सुंदरता इसकी सरलता में निहित है: अलग‑अलग स्टाइलशीट लोड करने या हजारों तत्वों पर क्लासेज को टॉगल करने के बजाय, हम केवल एक तत्व पर एक विशेषता बदलते हैं, और CSS कैस्केड के माध्यम से बाक़ी काम कर देता है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_css_संरचना_एक_थीम_सिस्टम_के_लिए">CSS संरचना एक थीम सिस्टम के लिए</h3>
+<div class="paragraph">
+<p>यहाँ एक पूर्ण CSS संरचना है एक मजबूत थीम प्रणाली लागू करने के लिए :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-css" data-lang="css">/**
+ * SYSTÈME DE THÈME COMPLET
+ * Utilise les Custom Properties CSS pour une maintenance facile
+ */
+
+/* ============================================
+   THÈME PAR DÉFAUT (LIGHT)
+   Défini sur :root pour être le fallback
+   ============================================ */
+:root {
+  /* Couleurs de base */
+  --color-primary: #0d6efd;
+  --color-secondary: #6c757d;
+  --color-success: #198754;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #0dcaf0;
+
+  /* Couleurs de fond */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+
+  /* Couleurs de texte */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+
+  /* Couleurs de bordure */
+  --border-color: #dee2e6;
+  --border-color-subtle: #e9ecef;
+
+  /* Couleurs d'ombre */
+  --shadow-sm: rgba(0, 0, 0, 0.075);
+  --shadow-md: rgba(0, 0, 0, 0.15);
+  --shadow-lg: rgba(0, 0, 0, 0.25</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">संबंधित लेख</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0098_preloading_css_variable_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    कृपया JavaScript सक्षम करें ताकि आप देख सकें
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">टिप्पणियाँ Disqus द्वारा संचालित</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        शिक्षण अभियांत्रिकी में विशेषज्ञ प्रशिक्षक डेवलपर।
+शिक्षा को बदलने के लिए नवीन ई-लर्निंग समाधान डिज़ाइन करना।
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="गिटहब">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS फ़ीड">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="संपर्क">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">नेविगेशन</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>होम</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ब्लॉग</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">संसाधन</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>आर्काइव्स</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> स्लाइड्स</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> प्रशिक्षण</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> बूट करने योग्य चाबी</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">स्थानीयकरण</h6>
+                    <p class="mb-3">पेरिस क्षेत्र में स्थित, फ्रांस और दूर से संभावित हस्तक्षेप।</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>इल-ड-फ़्रांस, फ़्रांस</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>घर से काम उपलब्ध</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>फ़्रांस में यात्रा</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. सर्वाधिकार सुरक्षित.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

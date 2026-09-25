@@ -1,0 +1,1482 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Migration Supabase → Firebase: Anschließen eines Kontaktformulars an Firestore ohne Backend — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0113_integration_firebase_contact_form_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0113_integration_firebase_contact_form_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0113_integration_firebase_contact_form_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0113_integration_firebase_contact_form_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Migration Supabase → Firebase: Anschließen eines Kontaktformulars an Firestore ohne Backend — Cheroliv"/>
+        <meta property="og:description" content="Mein Kontaktformular lief seit Monaten auf einem Mock. Der initiale Supabase-Plan wurde zugunsten von Firebase aufgegeben. Ich erzähle von der Erstellung des Projekts, der Konfiguration von Firestore, der Umformulierung des JS zur Absendung, der Bereinigung des toten Codes und davon, was diese Migration über die Einstellung « Beende, was du angefangen hast » aussagt."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0113_integration_firebase_contact_form_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0113_integration_firebase_contact_form_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Migration Supabase → Firebase: Anschließen eines Kontaktformulars an Firestore ohne Backend — Cheroliv"/>
+        <meta name="twitter:description" content="Mein Kontaktformular lief seit Monaten auf einem Mock. Der initiale Supabase-Plan wurde zugunsten von Firebase aufgegeben. Ich erzähle von der Erstellung des Projekts, der Konfiguration von Firestore, der Umformulierung des JS zur Absendung, der Bereinigung des toten Codes und davon, was diese Migration über die Einstellung « Beende, was du angefangen hast » aussagt."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0113_integration_firebase_contact_form_post.png"/>
+        <meta name="description" content="Mein Kontaktformular lief seit Monaten auf einem Mock. Der initiale Supabase-Plan wurde zugunsten von Firebase aufgegeben. Ich erzähle von der Erstellung des Projekts, der Konfiguration von Firestore, der Umformulierung des JS zur Absendung, der Bereinigung des toten Codes und davon, was diese Migration über die Einstellung « Beende, was du angefangen hast » aussagt."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0113_integration_firebase_contact_form_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0113_integration_firebase_contact_form_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0113_integration_firebase_contact_form_post.html"},
+                      "headline": "Migration Supabase \u2192 Firebase: Anschlie\u00DFen eines Kontaktformulars an Firestore ohne Backend",
+                      "description": "Vollst\u00E4ndiger Bericht \u00FCber die Migration des Kontaktformulars von Supabase zu Firebase Firestore auf dieser statischen JBake-Website. Erstellung des Firebase-Projekts, Firestore-Sicherheitsregeln, Neuschreibung des JavaScript f\u00FCr die \u00DCbermittlung, Aufr\u00E4umen des toten Supabase-Codes und Bereitstellung.",
+                      "datePublished": "2026-04-29",
+                      "dateModified": "2026-04-29",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0113_integration_firebase_contact_form_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Migration Supabase \u2192 Firebase: Anschlie\u00DFen eines Kontaktformulars an Firestore ohne Backend", "item": "https:\/\/cheroliv.com\/blog\/2026\/0113_integration_firebase_contact_form_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Migration Supabase → Firebase: Anschließen eines Kontaktformulars an Firestore ohne Backend</h1>
+                <p class="lead">
+                    <em>Publié le 29 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_die_szene_ein_formular_das_nichts_speichert">Die Szene: ein Formular, das nichts speichert</a>
+<ul class="sectlevel2">
+<li><a href="#_das_erbe_von_supabase">Das Erbe von Supabase</a></li>
+<li><a href="#_die_doppelte_phantom_einreichung">Die doppelte Phantom-Einreichung</a></li>
+</ul>
+</li>
+<li><a href="#_warum_firebase_statt_supabase">Warum Firebase statt Supabase?</a></li>
+<li><a href="#_phase_1_firebase_projekt_erstellen">Phase 1 : Firebase-Projekt erstellen</a>
+<ul class="sectlevel2">
+<li><a href="#_initialisierung">Initialisierung</a></li>
+<li><a href="#_firestore_sicherheitsregeln">Firestore-Sicherheitsregeln</a></li>
+</ul>
+</li>
+<li><a href="#_phase_2_submit_javascript_umschreiben">Phase 2: Submit-JavaScript umschreiben</a>
+<ul class="sectlevel2">
+<li><a href="#_die_abhängigkeit_window_firebase">Die Abhängigkeit `window.<em>FIREBASE</em></a></li>
+<li><a href="#_der_neue_contact_js">Der neue `contact.js</a></li>
+</ul>
+</li>
+<li><a href="#_phase_3_den_toten_code_in_supabase_bereinigen">Phase 3: Den toten Code in Supabase bereinigen</a></li>
+<li><a href="#_phase_4_fußzeile_konfigurieren">Phase 4: Fußzeile konfigurieren</a></li>
+<li><a href="#_phase_5_finale_architektur">Phase 5: Finale Architektur</a></li>
+<li><a href="#_was_diese_migration_über_dogfooding_sagt">Was diese Migration über Dogfooding sagt</a>
+<ul class="sectlevel2">
+<li><a href="#_zusammenfassung_der_änderungen">Zusammenfassung der Änderungen</a></li>
+</ul>
+</li>
+<li><a href="#_nächste_schritte_backlog">Nächste Schritte (backlog)</a></li>
+<li><a href="#_referenzen">Referenzen</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">Lesezeit : 12 minutes</div>
+<p>Monatelang lief das Kontaktformular dieser Seite auf einem JavaScript-Mock — eine Erfolgsversprechen von 85 %, ein gefälschter Firestore, null gespeicherte Daten. Der ursprüngliche Plan sah einen Supabase-Backend mit Google Apps Script für E‑Mail‑Benachrichtigungen vor. Verworfen. Heute erzähle ich von der Migration zu Firebase Firestore: Projektanlegen, Sicherheitsregeln, JS neu schreiben, Aufräumen des toten Supabase‑Codes. Und warum diese Wahl etwas über die Entwicklungsphilosophie aussagt.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">tok</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_szene_ein_formular_das_nichts_speichert">Die Szene: ein Formular, das nichts speichert</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Diese Seite wird von JBake, meinem Gradle-Plugin generiert`bakery`. Es ist zu 100 % statisch — kein Backend, keine Datenbank. Aber ich habe ein Kontaktformular. Die Seite`contact.html`existiert, das HTML ist bereit (Felder Name, E‑Mail, Telefon, Betreff, Nachricht, HTML5-Validierung, Anti-Spam-Honeypot), die Bootstrap-Stile sind vorhanden. Optisch ist alles perfekt.</p>
+</div>
+<div class="paragraph">
+<p>Aber bei der Einreichung passiert nichts.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">const firebaseMock = new Promise((resolve, reject) =&gt; {
+    setTimeout(() =&gt; {
+        if (Math.random() &lt; 0.85) {
+            resolve({ status: 201, message: 'Message stored in Firestore.' });
+        } else {
+            reject({ status: 500, message: 'Firestore write failed.' });
+        }
+    }, 1500);
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ein Mock. Ein Versprechen, das nur vorgetäuscht ist. Der Nutzer sieht einen Spinner, dann die Nachricht « Nachricht erfolgreich gesendet! ». Aber die Daten gehen ins Nichts. Keine Nachricht wird irgendwo gespeichert.</p>
+</div>
+<div class="paragraph">
+<p>Die Situation ist schlimmer als ein kaputtes Formular — es ist ein Formular, das lügt.</p>
+</div>
+<div class="sect2">
+<h3 id="_das_erbe_von_supabase">Das Erbe von Supabase</h3>
+<div class="paragraph">
+<p>Der initiale Plan, dokumentiert in`content/draft/integration_formulaire_contact_supabase.adoc`, vorsah :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Eine Supabase-Datenbank mit Tabelle`contacts`und Row Level Security</p>
+</li>
+<li>
+<p>Eine RPC`handle_contact_form`Serverseite</p>
+</li>
+<li>
+<p>Ein SQL-Trigger, der einen Google Apps Script-Webhook aufruft</p>
+</li>
+<li>
+<p>Google Apps Script, der eine Gmail-Benachrichtigungs-E-Mail sendet</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Der entsprechende JavaScript-Code existiert noch in`script.js`. Es gibt eine Klasse`SupabaseManager`der einen Supabase-Client mit globalen Variablen initialisiert`SUPABASE_URL` et <code>SUPABASE_KEY</code>, und eine Klasse`ContactFormHandler`der das Submit-Ereignis des Formulars abhört und aufruft`SupabaseManager.submitContactForm()`.</p>
+</div>
+<div class="paragraph">
+<p>Problem: Diese globalen Variablen werden nicht mehr in den Footer eingefügt. Der`&lt;script src="supabase-js"&gt;`wurde entfernt. Der Code ruft`supabase.createClient()`über eine Variable`supabase`nicht mehr existiert. Also:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">console.error : 'Supabase client library (supabase-js) is not loaded.'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Nicht nur werden die Daten nicht gespeichert, sondern der Einreichungscode ist tot.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_die_doppelte_phantom_einreichung">Die doppelte Phantom-Einreichung</h3>
+<div class="paragraph">
+<p>Um es noch schlimmer zu machen, gibt es eine<strong>stille Konkurrenz</strong>zwischen zwei Handlern auf demselben Formular :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>`contact.js`Höre auf das Submit, rufe den Firebase-Mock auf.</p>
+</li>
+<li>
+<p><code>script.js</code>— über`ContactFormHandler`— hör auch das submit, ruf`SupabaseManager`</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Beide machen`event.preventDefault() + event.stopPropagation()<code>. Wie`contact.js`wird zuerst in`footer.thyme</code>, sein Handler wird zuerst angehängt. Er blockiert die Ausbreitung.`ContactFormHandler`wird niemals ausgelöst.</p>
+</div>
+<div class="paragraph">
+<p>Es ist sogar kein aktiver Bug — es ist ein Zombie. Code, der nie die Gelegenheit hat, ausgeführt zu werden.</p>
+</div>
+<div id="diag-before" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 8) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title Initialzustand — Kontaktformular
+rectangle "contact.thyme\n(HTML Bootstrap, honeypot)" as FORM
+rectangle "footer.thyme\n(Firebase SDK mit Platzhalterkonfiguration)" as FOOT
+rectangle "contact.js
+(mock Firebase, 85% Erfolg)" as CONT
+^^^^^
+ Syntax Error? (Assumed diagram type: activity)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title Initialzustand — Kontaktformular
+rectangle "contact.thyme\n(HTML Bootstrap, honeypot)" as FORM
+rectangle "footer.thyme\n(Firebase SDK mit Platzhalterkonfiguration)" as FOOT
+rectangle "contact.js
+(mock Firebase, 85% Erfolg)" as CONT
+rectangle "script.js\n(SupabaseManager + ContactFormHandler, tote)" as SCRIPT
+rectangle "Benutzer" as USER
+
+USER -&gt; FORM : Soumission du formulaire
+FORM -&gt; CONT : submit event (attaché en premier)
+CONT -&gt; CONT : preventDefault + stopPropagation
+CONT -&gt; CONT : mock Promise (1.5s, aléatoire)
+note right of CONT
+  ⚠️ Aucune donnée stockée
+end note
+
+FORM ..&gt; SCRIPT : submit event (bloqué par stopPropagation)
+note right of SCRIPT : ❌ Jamais déclenché
+note right of SCRIPT : ❌ supabase-js non chargé
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_warum_firebase_statt_supabase">Warum Firebase statt Supabase?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die Migrationsentscheidung ist dokumentiert in`AGENT.adoc`:</p>
+</div>
+<div class="paragraph">
+<p>Firebase wird nun aus folgenden Gründen gewählt: besserer kostenloser Plan, nativer Firestore, integrierte Cloud Functions, besser geeignetes Google-Ökosystem. Die vorhandene Supabase-Implementierung ist mit « ⚠️ veraltet » gekennzeichnet.</p>
+</div>
+<div class="paragraph">
+<p>Über das kostenlose Angebot hinaus gibt es einen architektonischen Grund. Diese Website lebt im Google-Ökosystem: Das Ziel-Repository ist`cheroliv.github.io`, der CNAME zeigt auf GitHub Pages, der Gradle-Build pusht zu GitHub über JGit. Das Hinzufügen eines Google-Dienstes (Firebase) anstelle eines Drittanbieter-Dienstes (Supabase) verringert die Angriffsfläche.</p>
+</div>
+<div class="paragraph">
+<p>Firestore im nativen Modus (nicht im Datastore-Modus) ist ebenfalls näher an dem NoSQL-Dokumentmodell, das ich im Kopf habe: Sammlungen, Dokumente, typisierte Felder, Server-Zeitstempel, integrierte Sicherheitsregeln.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_1_firebase_projekt_erstellen">Phase 1 : Firebase-Projekt erstellen</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_initialisierung">Initialisierung</h3>
+<div class="paragraph">
+<p>Da die Firebase CLI auf meinem Rechner nicht installiert ist, verwende ich die Webkonsole:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>aufgehenhttps://console.firebase.google.com/[Firebase-Konsole]</p>
+</li>
+<li>
+<p>Ein Projekt erstellen`cheroliv-contact`(oder ein bestehendes Projekt wiederverwenden)</p>
+</li>
+<li>
+<p>Firestore im nativen Modus (nicht Datastore) aktivieren</p>
+</li>
+<li>
+<p>Eine Datenbank in der Region erstellen`eur3`(Europa)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Für einen minimalistischen Gebrauch wie unseren (einziges Sammeln, öffentliches Schreiben) ist der native Modus die richtige Wahl. Es sind keine komplexen Datastore-Regeln nötig.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_firestore_sicherheitsregeln">Firestore-Sicherheitsregeln</h3>
+<div class="paragraph">
+<p>Das Formular ist öffentlich — jeder kann eine Nachricht senden. Aber ich möchte den Missbrauch beschränken :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /contact_messages/{messageId} {
+      // Lecture : admin uniquement (authentifié)
+      allow read: if request.auth != null;
+
+      // Écriture : publique, mais limitée
+      allow create: if request.auth == null
+        &amp;&amp; request.resource.data.name is string
+        &amp;&amp; request.resource.data.name.size() &gt;= 1
+        &amp;&amp; request.resource.data.name.size() &lt;= 100
+        &amp;&amp; request.resource.data.email is string
+        &amp;&amp; request.resource.data.email.matches('.*@.*\\..*')
+        &amp;&amp; request.resource.data.email.size() &lt;= 254
+        &amp;&amp; request.resource.data.subject is string
+        &amp;&amp; request.resource.data.subject.size() &gt;= 3
+        &amp;&amp; request.resource.data.subject.size() &lt;= 200
+        &amp;&amp; request.resource.data.message is string
+        &amp;&amp; request.resource.data.message.size() &gt;= 10
+        &amp;&amp; request.resource.data.message.size() &lt;= 5000
+        &amp;&amp; request.resource.data.created_at == request.time
+        &amp;&amp; request.resource.data.user_agent is string
+        &amp;&amp; request.resource.data.user_agent.size() &lt;= 500;
+    }
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Schlüsselpunkte :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>allow read</code>— nur authentifizierte Benutzer können die Nachrichten lesen (ich über die Firebase-Konsole)</p>
+</li>
+<li>
+<p><code>allow create</code>— jeder kann ein Dokument erstellen, aber mit Feldvalidierung</p>
+</li>
+<li>
+<p>Serverseitige Validierung: Min/Max-Größen, E-Mail-Format,<code>created_at`muss entsprechen zu`request.time</code>(anti-fälschung)</p>
+</li>
+<li>
+<p>`user_agent`Es wird zur Nachverfolgung gesendet (nicht kritisch aber nützlich)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Diese Regeln sind strenger als ein einfaches`allow write: if true;`. Sie verhindern, dass ein Angreifer riesige Payloads oder malformierte Felder einfügt.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_2_submit_javascript_umschreiben">Phase 2: Submit-JavaScript umschreiben</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Der Vertrag ist einfach:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Die Daten des Formulars lesen</p>
+</li>
+<li>
+<p>Überprüfe das Honeypot (Feld`hp_name`— wenn es gefüllt ist, ist es ein Bot, wir simulieren einen Erfolg, ohne etwas zu senden)</p>
+</li>
+<li>
+<p>anrufen`addDoc(window.<em>FIREBASE</em>.collection(db, "contact_messages"), {&#8230;&#8203;})`</p>
+</li>
+<li>
+<p>Erfolg oder Fehler anzeigen</p>
+</li>
+</ol>
+</div>
+<div class="sect2">
+<h3 id="_die_abhängigkeit_window_firebase">Die Abhängigkeit `window.<em>FIREBASE</em></h3>
+<div class="paragraph">
+<p>in`footer.thyme`, ein Skriptmodul initialisiert das Firebase SDK und macht ein globales Objekt verfügbar :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;script type="module"&gt;
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    const firebaseConfig = { /* valeurs réelles */ };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Modulskripte werden vorher ausgeführt`DOMContentLoaded`, also`window.<em>FIREBASE</em>`ist garantiert verfügbar wenn der handler`contact.js`es wird ausgelöst. Aus Vorsicht füge ich trotzdem ein Polling von 5 Sekunden hinzu, falls der CDN langsam wäre.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_der_neue_contact_js">Der neue `contact.js</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
+
+    const form = document.getElementById('contact-form');
+    if (!form) return;
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    const successMessage = document.getElementById('contact-success-message');
+    const errorMessage = document.getElementById('contact-error-message');
+
+    // Éléments de validation
+    const nameInput = form.querySelector('input[name="name"]');
+    const emailInput = form.querySelector('input[name="email"]');
+    const phoneInput = form.querySelector('input[name="phone"]');
+    const subjectInput = form.querySelector('input[name="subject"]');
+    const messageInput = form.querySelector('textarea[name="message"]');
+    const honeypotInput = form.querySelector('input[name="hp_name"]');
+
+    /**
+     * Attend que window.__FIREBASE__ soit disponible.
+     * Timeout de 5 secondes — si le CDN Firebase est lent, on abandonne.
+     */
+    function waitForFirebase(timeoutMs = 5000) {
+        return new Promise((resolve, reject) =&gt; {
+            if (window.__FIREBASE__) {
+                resolve(window.__FIREBASE__);
+                return;
+            }
+            const start = Date.now();
+            const interval = setInterval(() =&gt; {
+                if (window.__FIREBASE__) {
+                    clearInterval(interval);
+                    resolve(window.__FIREBASE__);
+                } else if (Date.now() - start &gt; timeoutMs) {
+                    clearInterval(interval);
+                    reject(new Error('Firebase SDK non disponible après timeout'));
+                }
+            }, 100);
+        });
+    }
+
+    // --- Validation (identique à l'existant) ---
+    function validateForm() {
+        nameInput.setCustomValidity('');
+        emailInput.setCustomValidity('');
+        if (phoneInput) phoneInput.setCustomValidity('');
+        subjectInput.setCustomValidity('');
+        messageInput.setCustomValidity('');
+
+        if (nameInput.value.trim().length &lt; 1) {
+            nameInput.setCustomValidity('Veuillez saisir votre nom.');
+        }
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(emailInput.value.trim())) {
+            emailInput.setCustomValidity('Veuillez saisir une adresse email valide.');
+        }
+        if (phoneInput &amp;&amp; phoneInput.value.trim() !== '') {
+            const phonePattern = /^\d{10,15}$/;
+            if (!phonePattern.test(phoneInput.value.trim())) {
+                phoneInput.setCustomValidity('Veuillez saisir un numéro valide (10 à 15 chiffres).');
+            }
+        }
+        if (subjectInput.value.trim().length &lt; 3) {
+            subjectInput.setCustomValidity('Veuillez saisir un sujet (3 caractères minimum).');
+        }
+        if (messageInput.value.trim().length &lt; 10) {
+            messageInput.setCustomValidity('Veuillez saisir un message (10 caractères minimum).');
+        }
+
+        form.classList.add('was-validated');
+        return form.checkValidity();
+    }
+
+    // --- Handler de soumission ---
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!validateForm()) return;
+
+        // Honeypot : si rempli, simuler un succès sans rien envoyer
+        if (honeypotInput &amp;&amp; honeypotInput.value.trim() !== '') {
+            successMessage.style.display = 'block';
+            form.reset();
+            form.classList.remove('was-validated');
+            return;
+        }
+
+        // UI : état d'envoi
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+            &lt;span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"&gt;&lt;/span&gt;
+            Envoi en cours...
+        `;
+        successMessage.style.display = 'none';
+        errorMessage.style.display = 'none';
+
+        try {
+            const fb = await waitForFirebase();
+            const messagesCollection = fb.collection(fb.db, 'contact_messages');
+
+            await fb.addDoc(messagesCollection, {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                phone: phoneInput ? phoneInput.value.trim() : '',
+                subject: subjectInput.value.trim(),
+                message: messageInput.value.trim(),
+                created_at: fb.serverTimestamp(),
+                user_agent: navigator.userAgent.substring(0, 500)
+            });
+
+            successMessage.style.display = 'block';
+            form.reset();
+            form.classList.remove('was-validated');
+
+        } catch (error) {
+            console.error('Erreur Firestore:', error);
+            errorMessage.style.display = 'block';
+
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = `
+                &lt;i class="bi bi-send me-2"&gt;&lt;/i&gt;
+                Envoyer le Message
+            `;
+        }
+    }, false);
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Die Änderungen im Vergleich zum Mock:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>waitForFirebase()</code>— Polling mit Timeout, auch robust, wenn das CDN langsam ist</p>
+</li>
+<li>
+<p><code>honeypot</code>— wenn das versteckte Feld`hp_name`ist gefüllt, simuliere einen uneingeschränkten Firestore-Erfolg. Der Bot glaubt, erfolgreich gewesen zu sein, aber nichts wird gespeichert.</p>
+</li>
+<li>
+<p><code>addDoc(collection, {&#8230;&#8203;})</code>— echter Firestore-Aufruf mit`serverTimestamp()` et <code>user_agent</code></p>
+</li>
+<li>
+<p>Fehlerbehandlung mit`try/catch`asynchron</p>
+</li>
+<li>
+<p>Reinigung des`finally`(Wiederherstellung des Knopfes)</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Warum`user_agent`? Es ist optional, aber nützlich für die Diagnose. Wenn eine seltsame Nachricht ankommt, zu wissen, ob sie von einem Desktop-Browser, einem mobilen Browser oder einem curl-Skript stammt, hilft bei der Sortierung.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_3_den_toten_code_in_supabase_bereinigen">Phase 3: Den toten Code in Supabase bereinigen</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>`script.js`enthält 250 Zeilen dead code :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>SupabaseManager</code>(Zeilen 417-481) — 65 Zeilen</p>
+</li>
+<li>
+<p><code>ContactFormHandler</code>(Zeilen 490-551) — 62 Zeilen</p>
+</li>
+<li>
+<p>Initialisierungsblock (Zeilen 645-654) — 10 Zeilen</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Gesamt: ~140 Zeilen zu löschen.</p>
+</div>
+<div class="paragraph">
+<p>Der Block`DOMContentLoaded`erstellt ein`SupabaseManager`dann ein`ContactFormHandler`an das Formular angehängt. Wie oben erklärt, wird dieser Code niemals ausgeführt (blockiert durch`contact.js`), und selbst wenn es ausgeführt würde, würde es fehlschlagen (kein Supabase-SDK geladen).</p>
+</div>
+<div class="paragraph">
+<p>Ich lösche :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Die Klasse`SupabaseManager`</p>
+</li>
+<li>
+<p>Die Klasse`ContactFormHandler`</p>
+</li>
+<li>
+<p>Der Initialisierungsblock in`DOMContentLoaded`(Zeilen 645-654)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Le reste de <code>script.js`ist intakt:`ThemeManager</code>, <code>ScrollToTopButton</code>, <code>MobileMenuManager</code>, <code>SmoothScrollWithOffset</code>, <code>NavbarHeightUpdater</code>, <code>DynamicNavbarBreakpoint</code>, <code>CodeBlockManager</code>, <code>TooltipManager</code>, <code>PhoneInputManager</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_4_fußzeile_konfigurieren">Phase 4: Fußzeile konfigurieren</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>`footer.thyme`Er hat bereits das Firebase-Boilerplate, aber mit Platzhalterwerten. Ich ersetze:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">const firebaseConfig = {
+    apiKey: "REMPLACER_PAR_VOTRE_API_KEY",
+    authDomain: "REMPLACER_PAR_VOTRE_AUTH_DOMAIN",
+    projectId: "REMPLACER_PAR_VOTRE_PROJECT_ID",
+    storageBucket: "REMPLACER_PAR_VOTRE_STORAGE_BUCKET",
+    messagingSenderId: "REMPLACER_PAR_VOTRE_SENDER_ID",
+    appId: "REMPLACER_PAR_VOTRE_APP_ID"
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Durch die seit abgerufenen tatsächlichen Werte<strong>Projekteinstellungen &gt; Allgemein &gt; Deine Apps &gt; Web-App</strong>in der Firebase‑Konsole.</p>
+</div>
+<div class="paragraph">
+<p>Die Werte sind sensibel.<code>apiKey`ist bei Firebase von Haus aus öffentlich, aber ich ziehe es vor, sie nicht im Klartext zu committten). Ich speichere sie in`site.yml</code>(bereits in`.gitignore`) und das Plugin`bakery`Er injiziert sie in das Template mithilfe einer Logik, die auf der Build-Seite hinzugefügt werden soll.</p>
+</div>
+<div class="paragraph">
+<p>Im Moment lege ich sie direkt hinein.<code>footer.thyme</code>— der Build`./gradlew serve`Es wird sie lokal laden. Bei der Bereitstellung werde ich die Injektion nach`site.yml`oder zu einer Gradle-Variable.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>L'`apiKey`Firebase ist nicht<strong>nicht</strong>ein Geheimnis. Sie ist von Natur aus öffentlich. Was Ihre Daten schützt, sind die<strong>Firestore-Sicherheitsregeln</strong>, nicht den API-Schlüssel. Legen Sie es nicht in ein`.env`Serverseitig geladen — sie ist dafür vorgesehen, im Browser angezeigt zu werden.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_5_finale_architektur">Phase 5: Finale Architektur</h2>
+<div class="sectionbody">
+<div id="diag-after" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 8) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title Finale Architektur — Kontaktformular Firebase
+actor Utilisateur as USER
+
+package "Browser" #E8F5E9 {
+  rectangle "contact.thyme
+^^^^^
+ Syntax Error? (Assumed diagram type: component)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title Finale Architektur — Kontaktformular Firebase
+actor Utilisateur as USER
+
+package "Browser" #E8F5E9 {
+  rectangle "contact.thyme
+(HTML, honeypot)" as FORM
+  rectangle "contact.js\n(Validierung + Firestore)" as CONT
+  rectangle "Footer.Thyme
+(Initialisierung des Firebase SDK)" as FOOT
+}
+
+cloud "Firebase" #BBDEFB {
+  rectangle "Firestore
+(contact_messages)" as FS
+}
+
+FORM --&gt; CONT : submit event
+CONT --&gt; FOOT : window.__FIREBASE__.addDoc()
+FOOT --&gt; FS : Insert document\n(règles de sécurité validées)
+
+note right of FS
+  Firestore Rules :
+  - create: public, validé
+  - read: auth uniquement
+end note
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_was_diese_migration_über_dogfooding_sagt">Was diese Migration über Dogfooding sagt</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Diese Website wird von meinem eigenen Gradle-Plugin generiert`bakery`. Das Kontaktformular befindet sich innerhalb der Website. Die Migration Supabase → Firebase wird in`AGENT.adoc`, sie wird im Backlog diskutiert, sie wird via getestet`./gradlew serve`, und sie generiert einen Blogartikel (den du gerade liest).</p>
+</div>
+<div class="paragraph">
+<p>Das ist reines Dogfooding. Die Website ist das Produkt des Plugins, das Plugin ist das Produkt des Entwicklers, der Entwickler dokumentiert den Prozess auf der Website selbst.</p>
+</div>
+<div class="paragraph">
+<p>Der Kreis ist geschlossen.</p>
+</div>
+<div class="paragraph">
+<p>Dass ich ein Mock monatelang mit mir herumgeschleppt habe (ganze Sitzungen, in denen das Formular schweigend gelogen hat), hat mir bewusst gemacht: Das Backlog einer persönlichen statischen Website ist niemals „fertig“. Es gibt immer eine priorisierte Benutzerstory, immer einen Artikel im Entwurf und immer einen kommentierten Abschnitt in einer Vorlage. Disziplin bedeutet nicht, alles fertigzustellen – sondern das zu vollenden, was für den Nutzer sichtbar ist.</p>
+</div>
+<div class="paragraph">
+<p>Ein kaputtes Kontaktformular ist schlimmer als überhaupt kein Kontaktformular. Das ist ein nicht gehaltenes Versprechen.</p>
+</div>
+<div class="sect2">
+<h3 id="_zusammenfassung_der_änderungen">Zusammenfassung der Änderungen</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6676%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Datei</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Modifikation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auswirkung</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>blog/2026/0113_*.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Erstellung des Artikels</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dokumentation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>assets/js/contact.js</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Umschreibung (mock → echter Firestore)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Funktionsfähig</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>assets/js/script.js</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Löschen SupabaseManager + ContactFormHandler + init Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reinigung</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>templates/footer.thyme</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ersetzung des Konfigurationsplatzhalters → echte Werte</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Konfiguration</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_nächste_schritte_backlog">Nächste Schritte (backlog)</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Benachrichtigungs-Email</strong>: Eine Cloud Function`onCreate`auf`contact_messages`der eine E-Mail über SendGrid sendet. Das Formular speichert, aber ich werde nicht benachrichtigt. Mittlere Priorität — die Nachrichten sind in der Firebase-Konsole sichtbar.</p>
+</li>
+<li>
+<p><strong>Rate Limiting auf der Clientseite</strong>Füge einen localStorage-Zeitstempel hinzu, um mehrfache schnelle Sendungen zu verhindern. Der Honeypot blockiert naivere Bots, ein Rate Limiter würde etwas cleverere Bots blockieren.</p>
+</li>
+<li>
+<p><strong>Tests</strong>: Ein Playwright-Test, der das Formular absendet und überprüft, dass das Dokument in Firestore erscheint. Im Moment teste ich manuell über`./gradlew serve`.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_referenzen">Referenzen</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://firebase.google.com/docs/firestore/security/get-started">Dokumentation Firestore Sicherheitsregeln</a></p>
+</li>
+<li>
+<p><a href="https://firebase.google.com/docs/firestore/manage-data/add-data#add_a_document">Dokumentation Firestore addDoc — Web v9 modulare</a></p>
+</li>
+<li>
+<p><a href="/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html">Series Governance-Agent — Teil 1: Eager/Lazy</a></p>
+</li>
+<li>
+<p><a href="/blog/2026/0110_mecanisme_backup_contexte_agent_post.html">Governance-Agent-Serie — Teil 2: Hot/Warm/Cold</a></p>
+</li>
+<li>
+<p><a href="/blog/2026/0111_audit_contexte_agent_post.html">Governance-Agent-Serie — Teil 3: Audit</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0113_integration_firebase_contact_form_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

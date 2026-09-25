@@ -1,0 +1,1240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>音乐 Discord 机器人的开发：功能架构和日志驱动开发 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0084_disco_bot_discord_python_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="音乐 Discord 机器人的开发：功能架构和日志驱动开发 — Cheroliv"/>
+        <meta property="og:description" content="本文介绍了一种使用 Spotify 和 YouTube API 以及 Python 开发音乐 Discord 机器人的方法论途径。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0084_disco_bot_discord_python_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="音乐 Discord 机器人的开发：功能架构和日志驱动开发 — Cheroliv"/>
+        <meta name="twitter:description" content="本文介绍了一种使用 Spotify 和 YouTube API 以及 Python 开发音乐 Discord 机器人的方法论途径。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0084_disco_bot_discord_python_post.png"/>
+        <meta name="description" content="本文介绍了一种使用 Spotify 和 YouTube API 以及 Python 开发音乐 Discord 机器人的方法论途径。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0084_disco_bot_discord_python_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0084_disco_bot_discord_python_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0084_disco_bot_discord_python_post.html"},
+                      "headline": "\u97F3\u4E50 Discord \u673A\u5668\u4EBA\u7684\u5F00\u53D1\uFF1A\u529F\u80FD\u67B6\u6784\u548C\u65E5\u5FD7\u9A71\u52A8\u5F00\u53D1",
+                      "description": "\u672C\u6587\u4ECB\u7ECD\u4E86\u4E00\u79CD\u4F7F\u7528 Spotify \u548C YouTube API \u4EE5\u53CA Python \u5F00\u53D1\u97F3\u4E50 Discord \u673A\u5668\u4EBA\u7684\u65B9\u6CD5\u8BBA\u9014\u5F84\u3002",
+                      "datePublished": "2025-07-16",
+                      "dateModified": "2025-07-16",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0084_disco_bot_discord_python_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u97F3\u4E50 Discord \u673A\u5668\u4EBA\u7684\u5F00\u53D1\uFF1A\u529F\u80FD\u67B6\u6784\u548C\u65E5\u5FD7\u9A71\u52A8\u5F00\u53D1", "item": "https:\/\/cheroliv.com\/blog\/2025\/0084_disco_bot_discord_python_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">音乐 Discord 机器人的开发：功能架构和日志驱动开发</h1>
+                <p class="lead">
+                    <em>Publié le 16 July 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_介绍">介绍</a></li>
+<li><a href="#_背景和当前挑战">背景和当前挑战</a>
+<ul class="sectlevel2">
+<li><a href="#_音乐_api_的演变">音乐 API 的演变</a></li>
+<li><a href="#_日志驱动开发">日志驱动开发</a></li>
+</ul>
+</li>
+<li><a href="#_概念架构">概念架构</a></li>
+<li><a href="#_技术栈和函数式范式">技术栈和函数式范式</a>
+<ul class="sectlevel2">
+<li><a href="#_技术选择">技术选择</a></li>
+<li><a href="#_应用功能原理">应用功能原理</a></li>
+</ul>
+</li>
+<li><a href="#_敏捷方法论和backlog">敏捷方法论和Backlog</a>
+<ul class="sectlevel2">
+<li><a href="#_主要史诗">主要史诗</a>
+<ul class="sectlevel3">
+<li><a href="#_史诗_1基础设施机器人_discord">史诗 1：基础设施机器人 Discord</a></li>
+<li><a href="#_史诗_2spotify_集成">史诗 2：Spotify 集成</a></li>
+<li><a href="#_史诗_3youtube_集成">史诗 3：YouTube 集成</a></li>
+<li><a href="#_epic_4_音乐功能">Epic 4 : 音乐功能</a></li>
+</ul>
+</li>
+<li><a href="#_详细的用户故事">�详细的用户故事</a>
+<ul class="sectlevel3">
+<li><a href="#_us1_1_机器人初始化">US1.1 : 机器人初始化</a></li>
+<li><a href="#_us2_1_智能_spotify_搜索">US2.1 : 智能 Spotify 搜索</a></li>
+<li><a href="#_us3_1_有弹性的_youtube_提取">US3.1 : 有弹性的 YouTube 提取</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_日志驱动开发方法">日志驱动开发方法</a>
+<ul class="sectlevel2">
+<li><a href="#_日志策略">日志策略</a></li>
+<li><a href="#_日志结构">日志结构</a></li>
+<li><a href="#_日志设计示例">日志设计示例</a></li>
+</ul>
+</li>
+<li><a href="#_使用_pydantic_的验证架构">使用 Pydantic 的验证架构</a>
+<ul class="sectlevel2">
+<li><a href="#_数据模型">数据模型</a></li>
+</ul>
+</li>
+<li><a href="#_功能性错误管理">功能性错误管理</a>
+<ul class="sectlevel2">
+<li><a href="#_单子和错误处理">单子和错误处理</a></li>
+</ul>
+</li>
+<li><a href="#_规避限制的策略">规避限制的策略</a>
+<ul class="sectlevel2">
+<li><a href="#_多源方法">多源方法</a></li>
+</ul>
+</li>
+<li><a href="#_迭代开发计划">迭代开发计划</a>
+<ul class="sectlevel2">
+<li><a href="#_冲刺计划">冲刺计划</a></li>
+<li><a href="#_质量指标">质量指标</a></li>
+</ul>
+</li>
+<li><a href="#_部署与监控">部署与监控</a>
+<ul class="sectlevel2">
+<li><a href="#_生产架构">生产架构</a></li>
+<li><a href="#_主动监控">主动监控</a></li>
+</ul>
+</li>
+<li><a href="#_结论与展望">结论与展望</a>
+<ul class="sectlevel2">
+<li><a href="#_下一步">下一步</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_介绍"><a class="anchor" href="#_介绍"></a>介绍</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>开发一个集成 Spotify 和 YouTube API 的 Discord 机器人代表了一项现代技术挑战，特别是在面对平台最近的限制和演变时。本文介绍了一种基于的方法论方法。<strong>日志驱动开发</strong>(LDD) 是一种在函数式编程范式中以 Python 实现的测试驱动开发的扩展。</p>
+</div>
+<div class="paragraph">
+<p>我们的目标：创建一个健壮、可维护且可扩展的机器人，能够应对当前音乐 API 的限制，同时在 Discord 上提供流畅的用户体验。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_背景和当前挑战"><a class="anchor" href="#_背景和当前挑战"></a>背景和当前挑战</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_音乐_api_的演变"><a class="anchor" href="#_音乐_api_的演变"></a>音乐 API 的演变</h3>
+<div class="paragraph">
+<p>音乐平台已经大幅收紧了他们的访问政策：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Spotify</strong>对元数据访问的限制，配额限制</p>
+</li>
+<li>
+<p><strong>油管</strong>: 强化的反机器人政策，身份验证的复杂化</p>
+</li>
+<li>
+<p><strong>Discord</strong>: 新的安全和性能要求</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_日志驱动开发"><a class="anchor" href="#_日志驱动开发"></a>日志驱动开发</h3>
+<div class="paragraph">
+<p>LDD 通过将日志置于开发核心来扩展 TDD :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>日志的定义</strong>在实施前</p>
+</li>
+<li>
+<p><strong>通过观察验证</strong>预期的行为</p>
+</li>
+<li>
+<p><strong>完整追踪</strong>数据流</p>
+</li>
+<li>
+<p><strong>主动调试</strong>为预防错误</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_概念架构"><a class="anchor" href="#_概念架构"></a>概念架构</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-1a758d5babf1cc2d4a0bdb0a97211257.png" alt="Diagram" width="777" height="618">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_技术栈和函数式范式"><a class="anchor" href="#_技术栈和函数式范式"></a>技术栈和函数式范式</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_技术选择"><a class="anchor" href="#_技术选择"></a>技术选择</h3>
+<div class="paragraph">
+<p>我们的技术栈围绕函数式编程展开 ：</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>PyMonade</strong></dt>
+<dd>
+<p>副作用管理与函数组合</p>
+</dd>
+<dt class="hdlist1"><strong>Pydantic</strong></dt>
+<dd>
+<p>类型安全的数据验证和序列化</p>
+</dd>
+<dt class="hdlist1"><strong>异步 I/O</strong></dt>
+<dd>
+<p>用于 API 的异步编程</p>
+</dd>
+<dt class="hdlist1"><strong>Structlog</strong></dt>
+<dd>
+<p>用于LDD的结构化日志</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_应用功能原理"><a class="anchor" href="#_应用功能原理"></a>应用功能原理</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-7bf34fbfe52bbfdec2e412de8f53bf10.png" alt="Diagram" width="670" height="554">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_敏捷方法论和backlog"><a class="anchor" href="#_敏捷方法论和backlog"></a>敏捷方法论和Backlog</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_主要史诗"><a class="anchor" href="#_主要史诗"></a>主要史诗</h3>
+<div class="paragraph">
+<p>我们的开发围绕4个主要的史诗：</p>
+</div>
+<div class="sect3">
+<h4 id="_史诗_1基础设施机器人_discord"><a class="anchor" href="#_史诗_1基础设施机器人_discord"></a>史诗 1：基础设施机器人 Discord</h4>
+<div class="paragraph">
+<p><strong>业务价值</strong> :坚实且可扩展的基础</p>
+</div>
+<div class="paragraph">
+<p><strong>验收标准</strong> : 稳定的 Discord 连接，配备重连管理 - 模块化命令系统 - 集成结构化日志 - 集中错误管理</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_史诗_2spotify_集成"><a class="anchor" href="#_史诗_2spotify_集成"></a>史诗 2：Spotify 集成</h4>
+<div class="paragraph">
+<p><strong>业务价值</strong> : 访问音乐元数据</p>
+</div>
+<div class="paragraph">
+<p><strong>验收标准</strong> : - 安全的OAuth2身份验证 - 使用智能缓存的曲目搜索 - API配额管理 - 网络错误的回退</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_史诗_3youtube_集成"><a class="anchor" href="#_史诗_3youtube_集成"></a>史诗 3：YouTube 集成</h4>
+<div class="paragraph">
+<p><strong>业务价值</strong> : 访问音频内容</p>
+</div>
+<div class="paragraph">
+<p><strong>验收标准</strong> - 合法规避限制 - 优化的音频提取 - 管理私有/已删除的视频 - 遵守 YouTube 的服务条款</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_epic_4_音乐功能"><a class="anchor" href="#_epic_4_音乐功能"></a>Epic 4 : 音乐功能</h4>
+<div class="paragraph">
+<p><strong>业务价值</strong> : 完整的用户体验</p>
+</div>
+<div class="paragraph">
+<p><strong>接受标准</strong> - 高质量音频播放 - 智能阅读队列 - Discord 语音命令 - 跨平台同步</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_详细的用户故事"><a class="anchor" href="#_详细的用户故事"></a>�详细的用户故事</h3>
+<div class="sect3">
+<h4 id="_us1_1_机器人初始化"><a class="anchor" href="#_us1_1_机器人初始化"></a>US1.1 : 机器人初始化</h4>
+<div class="paragraph">
+<p><strong>作为</strong> 开发者 <strong>我想要</strong> 一个可靠连接的Discord机器人 <strong>Afin de</strong> 为了确保服务的可用性</p>
+</div>
+<div class="paragraph">
+<p><strong>DoD (完成的定义)</strong> : - [ ] 机器人在启动时自动连接 - [ ] 结构化日志记录每一步 - [ ] 自动重连（断开连接时） - [ ] 集成测试通过</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_us2_1_智能_spotify_搜索"><a class="anchor" href="#_us2_1_智能_spotify_搜索"></a>US2.1 : 智能 Spotify 搜索</h4>
+<div class="paragraph">
+<p><strong>作为</strong> 用户 Discord <strong>我想</strong> 通过 Spotify 搜索曲目 <strong>为了</strong> 发现和分享音乐</p>
+</div>
+<div class="paragraph">
+<p><strong>DoD</strong> : - [ ] 订单`/search`功能的 - [ ] 相关结果，带有元数据 - [ ] 本地缓存以优化请求 - [ ] 优雅的API错误处理</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_us3_1_有弹性的_youtube_提取"><a class="anchor" href="#_us3_1_有弹性的_youtube_提取"></a>US3.1 : 有弹性的 YouTube 提取</h4>
+<div class="paragraph">
+<p>作为系统 <strong>我想</strong> 可靠地提取 YouTube 音频 为了 保持服务的连续性</p>
+</div>
+<div class="paragraph">
+<p><strong>DoD</strong> : - [ ] 不违反服务条款的提取 - [ ] 音质最佳 - [ ] 管理地理限制 - [ ] 详细的操作日志</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_日志驱动开发方法"><a class="anchor" href="#_日志驱动开发方法"></a>日志驱动开发方法</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_日志策略"><a class="anchor" href="#_日志策略"></a>日志策略</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-9705e19776eeb21de285dd1348680ff9.png" alt="Diagram" width="687" height="633">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_日志结构"><a class="anchor" href="#_日志结构"></a>日志结构</h3>
+<div class="paragraph">
+<p>我们的LDD方法使用带有语义级别的结构化日志：</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>痕迹</strong></dt>
+<dd>
+<p>�详细数据流</p>
+</dd>
+<dt class="hdlist1"><strong>调试</strong></dt>
+<dd>
+<p>函数的内部状态</p>
+</dd>
+<dt class="hdlist1"><strong>信息</strong></dt>
+<dd>
+<p>成功的业务运营</p>
+</dd>
+<dt class="hdlist1"><strong>警告</strong></dt>
+<dd>
+<p>降级但得到管理的情况</p>
+</dd>
+<dt class="hdlist1"><strong>错误</strong></dt>
+<dd>
+<p>需要干预的错误</p>
+</dd>
+<dt class="hdlist1"><strong>关键</strong></dt>
+<dd>
+<p>系统故障</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_日志设计示例"><a class="anchor" href="#_日志设计示例"></a>日志设计示例</h3>
+<div class="paragraph">
+<p>在实现 Spotify 搜索功能之前，我们先定义它的日志：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">INFO: spotify.search.start query="bohemian rhapsody" user_id=123456
+DEBUG: spotify.search.validation query_length=16 safe_chars=true
+DEBUG: spotify.search.api_call endpoint="/search" params={...}
+INFO: spotify.search.success results_count=15 duration_ms=340</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_使用_pydantic_的验证架构"><a class="anchor" href="#_使用_pydantic_的验证架构"></a>使用 Pydantic 的验证架构</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_数据模型"><a class="anchor" href="#_数据模型"></a>数据模型</h3>
+<div class="paragraph">
+<p>我们的功能方法优先考虑前置验证：</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-ebd4e1dfbd7b19d5a6054ecf213e9e2d.png" alt="Diagram" width="696" height="339">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_功能性错误管理"><a class="anchor" href="#_功能性错误管理"></a>功能性错误管理</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_单子和错误处理"><a class="anchor" href="#_单子和错误处理"></a>单子和错误处理</h3>
+<div class="paragraph">
+<p>使用 PyMonade 可以实现优雅的错误处理：</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-136202d4ff85a3301d5f061e8e0d5d86.png" alt="Diagram" width="466" height="494">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_规避限制的策略"><a class="anchor" href="#_规避限制的策略"></a>规避限制的策略</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_多源方法"><a class="anchor" href="#_多源方法"></a>多源方法</h3>
+<div class="paragraph">
+<p>面对 API 限制，我们采取了多元化策略：</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-7d9e8e51fad9678862e67af0f945456e.png" alt="Diagram" width="665" height="744">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_迭代开发计划"><a class="anchor" href="#_迭代开发计划"></a>迭代开发计划</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_冲刺计划"><a class="anchor" href="#_冲刺计划"></a>冲刺计划</h3>
+<div class="paragraph">
+<p>我们的开发遵循为期两周的冲刺周期 :</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>冲刺 1-2</strong></dt>
+<dd>
+<p>基础设施和 Discord Bot 核心</p>
+</dd>
+<dt class="hdlist1"><strong>冲刺 3-4</strong></dt>
+<dd>
+<p>Spotify 与 LDD 的集成</p>
+</dd>
+<dt class="hdlist1"><strong>�冲刺 5-6</strong></dt>
+<dd>
+<p>YouTube 集成与规避</p>
+</dd>
+<dt class="hdlist1"><strong>冲刺 7-8</strong></dt>
+<dd>
+<p>高级音乐功能</p>
+</dd>
+<dt class="hdlist1"><strong>�冲刺 9-10</strong></dt>
+<dd>
+<p>优化与生产</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_质量指标"><a class="anchor" href="#_质量指标"></a>质量指标</h3>
+<div class="paragraph">
+<p>每个 sprint 的评估基于 :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>日志覆盖</strong>: &gt;90% 的关键路径</p>
+</li>
+<li>
+<p><strong>API 可靠性</strong>: &lt;1% 未处理的错误</p>
+</li>
+<li>
+<p><strong>性能</strong>: &lt;500ms 平均响应时间</p>
+</li>
+<li>
+<p><strong>可维护性</strong>圈复杂度 &lt;10</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_部署与监控"><a class="anchor" href="#_部署与监控"></a>部署与监控</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_生产架构"><a class="anchor" href="#_生产架构"></a>生产架构</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-64260b24081cf450e8871a253b326f1b.png" alt="Diagram" width="938" height="381">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_主动监控"><a class="anchor" href="#_主动监控"></a>主动监控</h3>
+<div class="paragraph">
+<p>LDD 有助于智能监控：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>基于日志模式的警报</strong></p>
+</li>
+<li>
+<p><strong>行为异常检测</strong></p>
+</li>
+<li>
+<p><strong>实时业务指标</strong></p>
+</li>
+<li>
+<p><strong>日志关联的调试辅助</strong></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_结论与展望"><a class="anchor" href="#_结论与展望"></a>结论与展望</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这种方法论结合了函数式编程范式的优势与日志驱动开发（Log Driven Development）的稳健性。它使我们能够：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>预见问题</strong>得益于预先设计的日志</p>
+</li>
+<li>
+<p><strong>保持质量</strong>通过持续验证</p>
+</li>
+<li>
+<p><strong>快速适应</strong>对 API 的变更</p>
+</li>
+<li>
+<p><strong>确保可追溯性</strong>完整的操作</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>迭代开发和模块化架构确保了在面对音乐平台不断变化的约束时的可扩展性。</p>
+</div>
+<div class="sect2">
+<h3 id="_下一步"><a class="anchor" href="#_下一步"></a>下一步</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>第一阶段</strong>使用 PyMonade 实现核心</p>
+</li>
+<li>
+<p><strong>阶段 2</strong>: 带有智能缓存的 Spotify 集成</p>
+</li>
+<li>
+<p><strong>阶段 3</strong>有弹性的 YouTube 解决方案</p>
+</li>
+<li>
+<p><strong>第四阶段</strong>: 高级特性和优化</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>这个坚实的概念性基础将使我们能够在交付卓越用户体验的同时应对技术挑战。</p>
+</div>
+<hr>
+<div class="paragraph">
+<p><strong>本文将随后提供一系列技术文章，详细介绍每个组件的实现，并附带代码示例和函数式模式。</strong></p>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0084_disco_bot_discord_python_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

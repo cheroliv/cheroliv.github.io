@@ -1,0 +1,1237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kotlin Arrow : Die Navigation in der Either-Monade meistern — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Kotlin Arrow : Die Navigation in der Either-Monade meistern — Cheroliv"/>
+        <meta property="og:description" content="Entdecken Sie die fortgeschrittenen Techniken, um effizient durch die rechte und linke Seite der Either-Monade mit der Kotlin Arrow-Bibliothek zu navigieren."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Kotlin Arrow : Die Navigation in der Either-Monade meistern — Cheroliv"/>
+        <meta name="twitter:description" content="Entdecken Sie die fortgeschrittenen Techniken, um effizient durch die rechte und linke Seite der Either-Monade mit der Kotlin Arrow-Bibliothek zu navigieren."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.png"/>
+        <meta name="description" content="Entdecken Sie die fortgeschrittenen Techniken, um effizient durch die rechte und linke Seite der Either-Monade mit der Kotlin Arrow-Bibliothek zu navigieren."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html"},
+                      "headline": "Kotlin Arrow : Die Navigation in der Either-Monade meistern",
+                      "description": "Entdecken Sie die fortgeschrittenen Techniken, um effizient durch die rechte und linke Seite der Either-Monade mit der Kotlin Arrow-Bibliothek zu navigieren.",
+                      "datePublished": "2024-09-24",
+                      "dateModified": "2024-09-24",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Kotlin Arrow : Die Navigation in der Either-Monade meistern", "item": "https:\/\/cheroliv.com\/blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Kotlin Arrow : Die Navigation in der Either-Monade meistern</h1>
+                <p class="lead">
+                    <em>Publié le 24 September 2024</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_einführung">Einführung</a></li>
+<li><a href="#_was_ist_die_either_monade">Was ist die Either-Monade?</a>
+<ul class="sectlevel2">
+<li><a href="#_warum_either_verwenden">Warum Either verwenden?</a></li>
+</ul>
+</li>
+<li><a href="#_kontext">Kontext</a></li>
+<li><a href="#_die_verschiedenen_ansätze">Die verschiedenen Ansätze</a>
+<ul class="sectlevel2">
+<li><a href="#_der_klassische_ansatz_mit_when">Der klassische Ansatz mit `when</a></li>
+<li><a href="#_verwendung_von_fold_für_einen_präziseren_ansatz">Verwendung von <code>fold</code> für einen präziseren Ansatz</a></li>
+<li><a href="#_transformation_mit_map_und_mapleft">Transformation mit <code>map</code> und `mapLeft</a></li>
+<li><a href="#_fehlerbehandlung_mit_getorelse">Fehlerbehandlung mit `getOrElse</a></li>
+<li><a href="#_seitliche_aktionen_mit_onleft_und_onright">Seitliche Aktionen mit <code>onLeft</code> und `onRight</a></li>
+<li><a href="#_verkettung_von_operationen_mit_flatmap">Verkettung von Operationen mit `flatMap</a></li>
+<li><a href="#_bidirektionale_transformation_mit_bimap">Bidirektionale Transformation mit `bimap</a></li>
+<li><a href="#_umkehrung_der_seiten_mit_swap">Umkehrung der Seiten mit `swap</a></li>
+<li><a href="#_verwendung_von_tap_und_tapleft">Verwendung von <code>tap</code> und <code>tapLeft</code> :</a></li>
+<li><a href="#_verwendung_von_recover">Verwendung von <code>recover</code> :</a></li>
+</ul>
+</li>
+<li><a href="#_praktische_anwendungsfälle">Praktische Anwendungsfälle</a></li>
+<li><a href="#_fazit">Fazit</a></li>
+<li><a href="#_weitergehen">Weitergehen</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Lesezeit: 12 bis 15 Minuten.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_einführung">Einführung</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title"><em>Zielgruppe :</em> Kotlin-Entwickler von mittlerem bis fortgeschrittenem Niveau.</div>
+<p>In der Welt der funktionalen Programmierung in Kotlin bietet die Arrow-Bibliothek leistungsstarke Werkzeuge zur Behandlung von Fehlern und alternativen Fällen. Unter diesen Werkzeugen ist die Monade`Either`zeichnet sich dadurch aus, dass es zwei mögliche Zustände darstellen kann: Erfolg (Right) oder Fehler (Left). Aber wie kann man effizient zwischen diesen beiden Zuständen navigieren? Das werden wir in diesem Artikel untersuchen.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_was_ist_die_either_monade">Was ist die Either-Monade?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die Monade`Either`ist eine Datenstruktur, die zwei sich gegenseitig ausschließende Möglichkeiten repräsentiert. In Kotlin mit Arrow wird sie häufig verwendet, um die Erfolgs- und Fehlerfälle einer Operation zu behandeln, wobei sie eine elegante Alternative zu traditionellen Ausnahmen bietet.</p>
+</div>
+<div class="sect2">
+<h3 id="_warum_either_verwenden">Warum Either verwenden?</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Explizite Fehlerbehandlung: Zwingt den Entwickler, Fehlersituationen zu berücksichtigen.</p>
+</li>
+<li>
+<p>Funktionale Komposition: Erleichtert das Verketten von Operationen, die fehlschlagen können.</p>
+</li>
+<li>
+<p>Typsicherheit: Fehler sind typisiert, was hilft, sie präziser zu handhaben.</p>
+</li>
+<li>
+<p>Keine Ausnahmen: Vermeide Nebeneffekte und unerwartete Unterbrechungen des Ausführungsflusses.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_kontext">Kontext</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Stellen Sie sich vor, Sie entwickeln eine REST-API mithttps://spring.io/projects/spring-boot/[Spring Boot,windows=später-lesen] et <a href="https://kotlinlang.org/">Kotlin</a>, indem die Bibliothek verwendet wirdhttps://arrow-kt.io/[Pfeil,Fenster=read-later]. Sie haben eine Funktion`findOneUserByEmail`der ein zurückgibt`Either&lt;Throwable, User&gt;`. Wie können Sie dieses Ergebnis elegant und funktional behandeln?</p>
+</div>
+<div class="paragraph">
+<p>Wir haben eine Klasse User:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">@file:Suppress(
+    "RemoveRedundantQualifierName",
+    "MemberVisibilityCanBePrivate",
+    "SqlNoDataSourceInspection"
+)
+
+package webapp.users
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
+import org.springframework.beans.factory.getBean
+import org.springframework.context.ApplicationContext
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
+import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.awaitOne
+import org.springframework.r2dbc.core.awaitRowsUpdated
+import webapp.core.property.ANONYMOUS_USER
+import webapp.core.property.EMPTY_STRING
+import webapp.core.utils.AppUtils.cleanField
+import webapp.users.EntityModel.Companion.ID_MEMBER
+import webapp.users.User.UserDao.Attributes.EMAIL_ATTR
+import webapp.users.User.UserDao.Attributes.ID_ATTR
+import webapp.users.User.UserDao.Attributes.LANG_KEY_ATTR
+import webapp.users.User.UserDao.Attributes.LOGIN_ATTR
+import webapp.users.User.UserDao.Attributes.PASSWORD_ATTR
+import webapp.users.User.UserDao.Attributes.VERSION_ATTR
+import webapp.users.User.UserDao.Constraints.LOGIN_REGEX
+import webapp.users.User.UserDao.Fields.EMAIL_FIELD
+import webapp.users.User.UserDao.Fields.ID_FIELD
+import webapp.users.User.UserDao.Fields.LANG_KEY_FIELD
+import webapp.users.User.UserDao.Fields.LOGIN_FIELD
+import webapp.users.User.UserDao.Fields.PASSWORD_FIELD
+import webapp.users.User.UserDao.Fields.VERSION_FIELD
+import webapp.users.User.UserDao.Relations.INSERT
+import webapp.users.security.Role
+import webapp.users.security.Role.RoleDao
+import webapp.users.security.UserRole.UserRoleDao
+import java.util.*
+import jakarta.validation.constraints.Email as EmailConstraint
+
+data class User(
+    override val id: UUID? = null,
+
+    @field:NotNull
+    @field:Pattern(regexp = LOGIN_REGEX)
+    @field:Size(min = 1, max = 50)
+    val login: String,
+
+    @JsonIgnore
+    @field:NotNull
+    @field:Size(min = 60, max = 60)
+    val password: String = EMPTY_STRING,
+
+    @field:EmailConstraint
+    @field:Size(min = 5, max = 254)
+    val email: String = EMPTY_STRING,
+
+    @JsonIgnore
+    val roles: MutableSet&lt;Role&gt; = mutableSetOf(Role(ANONYMOUS_USER)),
+
+    @field:Size(min = 2, max = 10)
+    val langKey: String = EMPTY_STRING,
+
+    @JsonIgnore
+    val version: Long = -1,
+) : EntityModel&lt;UUID&gt;() {
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array&lt;String&gt;) = println(UserDao.Relations.sqlScript)
+    }
+
+    object UserDao {
+        object Constraints {
+            // Regex for acceptable logins
+            const val LOGIN_REGEX =
+                "^(?&gt;[a-zA-Z0-9!$&amp;*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?&gt;[_.@A-Za-z0-9-]+)$"
+            const val PASSWORD_MIN: Int = 4
+            const val PASSWORD_MAX: Int = 16
+            const val IMAGE_URL_DEFAULT = "https://placehold.it/50x50"
+            const val PHONE_REGEX = "^(\\+|00)?[1-9]\\d{0,49}\$"
+        }
+
+        object Members {
+            const val PASSWORD_MEMBER = "password"
+            const val ROLES_MEMBER = "roles"
+        }
+
+        object Fields {
+            const val ID_FIELD = "`id`"
+            const val LOGIN_FIELD = "`login`"
+            const val PASSWORD_FIELD = "`password`"
+            const val EMAIL_FIELD = "`email`"
+            const val LANG_KEY_FIELD = "`lang_key`"
+            const val VERSION_FIELD = "`version`"
+        }
+
+        object Attributes {
+            val ID_ATTR = ID_FIELD.cleanField()
+            val LOGIN_ATTR = LOGIN_FIELD.cleanField()
+            val PASSWORD_ATTR = PASSWORD_FIELD.cleanField()
+            val EMAIL_ATTR = EMAIL_FIELD.cleanField()
+            const val LANG_KEY_ATTR = "langKey"
+            val VERSION_ATTR = VERSION_FIELD.cleanField()
+        }
+
+        object Relations {
+            const val TABLE_NAME = "`user`"
+            const val SQL_SCRIPT = """
+            CREATE TABLE IF NOT EXISTS $TABLE_NAME (
+                $ID_FIELD                     UUID default random_uuid() PRIMARY KEY,
+                $LOGIN_FIELD                  VARCHAR,
+                $PASSWORD_FIELD               VARCHAR,
+                $EMAIL_FIELD                  VARCHAR,
+                $LANG_KEY_FIELD               VARCHAR,
+                $VERSION_FIELD                bigint
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS `uniq_idx_user_login`
+            ON $TABLE_NAME ($LOGIN_FIELD);
+            CREATE UNIQUE INDEX IF NOT EXISTS `uniq_idx_user_email`
+            ON $TABLE_NAME ($EMAIL_FIELD);
+"""
+
+            @Suppress("SqlDialectInspection")
+            const val INSERT = """
+            insert into $TABLE_NAME (
+                $LOGIN_FIELD, $EMAIL_FIELD,
+                $PASSWORD_FIELD, $LANG_KEY_FIELD,
+                $VERSION_FIELD
+            ) values ( :login, :email, :password, :langKey, :version)"""
+
+            @JvmStatic
+            val sqlScript: String
+                get() = setOf(
+                    UserDao.Relations.SQL_SCRIPT,
+                    RoleDao.Relations.SQL_SCRIPT,
+                    UserRoleDao.Relations.SQL_SCRIPT
+                ).joinToString("")
+                    .trimMargin()
+        }
+
+        object Dao {
+            val Pair&lt;User, ApplicationContext&gt;.toJson: String
+                get() = second.getBean&lt;ObjectMapper&gt;().writeValueAsString(first)
+
+            suspend fun Pair&lt;User, ApplicationContext&gt;.save(): Either&lt;Throwable, Long&gt; = try {
+                second.getBean&lt;R2dbcEntityTemplate&gt;()
+                    .databaseClient
+                    .sql(INSERT)
+                    .bind(LOGIN_ATTR, first.login)
+                    .bind(EMAIL_ATTR, first.email)
+                    .bind(PASSWORD_ATTR, first.password)
+                    .bind(LANG_KEY_ATTR, first.langKey)
+                    .bind(VERSION_ATTR, first.version)
+                    .fetch()
+                    .awaitRowsUpdated()
+                    .right()
+            } catch (e: Throwable) {
+                e.left()
+            }
+
+
+            suspend fun ApplicationContext.findOneUserByEmail(
+                email: String
+            ): Either&lt;Throwable, User&gt; = try {
+                getBean&lt;DatabaseClient&gt;()
+                    .sql("SELECT * FROM `user` WHERE LOWER(email) = LOWER(:email)")
+                    .bind("email", email)
+                    .fetch()
+                    .awaitOne()
+                    .let { row -&gt;
+                        User(
+                            id = row[ID_ATTR] as UUID?,
+                            login = row[LOGIN_ATTR] as String,
+                            password = row[PASSWORD_ATTR] as String,
+                            email = row[EMAIL_ATTR] as String,
+                            langKey = row[LANG_KEY_ATTR] as String,
+                            version = row[VERSION_ATTR] as Long
+                        )
+                    }.right()
+            } catch (e: Throwable) {
+                e.left()
+            }
+        }
+    }
+
+    /** Account REST API URIs */
+    object UserRestApis {
+        const val API_AUTHORITY = "/api/authorities"
+        const val API_USERS = "/api/users"
+        const val API_SIGNUP = "/signup"
+        const val API_SIGNUP_PATH = "$API_USERS$API_SIGNUP"
+        const val API_ACTIVATE = "/activate"
+        const val API_ACTIVATE_PATH = "$API_USERS$API_ACTIVATE?key="
+        const val API_ACTIVATE_PARAM = "{activationKey}"
+        const val API_ACTIVATE_KEY = "key"
+        const val API_RESET_INIT = "/reset-password/init"
+        const val API_RESET_FINISH = "/reset-password/finish"
+        const val API_CHANGE = "/change-password"
+        const val API_CHANGE_PATH = "$API_USERS$API_CHANGE"
+    }
+}
+
+// Abstract entity model with Generic ID, which can be of any type
+abstract class EntityModel&lt;T&gt;(
+    open val id: T? = null
+) {
+    companion object {
+        const val ID_MEMBER = "id"
+    }
+}
+
+// Generic extension function that allows the ID to be applied to any EntityModel type
+inline fun &lt;reified T : EntityModel&lt;ID&gt;, ID&gt; T.withId(id: ID): T {
+    // Use reflection to create a copy with the passed ID
+    return this::class.constructors.first { it.parameters.any { param -&gt; param.name == ID_MEMBER } }
+        .call(id, *this::class.constructors.first().parameters.drop(1).map { param -&gt;
+            this::class.members.first { member -&gt; member.name == param.name }.call(this)
+        }.toTypedArray())
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_verschiedenen_ansätze">Die verschiedenen Ansätze</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_der_klassische_ansatz_mit_when">Der klassische Ansatz mit `when</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val user: User by lazy { userFactory(USER) }
+
+val result: Either&lt;Throwable, User&gt; = context.findOneUserByEmail(user.email)
+
+when (result) {
+    is Either.Left -&gt; {
+        val error = result.value
+        println("Erreur : ${error.message}")
+    }
+    is Either.Right -&gt; {
+        val user = result.value
+        println("Utilisateur trouvé : ${user.login}")
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Diese Methode, obwohl einfach und lesbar, nutzt die funktionalen Fähigkeiten von Arrow nicht vollständig aus.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verwendung_von_fold_für_einen_präziseren_ansatz">Verwendung von <code>fold</code> für einen präziseren Ansatz</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">result.fold(
+{ error -&gt; println("Erreur : ${error.message}") },
+{ user -&gt; println("Utilisateur trouvé : ${user.login}") }
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`fold`ermöglicht es, Aktionen für die beiden Fälle (Left und Right) kurz und elegant zu definieren.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_transformation_mit_map_und_mapleft">Transformation mit <code>map</code> und `mapLeft</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val processedResult = result
+    .map { user -&gt; "Utilisateur trouvé : ${user.login}" }
+    .mapLeft { error -&gt; "Erreur : ${error.message}" }
+
+println(processedResult.merge())</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Dieser Ansatz ermöglicht es, die in Either enthaltenen Werte zu transformieren, während seine Struktur erhalten bleibt, ideal für komplexere Verarbeitungsketten.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_fehlerbehandlung_mit_getorelse">Fehlerbehandlung mit `getOrElse</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val user = result.getOrElse { error -&gt;
+    println("Erreur : ${error.message}")
+    User(login = "default", email = "default@example.com") // utilisateur par défaut
+}
+println("Login : ${user.login}")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`getOrElse`bietet eine elegante Fehlerbehandlung, indem es die Angabe eines Standardwertes erlaubt.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_seitliche_aktionen_mit_onleft_und_onright">Seitliche Aktionen mit <code>onLeft</code> und `onRight</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">result.onLeft { error -&gt; println("Erreur : ${error.message}") }
+.onRight { user -&gt; println("Utilisateur trouvé : ${user.login}") }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Diese Methoden ermöglichen das Ausführen von Aktionen auf jeder Seite ohne das Either zu ändern, perfekt für das Logging oder leichte Seiteneffekte.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verkettung_von_operationen_mit_flatmap">Verkettung von Operationen mit `flatMap</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">fun findUser(email: String): Either&lt;Throwable, User&gt; = // ... implémentation
+
+fun getUserPermissions(user: User): Either&lt;Throwable, List&lt;String&gt;&gt; = // ... implémentation
+
+val userPermissions = findUser("user@example.com")
+    .flatMap { user -&gt; getUserPermissions(user) }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>flatMap`ist nützlich, um Vorgänge zu verketten, die einige zurückgeben`Either</code>, dadurch vermeidend die`Either`verschachtelt.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bidirektionale_transformation_mit_bimap">Bidirektionale Transformation mit `bimap</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val result: Either&lt;Throwable, User&gt; = // ... obtention du résultat
+val processedResult = result.bimap(
+    { error -&gt; "Erreur: ${error.message}" },
+    { user -&gt; "Utilisateur: ${user.login}" }
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`bimap`ermöglicht es, sowohl die linke als auch die rechte Seite in einem Vorgang zu transformieren.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_umkehrung_der_seiten_mit_swap">Umkehrung der Seiten mit `swap</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val result: Either&lt;Throwable, User&gt; = // ... obtention du résultat
+val swapped = result.swap()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>swap`ist nützlich, wenn du die Seiten eines umkehren möchtest`Either</code>, zum Beispiel um die Schnittstelle einer Funktion an eine andere anzupassen.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verwendung_von_tap_und_tapleft">Verwendung von <code>tap</code> und <code>tapLeft</code> :</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">result.tap { user -&gt; println("Utilisateur trouvé : ${user.login}") }
+.tapLeft { error -&gt; println("Erreur : ${error.message}") }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ähnlich zu`onLeft` et <code>onRight</code>, aber diese Methoden geben das ursprüngliche Either zurück, was nützlich ist, um Operationen zu ketten.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verwendung_von_recover">Verwendung von <code>recover</code> :</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val recoveredUser = result.recover { error -&gt;
+    println("Erreur récupérée : ${error.message}")
+    User(login = "recovered", email = "recovered@example.com")
+}
+println("Login : ${recoveredUser.login}")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Diese Methode ermöglicht das Umwandeln eines Either.Left in ein Either.Right, indem sie einen Ersatzwert bereitstellt.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_praktische_anwendungsfälle">Praktische Anwendungsfälle</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Benutzen Sie`fold`für einfache Vorgänge, die eine Bearbeitung pro Fall erfordern. - Bevorzugen Sie`map` et <code>mapLeft`für Datenumwandlungen ohne die Struktur des`Either</code>. - Wählen Sie für`flatMap`beim Verketten von Operationen, die fehlschlagen können - Verwenden Sie`recover`um einen Standardwert im Fehlerfall bereitzustellen - Wählen`onLeft` et <code>onRight</code> (ou <code>tap</code> et <code>tapLeft</code>) für Nebenwirkungen wie das Logging. - Verwenden Sie`bimap`um beide Seiten in eine einzige Operation zu verwandeln. - Anwenden`swap`wenn Sie die Schnittstelle einer Funktion an eine andere anpassen müssen.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fazit">Fazit</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Jede dieser Ansätze hat je nach Nutzungskontext ihre Vorteile. Methoden wie`fold`, <code>map</code>/<code>mapLeft</code>, et `recover`sind besonders nützlich, wenn Sie mehrere Operationen hintereinander ausführen oder Daten funktional transformieren möchten.</p>
+</div>
+<div class="paragraph">
+<p>Die Monade`Either`Arrow bietet eine bemerkenswerte Flexibilität für die Handhabung von Erfolgs- und Fehlerfällen in Ihren Kotlin-Anwendungen. Wenn Sie diese verschiedenen Ansätze beherrschen, können Sie robuster, lesbarer und funktionaleren Code schreiben.</p>
+</div>
+<div class="paragraph">
+<p>In Ihrem nächsten Projekt zögern Sie nicht, diese Techniken zu erkunden, um das Beste aus der funktionalen Programmierung mit Kotlin und Arrow herauszuholen!</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_weitergehen">Weitergehen</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Offizielle Dokumentation von Arrow:https://arrow-kt.io/docs/apidocs/arrow-core/arrow.core/-either/[Pfeil entweder] - Kotlin Coroutines mit Arrow :https://arrow-kt.io/docs/fx/[Arrow Fx Coroutines]</p>
+</div>
+<div class="paragraph">
+<p>Vergiss nicht, deine Erfahrungen und deine bevorzugten Techniken zum Arbeiten damit zu teilen.`Either`in den Kommentaren unten!</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

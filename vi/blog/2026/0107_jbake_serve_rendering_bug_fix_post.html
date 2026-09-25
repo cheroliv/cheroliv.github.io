@@ -1,0 +1,1038 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Warum zeigte `serve` eine hässliche Website an, während `publishSite` perfekt war — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Warum zeigte `serve` eine hässliche Website an, während `publishSite` perfekt war — Cheroliv"/>
+        <meta property="og:description" content="Die Aufgabe `serve` meines Gradle-JBake-Plugins zeigte rechteckige Buttons, unlesbaren Text und teilweise fehlendes CSS, während `publishSite` eine perfekte Website erzeugte. Ursache: JBake-CLI-Argumente wurden mit falscher Syntax übergeben. Hier ist die vollständige Diagnose und wie ich sie behoben habe."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0107_jbake_serve_rendering_bug_fix_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Warum zeigte `serve` eine hässliche Website an, während `publishSite` perfekt war — Cheroliv"/>
+        <meta name="twitter:description" content="Die Aufgabe `serve` meines Gradle-JBake-Plugins zeigte rechteckige Buttons, unlesbaren Text und teilweise fehlendes CSS, während `publishSite` eine perfekte Website erzeugte. Ursache: JBake-CLI-Argumente wurden mit falscher Syntax übergeben. Hier ist die vollständige Diagnose und wie ich sie behoben habe."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0107_jbake_serve_rendering_bug_fix_post.png"/>
+        <meta name="description" content="Die Aufgabe `serve` meines Gradle-JBake-Plugins zeigte rechteckige Buttons, unlesbaren Text und teilweise fehlendes CSS, während `publishSite` eine perfekte Website erzeugte. Ursache: JBake-CLI-Argumente wurden mit falscher Syntax übergeben. Hier ist die vollständige Diagnose und wie ich sie behoben habe."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0107_jbake_serve_rendering_bug_fix_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0107_jbake_serve_rendering_bug_fix_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0107_jbake_serve_rendering_bug_fix_post.html"},
+                      "headline": "Warum zeigte `serve` eine h\u00E4ssliche Website an, w\u00E4hrend `publishSite` perfekt war",
+                      "description": "Analyse eines subtilen Fehlers in einem Gradle-Plugin, bei der die Aufgabe `serve` ein visuell anderes Ergebnis als `publishSite` produzierte. Diagnose, Ursache und Korrektur mithilfe von positionellen Argumenten der JBake CLI.",
+                      "datePublished": "2026-04-22",
+                      "dateModified": "2026-04-22",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0107_jbake_serve_rendering_bug_fix_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Warum zeigte `serve` eine h\u00E4ssliche Website an, w\u00E4hrend `publishSite` perfekt war", "item": "https:\/\/cheroliv.com\/blog\/2026\/0107_jbake_serve_rendering_bug_fix_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Warum zeigte `serve` eine hässliche Website an, während `publishSite` perfekt war</h1>
+                <p class="lead">
+                    <em>Publié le 22 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_die_szene_vier_screenshots_zwei_renderings">Die Szene: vier Screenshots, zwei Renderings</a>
+<ul class="sectlevel2">
+<li><a href="#_lokales_rendern">Lokales Rendern</a></li>
+<li><a href="#_online_rendering">Online-Rendering</a></li>
+</ul>
+</li>
+<li><a href="#_die_diagnose_serve_zeigte_nicht_auf_den_richtigen_ordner">Die Diagnose: <code>serve</code> zeigte nicht auf den richtigen Ordner.</a></li>
+<li><a href="#_die_ursache_jbake_cli_funktioniert_nicht_so">Die Ursache: JBake CLI funktioniert nicht so.</a></li>
+<li><a href="#_die_lösung_positionale_argumente_keine_flags">Die Lösung: positionale Argumente, keine Flags</a></li>
+<li><a href="#_schnelle_überprüfung_mit_curl">Schnelle Überprüfung mit curl</a></li>
+<li><a href="#_warum_war_dieser_bug_tückisch">Warum war dieser Bug tückisch?</a></li>
+<li><a href="#_fazit">Fazit</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">Lesezeit: 10 minutes</div>
+<p>Kennst du diesen Moment, wenn deine lokale Seite überhaupt nicht gut aussieht, aber sobald sie online bereitgestellt wird, ist alles bestens? Das ist mir mit meinem Gradle-JBake-Plugin passiert. Die Aufgabe`serve`Es zeigte quadratische Buttons, dunklen Text auf schwarzem Hintergrund und ein seltsam fehlendes CSS. Doch`publishSite`Erzeugte dieselbe Website, und zwar tadellos. Der Schuldige war weder das CSS, noch der Browser, noch der Cache. Es war eine Zeile Kotlin-Code — und eine schlechte Angewohnheit bei den Kommandozeilenargumenten.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Klopfen</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_szene_vier_screenshots_zwei_renderings">Die Szene: vier Screenshots, zwei Renderings</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Es war nach einem Systemabsturz. Ich hatte vier Screenshots gemacht, um die lokale Wiedergabe zu vergleichen (<code>./gradlew serve`auf`localhost:8820</code>) mit dem Online-Rendering (`publishSite`Auf GitHub Pages). Zwei Screenshots pro Seite: oben und unten.</p>
+</div>
+<div class="sect2">
+<h3 id="_lokales_rendern">Lokales Rendern</h3>
+<div class="paragraph">
+<p><strong>Kopf der Seite</strong>— Die Schaltflächen <strong>Project</strong> und <strong>Template</strong> sind<strong>kleine, rechteckige</strong>, mit den Standardfarben (blau und grün). Die Karte <strong>Start Writing</strong> hat ein<strong>einfarbiger schwarzer Hintergrund</strong>, ohne Rahmen.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/screen_local1.png" alt="Rendu local - haut de page">
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Seitenfuß</strong>— Der Untertitel <strong>"Letzte Artikel und Ressourcen"</strong> ist<strong>quasi-unlesbar</strong>, zu dunkel auf schwarzem Hintergrund. Die Daten unter den Blog-Bildern („17. Oktober 2013“ usw.) sind<strong>abwesend</strong>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/screen_local2.png" alt="Rendu local - bas de page">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_online_rendering">Online-Rendering</h3>
+<div class="paragraph">
+<p><strong>Seitenkopf</strong>— Die gleichen Tasten sind<strong>große, Schafe, flashiges Neon-Grün</strong>, Text in Großbuchstaben. Die Karte hat ein<strong>abgerundeter weißer Rahmen mit Schattenwurf</strong>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/screen_online1.png" alt="Rendu en ligne - haut de page">
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Fußzeile</strong>— Der Untertitel ist<strong>gut lesbar</strong>. Die Daten sind<strong>sichtbare</strong>. Die Artikelkarten haben<strong>abgerundete Ecken</strong>und die Titel sind<strong>fett</strong>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/screen_online2.png" alt="Rendu en ligne - bas de page">
+</div>
+</div>
+<div class="paragraph">
+<p>Erster Reflex: das Thema. Ich verwende ein dynamisches Themensystem (hell, dunkel, high-contrast) basierend auf`localStorage`. Vielleicht hat der lokale store ein High-Contrast-Theme ausgelöst? Nein. Ich hatte bereits geschriebenhttps://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html[ein ganzer Artikel über das Vorladen der Themen], ich weiß, wie das funktioniert. Und selbst im High-Contrast-Modus hätte die CSS-Struktur (ovale Buttons, Schatten) da sein müssen. Sie war nicht da.</p>
+</div>
+<div class="paragraph">
+<p>Zweiter Reflex: Der Browser-Cache. Nein, ich hatte den Test mit sauberen Profilen durchgeführt. Der Unterschied blieb bestehen.</p>
+</div>
+<div class="paragraph">
+<p>Dritter Reflex:`serve`lieferte nicht die gleichen Dateien wie`publishSite`.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_diagnose_serve_zeigte_nicht_auf_den_richtigen_ordner">Die Diagnose: <code>serve</code> zeigte nicht auf den richtigen Ordner.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Mein Gradle-Plugin`bakery`hat zwei Hauptaufgaben:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>bake</code>: erzeugt die statische Seite in`build/bake/`</p>
+</li>
+<li>
+<p><code>serve</code>: startet einen lokalen Webserver</p>
+</li>
+<li>
+<p><code>publishSite</code>: schiebt`build/bake/`zu GitHub Pages</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Die Divergenz konnte nur von`serve`. Si <code>publishSite`veröffentlichte den richtigen Inhalt, das ist, dass`build/bake/`war gut. Wenn`serve`Er zeigte etwas anderes, denn er war nicht nützlich`build/bake/</code>.</p>
+</div>
+<div class="paragraph">
+<p>Schauen wir uns den Code an. In`SiteManager.kt`, die Aufgabe`serve`ist wie folgt definiert:</p>
+</div>
+<div class="listingblock">
+<div class="title">SiteManager.kt — La tâche serve (version buggy)</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">tasks.register("serve", JavaExec::class.java) { task -&gt;
+    task.apply {
+        mainClass.set("org.jbake.launcher.Main")
+        classpath = jbakeRuntime
+        environment("GEM_PATH", jbakeRuntime.asPath)
+        jvmArgs(/* ... */)
+        args = listOf(
+            "-b", file(site.bake.srcPath).absolutePath,
+            "-s", layout.buildDirectory.get()
+                .asFile.resolve(site.bake.destDirPath)
+                .absolutePath
+        )
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>org.jbake.launcher.Main`ist der Einstiegspunkt der JBake 2.7.0 CLI. Die Idee: zu passen</code>-b`für den Quellordner und`-s`für den Zielordner, dann den Server-Modus starten. Aber&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_ursache_jbake_cli_funktioniert_nicht_so">Die Ursache: JBake CLI funktioniert nicht so.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>JBake 2.7.0 wartet auf<strong>positionale Argumente</strong>für Quelle und Ziel, dann optionale Flags. Die Signatur ist:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">jbake &lt;source&gt; &lt;destination&gt; [options]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Aber in meinem Code habe ich geschrieben:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">args = listOf("-b", "/path/to/site", "-s", "/path/to/build/bake")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>JBake interpretierte das so:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>-b</code>→ parses das Flag \"bake\" (Bool), verbraucht</p>
+</li>
+<li>
+<p><code>/path/to/site</code>→ wird positionelles Argument 1 (Quelle)</p>
+</li>
+<li>
+<p><code>-s</code>→ parset das Flag "serve" (boolesch), Server gestartet<strong>sofort</strong></p>
+</li>
+<li>
+<p><code>/path/to/build/bake</code>→ wird zu einem verwaisten Argument, das ignoriert oder falsch interpretiert wird</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Ergebnis: JBake nahm`/path/to/site`wie Quelle,<strong>berücksichtigte das Ziel nicht</strong>bereitgestellt (<code>build/bake</code>), und verwendete sein Standardverzeichnis (oft`./output`oder eine temporäre Kopie). Die Datei`css/styles.css`Der Build war also überschrieben oder ignoriert, und es wurde ein altes Standard-CSS (ohne die benutzerdefinierten Variablen, ohne die abgerundeten Ecken, ohne die Schatten) bereitgestellt.</p>
+</div>
+<div class="paragraph">
+<p>Im Vergleich,<code>bake</code> et <code>publishSite`verwenden den<strong>offizielles Gradle-JBake-Plugin</strong>(`jbake-gradle-plugin</code>) der ordentlich schreibt in`build/bake/`über die Gradle-API. Sie gehen nicht über die CLI.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_lösung_positionale_argumente_keine_flags">Die Lösung: positionale Argumente, keine Flags</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die Korrektur ist trivial — sobald man weiß. Es genügt, Quelle und Ziel als positionale Argumente zu übergeben, dann`-s`zum Schluss:</p>
+</div>
+<div class="listingblock">
+<div class="title">SiteManager.kt — La tâche serve (version corrigée)</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">args = listOf(
+    file(site.bake.srcPath).absolutePath,
+    layout.buildDirectory.get()
+        .asFile.resolve(site.bake.destDirPath)
+        .absolutePath,
+    "-s"
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Das ist alles. Drei Zeilen geändert, Fehler behoben.</p>
+</div>
+<div class="paragraph">
+<p>&lt;/think&gt;</p>
+</div>
+<div class="paragraph">
+<p>Nach lokaler Veröffentlichung des Plugins (<code>publishToMavenLocal</code>), un `./gradlew serve`Starte JBake mit der korrekten Syntax:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">jbake /home/user/project/site /home/user/project/build/bake -s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Und dieses Mal dient der in JBake integrierte Jetty-Server dem Inhalt von`build/bake/`— identisch mit dem, was online veröffentlicht wird.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/serve-vs-publish-diagram.svg" alt="serve vs publish diagram" width="1214" height="348">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_schnelle_überprüfung_mit_curl">Schnelle Überprüfung mit curl</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Um sicherzustellen, dass der Server den richtigen Inhalt bereitstellt, ein einfaches`curl`bestätigt dass`index.html`enthält`data-bs-theme="light"`und dass`build/bake/css/styles.css`wiegt tatsächlich 31 402 Byte — identisch zur von erzeugten Datei`bake`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew serve
+# Dans un autre terminal :
+$ curl -s http://localhost:8820/ | grep data-bs-theme
+&lt;html ... data-bs-theme="light" ...&gt;
+
+$ curl -I http://localhost:8820/css/styles.css
+HTTP/1.1 200 OK
+Content-Length: 31402
+Content-Type: text/css</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Das lokale Rendering ist jetzt<strong>pixel-identisch</strong>zum bereitgestellten Rendering</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_warum_war_dieser_bug_tückisch">Warum war dieser Bug tückisch?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Siehst du, warum es schwierig war, es zu fangen?</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Kein expliziter Fehler</strong>: JBake ist nicht abgestürzt. Es 'funktionierte', einfach mit einem falschen Ordner.</p>
+</li>
+<li>
+<p><strong>Der Build funktionierte</strong>:`./gradlew bake`erzeugte korrekt die Dateien in`build/bake/`.</p>
+</li>
+<li>
+<p><strong>Die Bereitstellung funktionierte.</strong>:`publishSite`schob den guten Inhalt online.</p>
+</li>
+<li>
+<p><strong>Nur <code>serve</code> war kaputt</strong>: die Entwicklungsaufgabe, die man ständig zum Iterieren verwendet.</p>
+</li>
+<li>
+<p><strong>Die Gewohnheit des <code>-key value</strong>Als Entwickler, ist man durch Jahre der Unix-CLI geprägt.</code>-o output`, <code>-i input</code>). JBake CLI ist eine Ausnahme — Quelle und Ziel sind positionell.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fazit">Fazit</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Wenn Sie ein Gradle-Plugin warten, das JBake (oder jedes CLI-Tool) umhüllt,<strong>Lies die Dokumentation der Argumente</strong>auch wenn du denkst, sie zu kennen. Eine implizite Annahme(<code>-s</code>= "set destination") kann Sie Stunden visuellem Debugging kosten.</p>
+</div>
+<div class="paragraph">
+<p>Der Fix bestand wörtlich darin, zu ändern</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">args = listOf("-b", src, "-s", dest)   // ❌ BUG</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>en :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">args = listOf(src, dest, "-s")         // ✅ FIX</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Drei verschobene Tokens, und meine lokale Website ist wieder genauso schön wie die Produktionswebsite.</p>
+</div>
+<div class="paragraph">
+<p><strong>Lektion</strong>: Wenn die Darstellung zwischen lokal und prod ohne ersichtlichen Grund abweicht, verdächtigen Sie zuerst das <strong>pipeline</strong> — nicht das CSS, nicht den Browser, und erst recht nicht das Framework. Oft ist es gerade der Schritt vor der Darstellung, der betrügt.</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0107_jbake_serve_rendering_bug_fix_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

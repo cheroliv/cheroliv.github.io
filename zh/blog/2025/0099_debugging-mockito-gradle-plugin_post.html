@@ -1,0 +1,1317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>调试 Mockito：解决 Gradle 插件测试中的 &quot;Wanted but not invoked&quot; 错误 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0099_debugging-mockito-gradle-plugin_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0099_debugging-mockito-gradle-plugin_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0099_debugging-mockito-gradle-plugin_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0099_debugging-mockito-gradle-plugin_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="调试 Mockito：解决 Gradle 插件测试中的 &quot;Wanted but not invoked&quot; 错误 — Cheroliv"/>
+        <meta property="og:description" content="了解我如何在 Gradle 插件的测试中解决一系列复杂的 Mockito 模拟问题，从“Wanted but not invoked”错误到级联的“Unfinished Stubbing”。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0099_debugging-mockito-gradle-plugin_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0099_debugging-mockito-gradle-plugin_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="调试 Mockito：解决 Gradle 插件测试中的 &quot;Wanted but not invoked&quot; 错误 — Cheroliv"/>
+        <meta name="twitter:description" content="了解我如何在 Gradle 插件的测试中解决一系列复杂的 Mockito 模拟问题，从“Wanted but not invoked”错误到级联的“Unfinished Stubbing”。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0099_debugging-mockito-gradle-plugin_post.png"/>
+        <meta name="description" content="了解我如何在 Gradle 插件的测试中解决一系列复杂的 Mockito 模拟问题，从“Wanted but not invoked”错误到级联的“Unfinished Stubbing”。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0099_debugging-mockito-gradle-plugin_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0099_debugging-mockito-gradle-plugin_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0099_debugging-mockito-gradle-plugin_post.html"},
+                      "headline": "\u8C03\u8BD5 Mockito\uFF1A\u89E3\u51B3 Gradle \u63D2\u4EF6\u6D4B\u8BD5\u4E2D\u7684 \"Wanted but not invoked\" \u9519\u8BEF",
+                      "description": "\u5B8C\u6574\u6307\u5357\uFF1A\u4F7F\u7528 Mockito \u89E3\u51B3\u5728\u6D4B\u8BD5\u81EA\u5B9A\u4E49 Gradle \u63D2\u4EF6\u65F6\u7684\u590D\u6742 mock \u95EE\u9898",
+                      "datePublished": "2024-11-17",
+                      "dateModified": "2024-11-17",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0099_debugging-mockito-gradle-plugin_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u8C03\u8BD5 Mockito\uFF1A\u89E3\u51B3 Gradle \u63D2\u4EF6\u6D4B\u8BD5\u4E2D\u7684 \"Wanted but not invoked\" \u9519\u8BEF", "item": "https:\/\/cheroliv.com\/blog\/2025\/0099_debugging-mockito-gradle-plugin_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">调试 Mockito：解决 Gradle 插件测试中的 &quot;Wanted but not invoked&quot; 错误</h1>
+                <p class="lead">
+                    <em>Publié le 17 November 2024</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_介绍">介绍</a></li>
+<li><a href="#_上下文gradle_bakery_插件">上下文：Gradle Bakery 插件</a></li>
+<li><a href="#_问题_1验证错误的模拟">问题 #1：验证错误的模拟</a>
+<ul class="sectlevel2">
+<li><a href="#_诊断">�诊断</a></li>
+<li><a href="#_解决方案">解决方案</a></li>
+</ul>
+</li>
+<li><a href="#_问题_2级联的_unfinishedstubbingexception">问题 #2：级联的 UnfinishedStubbingException</a>
+<ul class="sectlevel2">
+<li><a href="#_诊断_2">�诊断</a></li>
+<li><a href="#_解决方案_2">解决方案</a></li>
+</ul>
+</li>
+<li><a href="#_问题_3_配置文件不存在">问题 #3 : 配置文件不存在</a>
+<ul class="sectlevel2">
+<li><a href="#_诊断_3">诊断</a></li>
+<li><a href="#_解决方案_3">解决方案</a></li>
+</ul>
+</li>
+<li><a href="#_问题_4afterevaluate_和_nullpointerexception">问题 #4：afterEvaluate 和 NullPointerException</a>
+<ul class="sectlevel2">
+<li><a href="#_诊断_4">诊断</a></li>
+<li><a href="#_解决方案_4">解决方案</a></li>
+</ul>
+</li>
+<li><a href="#_完整的解决方案">完整的解决方案</a></li>
+<li><a href="#_学到的教训">学到的教训</a>
+<ul class="sectlevel2">
+<li><a href="#_检查正确的_mock">检查正确的 mock</a></li>
+<li><a href="#_2_避免使用嵌套的_mock">2. 避免使用嵌套的 mock</a></li>
+<li><a href="#_3_模拟评估回调">3. 模拟评估回调</a></li>
+<li><a href="#_4_测试路径解析">4. 测试路径解析</a></li>
+</ul>
+</li>
+<li><a href="#_最终测试架构">最终测试架构</a></li>
+<li><a href="#_结论">结论</a></li>
+<li><a href="#_资源">资源</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_介绍">介绍</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>在开发 Gradle 插件期间<strong>面包店</strong>对于我的 JBake 博客，我遇到了一个看似简单的问题：一个单元测试在出现错误时失败`Wanted but not invoked`. 这似乎是一个琐碎的 bug，结果却是一个完美的案例，用于理解使用 Mockito 和 Kotlin 进行模拟的细微差别。</p>
+</div>
+<div class="paragraph">
+<p>在这篇文章中，我将带您踏上一次系统的调试之旅，每个解决方案都会揭示一个新问题，直至最终的解决。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_上下文gradle_bakery_插件">上下文：Gradle Bakery 插件</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Bakery 插件是围绕 JBake 的包装器，它简化了静态网站的发布。以下是其简化的结构：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class BakeryPlugin : Plugin&lt;Project&gt; {
+    override fun apply(project: Project) {
+        val extension = project.extensions.create(
+            "bakery",
+            BakeryExtension::class.java
+        )
+
+        project.afterEvaluate {
+            if (!project.layout.projectDirectory.asFile
+                    .resolve(extension.configPath.get()).exists()) {
+                println("config file does not exists")
+            } else {
+                // C'EST ICI QUE ÇA SE PASSE
+                project.plugins.apply(JBakePlugin::class.java)
+
+                val site = FileSystemManager.from(project, extension.configPath.get())
+                // Configuration de JBake...
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>失败的测试很简单 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `plugin applies jbake gradle plugin`() {
+    val project = createMockProject()
+    val plugin = BakeryPlugin()
+
+    plugin.apply(project)
+
+    verify(project.plugins).apply(JBakePlugin::class.java)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>错误：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">Wanted but not invoked:
+pluginContainer.apply(class org.jbake.gradle.JBakePlugin);
+Actually, there were zero interactions with this mock.</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_问题_1验证错误的模拟">问题 #1：验证错误的模拟</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_诊断">�诊断</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/mockito-problem-1.svg" alt="mockito problem 1" width="613" height="521">
+</div>
+</div>
+<div class="paragraph">
+<p>问题：Mockito 无法追踪交互在`project.plugins`因为这只是一个返回真实 mock 的 getter`mockPluginContainer`. 验证必须直接在 mock 实例上进行。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_解决方案">解决方案</h3>
+<div class="paragraph">
+<p>修改`createMockProject()`为了返回两个对象：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">private fun createMockProject(): Pair&lt;Project, PluginContainer&gt; {
+    val mockPluginContainer = mock&lt;PluginContainer&gt;()
+    val mockProject = mock&lt;Project&gt; {
+        on { plugins } doReturn mockPluginContainer
+    }
+    return Pair(mockProject, mockPluginContainer)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>并调整测试：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `plugin applies jbake gradle plugin`() {
+    val (project, mockPluginContainer) = createMockProject()
+    val plugin = BakeryPlugin()
+
+    plugin.apply(project)
+
+    // ✅ Vérification directe sur le bon mock
+    verify(mockPluginContainer).apply(JBakePlugin::class.java)
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_问题_2级联的_unfinishedstubbingexception">问题 #2：级联的 UnfinishedStubbingException</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_诊断_2">�诊断</h3>
+<div class="paragraph">
+<p>在应用第一次修正后，出现了新的错误：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">UnfinishedStubbingException:
+Unfinished stubbing detected here
+Hints:
+ 3. you are stubbing the behaviour of another mock inside
+    before 'thenReturn' instruction is completed</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>有问题的代码使用了 Mockito-Kotlin 的 DSL 语法：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val mockProject = mock&lt;Project&gt; {
+    on { extensions } doReturn mockExtensionContainer
+    on { plugins } doReturn mockPluginContainer
+    on { logger } doReturn mock()  // ❌ PROBLÈME ICI !
+}</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/mockito-problem-2.svg" alt="mockito problem 2" width="690" height="316">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_解决方案_2">解决方案</h3>
+<div class="paragraph">
+<p>创建<strong>所有</strong>所有 mocks 在任何存根块之外，然后用……配置它们`whenever()`&lt;/think&gt;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">private fun createMockProject(): Pair&lt;Project, PluginContainer&gt; {
+    // 1️⃣ Créer TOUS les mocks d'abord
+    val mockPluginContainer = mock&lt;PluginContainer&gt;()
+    val mockExtensionContainer = mock&lt;ExtensionContainer&gt;()
+    val mockLogger = mock&lt;org.gradle.api.logging.Logger&gt;()
+    val mockProject = mock&lt;Project&gt;()
+
+    // 2️⃣ Configurer les mocks séparément avec whenever()
+    whenever(mockProject.plugins).thenReturn(mockPluginContainer)
+    whenever(mockProject.extensions).thenReturn(mockExtensionContainer)
+    whenever(mockProject.logger).thenReturn(mockLogger)
+
+    return Pair(mockProject, mockPluginContainer)
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>黄金规则</strong>永远不要调用`mock()`在 mock 配置块内。始终先创建 mock，然后再进行配置。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_问题_3_配置文件不存在">问题 #3 : 配置文件不存在</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_诊断_3">诊断</h3>
+<div class="paragraph">
+<p>即使使用了正确的模拟，测试仍然会失败，因为插件找不到配置文件：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// Dans BakeryPlugin.kt
+if (!project.layout.projectDirectory.asFile
+        .resolve(extension.configPath.get()).exists()) {
+    println("config file does not exists")
+    return@afterEvaluate  // ❌ Sort avant d'appliquer JBake !
+}</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/mockito-problem-3.svg" alt="mockito problem 3" width="401" height="373">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_解决方案_3">解决方案</h3>
+<div class="paragraph">
+<p>配置 mock 以使路径解析正常工作 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">private fun createMockProject(): Pair&lt;Project, PluginContainer&gt; {
+    // ... autres mocks ...
+
+    val configFile = File("../../site.yml").canonicalFile
+    val projectDir = configFile.parentFile
+
+    // Configuration cohérente des chemins
+    whenever(mockConfigPathProperty.get()).thenReturn("site.yml")
+    whenever(mockProjectDirectory.asFile).thenReturn(projectDir)
+
+    // Maintenant : projectDir.resolve("site.yml") existe ! ✅
+}</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/path-resolution.svg" alt="path resolution" width="1784" height="5580">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_问题_4afterevaluate_和_nullpointerexception">问题 #4：afterEvaluate 和 NullPointerException</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_诊断_4">诊断</h3>
+<div class="paragraph">
+<p>插件在代码块中使用 JBake。<code>afterEvaluate</code>, 并访问`buildDirectory.dir()`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.afterEvaluate {
+    // ...
+    project.tasks.withType(JBakeTask::class.java)
+        .getByName("bake").apply {
+            output = project.layout.buildDirectory
+                .dir(site.bake.destDirPath)  // ❌ NPE ici !
+                .get()
+                .asFile
+        }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>的模拟`buildDirectory.dir()<code>返回`null</code>。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_解决方案_4">解决方案</h3>
+<div class="paragraph">
+<p>�嘲笑`afterEvaluate`为了让它立即执行，并完全配置`buildDirectory`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">private fun createMockProject(): Pair&lt;Project, PluginContainer&gt; {
+    // ... autres mocks ...
+
+    val mockBuildDirectory = mock&lt;DirectoryProperty&gt;()
+    val buildDir = File(projectDir, "build")
+
+    // Mocker dir() pour retourner un Provider valide
+    whenever(mockBuildDirectory.dir(any&lt;String&gt;())).doAnswer { invocation -&gt;
+        val path = invocation.arguments[0] as String
+        val mockDirProvider = mock&lt;Provider&lt;Directory&gt;&gt;()
+        val mockDir = mock&lt;Directory&gt;()
+
+        whenever(mockDir.asFile).thenReturn(File(buildDir, path))
+        whenever(mockDirProvider.get()).thenReturn(mockDir)
+
+        mockDirProvider
+    }
+
+    // Mocker afterEvaluate pour exécution immédiate
+    whenever(mockProject.afterEvaluate(any&lt;Action&lt;Project&gt;&gt;())).doAnswer { invocation -&gt;
+        val action = invocation.arguments[0] as Action&lt;Project&gt;
+        action.execute(mockProject)  // ✅ Exécution synchrone
+        null
+    }
+
+    return Pair(mockProject, mockPluginContainer)
+}</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/after-evaluate-flow.svg" alt="after evaluate flow" width="762" height="357">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_完整的解决方案">完整的解决方案</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>以下是函数`createMockProject()`最终，解决所有问题：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">private fun createMockProject(): Pair&lt;Project, PluginContainer&gt; {
+    // 1️⃣ CRÉER tous les mocks (pas de nested mocks !)
+    val mockPluginContainer = mock&lt;PluginContainer&gt;()
+    val mockExtensionContainer = mock&lt;ExtensionContainer&gt;()
+    val mockLogger = mock&lt;org.gradle.api.logging.Logger&gt;()
+    val mockTaskContainer = mock&lt;TaskContainer&gt;()
+    val mockConfigPathProperty = mock&lt;Property&lt;String&gt;&gt;()
+    val mockBakeryExtension = mock&lt;BakeryExtension&gt;()
+    val mockProjectDirectory = mock&lt;Directory&gt;()
+    val mockBuildDirectory = mock&lt;DirectoryProperty&gt;()
+    val mockProjectLayout = mock&lt;ProjectLayout&gt;()
+    val mockProject = mock&lt;Project&gt;()
+
+    // 2️⃣ CONFIGURER la résolution des chemins
+    val configFile = File("../../site.yml").canonicalFile
+    val projectDir = configFile.parentFile
+    val buildDir = File(projectDir, "build")
+
+    whenever(mockConfigPathProperty.get()).thenReturn("site.yml")
+    whenever(mockConfigPathProperty.isPresent).thenReturn(true)
+    whenever(mockBakeryExtension.configPath).thenReturn(mockConfigPathProperty)
+    whenever(mockProjectDirectory.asFile).thenReturn(projectDir)
+
+    // 3️⃣ CONFIGURER buildDirectory avec dir()
+    whenever(mockBuildDirectory.dir(any&lt;String&gt;())).doAnswer { invocation -&gt;
+        val path = invocation.arguments[0] as String
+        val mockDirProvider = mock&lt;Provider&lt;Directory&gt;&gt;()
+        val mockDir = mock&lt;Directory&gt;()
+        whenever(mockDir.asFile).thenReturn(File(buildDir, path))
+        whenever(mockDirProvider.get()).thenReturn(mockDir)
+        mockDirProvider
+    }
+
+    // 4️⃣ ASSEMBLER le projet
+    whenever(mockProjectLayout.projectDirectory).thenReturn(mockProjectDirectory)
+    whenever(mockProjectLayout.buildDirectory).thenReturn(mockBuildDirectory)
+
+    whenever(mockExtensionContainer.create("bakery", BakeryExtension::class.java))
+        .thenReturn(mockBakeryExtension)
+    whenever(mockExtensionContainer.getByType(BakeryExtension::class.java))
+        .thenReturn(mockBakeryExtension)
+
+    whenever(mockProject.extensions).thenReturn(mockExtensionContainer)
+    whenever(mockProject.plugins).thenReturn(mockPluginContainer)
+    whenever(mockProject.tasks).thenReturn(mockTaskContainer)
+    whenever(mockProject.layout).thenReturn(mockProjectLayout)
+    whenever(mockProject.logger).thenReturn(mockLogger)
+    whenever(mockProject.projectDir).thenReturn(projectDir)
+
+    // 5️⃣ CONFIGURER afterEvaluate pour exécution immédiate
+    whenever(mockProject.afterEvaluate(any&lt;Action&lt;Project&gt;&gt;())).doAnswer { invocation -&gt;
+        val action = invocation.arguments[0] as Action&lt;Project&gt;
+        action.execute(mockProject)
+        null
+    }
+
+    return Pair(mockProject, mockPluginContainer)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以及通过的最终测试：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `plugin applies jbake gradle plugin`() {
+    val (project, mockPluginContainer) = createMockProject()
+    val plugin = BakeryPlugin()
+
+    plugin.apply(project)
+
+    verify(mockPluginContainer).apply(JBakePlugin::class.java) // ✅ SUCCÈS !
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_学到的教训">学到的教训</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="./images/lessons-learned.svg" alt="lessons learned" width="748" height="472">
+</div>
+</div>
+<div class="sect2">
+<h3 id="_检查正确的_mock">检查正确的 mock</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ❌ FAUX
+verify(project.plugins).apply(JBakePlugin::class.java)
+
+// ✅ CORRECT
+val (project, mockPluginContainer) = createMockProject()
+verify(mockPluginContainer).apply(JBakePlugin::class.java)</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_避免使用嵌套的_mock">2. 避免使用嵌套的 mock</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ❌ FAUX - UnfinishedStubbingException
+val mockProject = mock&lt;Project&gt; {
+    on { logger } doReturn mock()  // Nested mock creation !
+}
+
+// ✅ CORRECT - Créer séparément
+val mockLogger = mock&lt;org.gradle.api.logging.Logger&gt;()
+val mockProject = mock&lt;Project&gt;()
+whenever(mockProject.logger).thenReturn(mockLogger)</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_模拟评估回调">3. 模拟评估回调</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ✅ afterEvaluate doit s'exécuter pour les tests
+whenever(mockProject.afterEvaluate(any())).doAnswer { invocation -&gt;
+    val action = invocation.arguments[0] as Action&lt;Project&gt;
+    action.execute(mockProject)
+    null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_测试路径解析">4. 测试路径解析</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// Toujours vérifier que les chemins se résolvent correctement
+val extension = project.extensions.getByType(BakeryExtension::class.java)
+val configPath = extension.configPath.get()
+val projectDir = project.layout.projectDirectory.asFile
+val resolvedConfig = projectDir.resolve(configPath)
+
+println("Resolved config: ${resolvedConfig.absolutePath}")
+println("Exists: ${resolvedConfig.exists()}")</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最终测试架构">最终测试架构</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="./images/test-architecture.svg" alt="test architecture" width="1744" height="5468">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_结论">结论</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>看起来似乎只是一个简单的测试问题，结果却被证明是一个极佳的案例研究对象：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Mockito 与 Kotlin 的细微差别</p>
+</li>
+<li>
+<p>模拟正确对象的重要性</p>
+</li>
+<li>
+<p>测试中异步回调的管理</p>
+</li>
+<li>
+<p>在 Gradle 插件中解析路径</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>有条不紊的调试，通过理解问题的每一层，得出了一个健壮且可维护的解决方案。</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>您的测试建议</strong>如果在使用 Mockito 时遇到 "Wanted but not invoked"，请始终自问：
+1. 我是否在检查正确的 mock？
+2. 所有我的 mock 都是在配置块之外创建的吗？
+3. 我的回调真的在执行吗？
+4. 我的路径能正确解析吗？</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_资源">资源</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/mockito/mockito-kotlin">Mockito-Kotlin 文档</a></p>
+</li>
+<li>
+<p><a href="https://docs.gradle.org/current/userguide/custom_plugins.html">Gradle 插件开发指南</a></p>
+</li>
+<li>
+<p><a href="https://jbake.org/">JBake 静态站点生成器</a></p>
+</li>
+</ul>
+</div>
+<hr>
+<div class="paragraph">
+<p>您在测试中遇到类似的问题吗？请在评论中分享您的经验！</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0099_debugging-mockito-gradle-plugin_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

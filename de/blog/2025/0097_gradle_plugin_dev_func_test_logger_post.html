@@ -1,0 +1,1693 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Effektives Logging in den funktionalen Tests von Gradle-Plugins — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Effektives Logging in den funktionalen Tests von Gradle-Plugins — Cheroliv"/>
+        <meta property="og:description" content="Vollständiger Leitfaden zum Einrichten eines robusten und unabhängigen Logging-Systems in den funktionalen Tests von Gradle-Plugins mit SLF4J und Logback"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Effektives Logging in den funktionalen Tests von Gradle-Plugins — Cheroliv"/>
+        <meta name="twitter:description" content="Vollständiger Leitfaden zum Einrichten eines robusten und unabhängigen Logging-Systems in den funktionalen Tests von Gradle-Plugins mit SLF4J und Logback"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.png"/>
+        <meta name="description" content="Vollständiger Leitfaden zum Einrichten eines robusten und unabhängigen Logging-Systems in den funktionalen Tests von Gradle-Plugins mit SLF4J und Logback"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0097_gradle_plugin_dev_func_test_logger_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0097_gradle_plugin_dev_func_test_logger_post.html"},
+                      "headline": "Effektives Logging in den funktionalen Tests von Gradle-Plugins",
+                      "description": "Unabh\u00E4ngiger Logger f\u00FCr Gradle-Tests mit SLF4J und Logback. Robuste Architektur, PlantUML-Diagramme und Kotlin-Beispiele f\u00FCr wartbare Plugins.",
+                      "datePublished": "2025-11-07",
+                      "dateModified": "2025-11-07",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0097_gradle_plugin_dev_func_test_logger_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Effektives Logging in den funktionalen Tests von Gradle-Plugins", "item": "https:\/\/cheroliv.com\/blog\/2025\/0097_gradle_plugin_dev_func_test_logger_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Effektives Logging in den funktionalen Tests von Gradle-Plugins</h1>
+                <p class="lead">
+                    <em>Publié le 07 November 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_einleitung">Einleitung</a></li>
+<li><a href="#_das_problem_abhängigkeit_vom_gradlerunner">Das Problem: Abhängigkeit vom GradleRunner</a>
+<ul class="sectlevel2">
+<li><a href="#_kontext_der_plugin_entwicklung">Kontext der Plugin-Entwicklung</a></li>
+<li><a href="#_das_logging_dilemma">Das Logging-Dilemma</a></li>
+<li><a href="#_die_falschen_guten_ideen">Die falschen guten Ideen</a></li>
+</ul>
+</li>
+<li><a href="#_die_lösung_unabhängiger_logger">Die Lösung: Unabhängiger Logger</a>
+<ul class="sectlevel2">
+<li><a href="#_empfohlene_architektur">Empfohlene Architektur</a></li>
+<li><a href="#_ausführungsfluss">Ausführungsfluss</a></li>
+</ul>
+</li>
+<li><a href="#_vollständige_implementierung">Vollständige Implementierung</a>
+<ul class="sectlevel2">
+<li><a href="#_gradle_abhängigkeiten">Gradle-Abhängigkeiten</a></li>
+<li><a href="#_logback_konfiguration">Logback-Konfiguration</a></li>
+<li><a href="#_vollständige_testklasse">Vollständige Testklasse</a></li>
+</ul>
+</li>
+<li><a href="#_schema_des_mehrstufigen_loggings">Schema des mehrstufigen Loggings</a></li>
+<li><a href="#_gute_praktiken">Gute Praktiken</a>
+<ul class="sectlevel2">
+<li><a href="#_empfohlene_logging_struktur">Empfohlene Logging-Struktur</a></li>
+<li><a href="#_visuelle_symbole_für_die_lesbarkeit">Visuelle Symbole für die Lesbarkeit</a></li>
+<li><a href="#_extraktion_von_informationen_aus_der_ausgabe">Extraktion von Informationen aus der Ausgabe</a></li>
+</ul>
+</li>
+<li><a href="#_vergleich_vornach">Vergleich Vor/Nach</a>
+<ul class="sectlevel2">
+<li><a href="#_vorher_problematischer_ansatz">Vorher: Problematischer Ansatz</a></li>
+<li><a href="#_nach_robustes_vorgehen">Nach: Robustes Vorgehen</a></li>
+</ul>
+</li>
+<li><a href="#_zusammenfassendes_diagramm">Zusammenfassendes Diagramm</a></li>
+<li><a href="#_fallen_zu_vermeiden">Fallen zu vermeiden</a>
+<ul class="sectlevel2">
+<li><a href="#_falle_nr_1_vergessen_forwardoutput">�❌ Falle Nr. 1 : Vergessen `.forwardOutput()</a></li>
+<li><a href="#_falle_nr_2_nicht_initialisierter_logger">❌ Falle Nr. 2: Nicht initialisierter Logger</a></li>
+<li><a href="#_falle_nr_3_exzessives_logging">❌ Falle Nr. 3: Exzessives Logging</a></li>
+</ul>
+</li>
+<li><a href="#_ergebnisse_und_kennzahlen">Ergebnisse und Kennzahlen</a></li>
+<li><a href="#_fazit">Fazit</a></li>
+<li><a href="#_ressourcen">Ressourcen</a></li>
+<li><a href="#_weitergehen">Weitergehen</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_einleitung">Einleitung</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Bei der Entwicklung eines Gradle-Plugins sind Funktionaltests essentiell, um das Verhalten des Plugins in einer echten Gradle-Umgebung zu validieren. Allerdings stellt sich schnell eine entscheidende Frage:<strong>Wie kann man ein effektives Logging-System einrichten, ohne problematische Abhängigkeiten zu <code>GradleRunner</code> zu schaffen?</strong></p>
+</div>
+<div class="paragraph">
+<p>In diesem Artikel werden wir untersuchen:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Die Problematik des Loggings in den funktionellen Gradle-Tests</p>
+</li>
+<li>
+<p>Die Architektur einer robusten Lösung mit SLF4J und Logback</p>
+</li>
+<li>
+<p>Die vollständige Implementierung mit konkreten Beispielen</p>
+</li>
+<li>
+<p>Gute Praktiken und zu vermeidende Fallen</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_das_problem_abhängigkeit_vom_gradlerunner">Das Problem: Abhängigkeit vom GradleRunner</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_kontext_der_plugin_entwicklung">Kontext der Plugin-Entwicklung</h3>
+<div class="paragraph">
+<p>Bei der Entwicklung eines Gradle-Plugins verwendet man in der Regel das`GradleRunner`du <em>Gradle TestKit</em> zum Ausführen von Test-Builds :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `test my plugin`() {
+    val result = GradleRunner.create()
+        .withProjectDir(projectDir)
+        .withArguments("myTask")
+        .build()
+
+    // Comment logger efficacement ici ?
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_das_logging_dilemma">Das Logging-Dilemma</h3>
+<div class="paragraph">
+<p>Das Hauptproblem lautet wie folgt:<strong>Logging darf nicht von einem Objekt abhängen, von dessen Initialisierung man sich nicht sicher ist.</strong>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-519ec07b925616f1ea8bc2eb29accb0e.png" alt="Diagram" width="458" height="262">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_die_falschen_guten_ideen">Die falschen guten Ideen</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Machen Sie das NICHT:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ❌ MAUVAIS: Tentative d'obtenir un logger du runner
+val runner = GradleRunner.create()
+val logger = runner.logger // N'existe pas !
+// ❌ MAUVAIS: Logger partagé initialisé tardivement
+lateinit var logger: Logger
+@BeforeEach
+fun setup() {
+    logger = LoggerFactory.getLogger(...)
+}</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_lösung_unabhängiger_logger">Die Lösung: Unabhängiger Logger</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_empfohlene_architektur">Empfohlene Architektur</h3>
+<div class="paragraph">
+<p>Die Lösung besteht darin, einen Logger zu verwenden.<strong>vollständig unabhängig</strong> du <code>GradleRunner</code>, initialisiert auf Testklassenebene.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-7a555e83eee685446b459050a7f54230.png" alt="Diagram" width="601" height="448">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ausführungsfluss">Ausführungsfluss</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-2339fb55a46b486b9fd88032a4fc859e.png" alt="Diagram" width="714" height="686">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_vollständige_implementierung">Vollständige Implementierung</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_gradle_abhängigkeiten">Gradle-Abhängigkeiten</h3>
+<div class="paragraph">
+<p>Fügen Sie die erforderlichen Abhängigkeiten in Ihrem`build.gradle.kts`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
+    // Pour les tests fonctionnels
+    testImplementation(gradleTestKit())
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+
+    // Pour le logging
+    testImplementation("org.slf4j:slf4j-api:2.0.17")
+    testRuntimeOnly("ch.qos.logback:logback-classic:1.4.14")
+
+    // Pour les assertions
+    testImplementation("org.assertj:assertj-core:3.27.6")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_logback_konfiguration">Logback-Konfiguration</h3>
+<div class="paragraph">
+<p>Erstellen Sie die Datei`src/test/resources/logback-test.xml`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+    &lt;!-- Appender console avec format lisible --&gt;
+    &lt;appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- Appender fichier pour conservation --&gt;
+    &lt;appender name="FILE" class="ch.qos.logback.core.FileAppender"&gt;
+        &lt;file&gt;build/test-results/functional-tests.log&lt;/file&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- Logger pour vos tests --&gt;
+    &lt;logger name="com.cheroliv.bakery" level="DEBUG"/&gt;
+
+    &lt;!-- Réduire le bruit de Gradle --&gt;
+    &lt;logger name="org.gradle" level="WARN"/&gt;
+
+    &lt;!-- Configuration racine --&gt;
+    &lt;root level="INFO"&gt;
+        &lt;appender-ref ref="STDOUT"/&gt;
+        &lt;appender-ref ref="FILE"/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vollständige_testklasse">Vollständige Testklasse</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">package com.cheroliv.bakery
+
+import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
+import org.junit.jupiter.api.io.TempDir
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+@TestInstance(PER_CLASS)
+class BakeryPluginFunctionalTest {
+
+    @field:TempDir
+    lateinit var projectDir: File
+
+    private val buildFile by lazy { projectDir.resolve("build.gradle.kts") }
+    private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
+
+    companion object {
+        // ✓ Logger indépendant, initialisé au chargement de la classe
+        private val logger: Logger = LoggerFactory.getLogger(
+            BakeryPluginFunctionalTest::class.java
+        )
+
+        @JvmStatic
+        @BeforeAll
+        fun globalSetup() {
+            logger.info("═".repeat(60))
+            logger.info("DÉMARRAGE DE LA SUITE DE TESTS FONCTIONNELS")
+            logger.info("═".repeat(60))
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun globalTeardown() {
+            logger.info("═".repeat(60))
+            logger.info("FIN DE LA SUITE DE TESTS")
+            logger.info("═".repeat(60))
+        }
+    }
+
+    @BeforeEach
+    fun setup() {
+        logger.info("─".repeat(60))
+        logger.info("Préparation de l'environnement de test")
+        logger.debug("Répertoire de test: ${projectDir.absolutePath}")
+
+        settingsFile.writeText("""
+            rootProject.name = "test-bakery-project"
+        """.trimIndent())
+
+        logger.debug("✓ settings.gradle.kts créé")
+    }
+
+    @AfterEach
+    fun teardown(testInfo: TestInfo) {
+        logger.info("✓ Test terminé: ${testInfo.displayName}")
+        logger.info("─".repeat(60))
+    }
+
+    @Test
+    fun `plugin can be applied successfully`() {
+        logger.info("TEST: Application du plugin Bakery")
+
+        buildFile.writeText("""
+            plugins {
+                id("com.cheroliv.bakery")
+            }
+        """.trimIndent())
+
+        logger.debug("Fichier build.gradle.kts créé")
+        logger.debug("Lancement du build Gradle...")
+
+        val startTime = System.currentTimeMillis()
+
+        val result = GradleRunner.create()
+            .forwardOutput() // ← Important : capture la sortie
+            .withPluginClasspath()
+            .withArguments("tasks", "--group=bakery", "--stacktrace")
+            .withProjectDir(projectDir)
+            .build()
+
+        val duration = System.currentTimeMillis() - startTime
+        logger.info("Build terminé en ${duration}ms")
+
+        // Analyse de la sortie
+        logger.debug("Analyse de la sortie Gradle...")
+        val outputLines = result.output.lines()
+        logger.debug("Nombre de lignes capturées: ${outputLines.size}")
+
+        // Validation
+        val expectedTasks = listOf("bake", "printConfigPath", "printJBakeClasspath")
+        logger.info("Vérification des tâches attendues:")
+
+        expectedTasks.forEach { task -&gt;
+            val found = result.output.contains(task)
+            logger.debug("  ${if (found) "✓" else "✗"} $task")
+            assertTrue(found, "Task '$task' should be available")
+        }
+
+        logger.info("✓ Plugin appliqué avec succès - ${expectedTasks.size} tâches trouvées")
+    }
+
+    @Test
+    fun `bake task executes and prints version`() {
+        logger.info("TEST: Exécution de la tâche 'bake'")
+
+        buildFile.writeText("""
+            plugins {
+                id("com.cheroliv.bakery")
+            }
+        """.trimIndent())
+
+        logger.debug("Exécution de 'gradle bake'...")
+
+        val result = GradleRunner.create()
+            .forwardOutput()
+            .withPluginClasspath()
+            .withArguments("bake", "--info") // --info pour plus de détails
+            .withProjectDir(projectDir)
+            .build()
+
+        // Extraction d'informations depuis la sortie
+        logger.debug("Recherche du message 'Baking site'...")
+        val hasBakingMessage = result.output.contains("Baking site with Bakery Plugin!")
+
+        logger.debug("Recherche de la version JBake...")
+        val hasVersionMessage = result.output.contains("Using JBake version:")
+
+        // Extraction de la version (si présente)
+        val versionRegex = Regex("Using JBake version: (.+)")
+        val versionMatch = versionRegex.find(result.output)
+        if (versionMatch != null) {
+            val version = versionMatch.groupValues[1]
+            logger.info("Version JBake détectée: $version")
+        }
+
+        // Validation
+        assertTrue(hasBakingMessage, "Message 'Baking site' attendu")
+        assertTrue(hasVersionMessage, "Message de version attendu")
+        assertEquals(TaskOutcome.SUCCESS, result.task(":bake")?.outcome)
+
+        logger.info("✓ Tâche 'bake' exécutée avec succès")
+    }
+
+    @Test
+    fun `analyze output with structured logging`() {
+        logger.info("TEST: Analyse structurée de la sortie")
+
+        buildFile.writeText("""
+            plugins {
+                id("com.cheroliv.bakery")
+            }
+
+            task("diagnostics") {
+                doLast {
+                    println("[DIAG] Project: ${'$'}{project.name}")
+                    println("[DIAG] Build dir: ${'$'}{project.buildDir}")
+                    println("[DIAG] Plugin applied: true")
+
+                    val config = configurations.findByName("jbakeRuntime")
+                    println("[DIAG] JBake config exists: ${'$'}{config != null}")
+
+                    if (config != null) {
+                        println("[DIAG] Dependencies count: ${'$'}{config.dependencies.size}")
+                    }
+                }
+            }
+        """.trimIndent())
+
+        logger.debug("Exécution de la tâche diagnostics...")
+
+        val result = GradleRunner.create()
+            .forwardOutput()
+            .withPluginClasspath()
+            .withArguments("diagnostics", "--quiet")
+            .withProjectDir(projectDir)
+            .build()
+
+        // Analyse structurée
+        logger.info("Extraction des informations de diagnostic:")
+
+        val diagLines = result.output.lines()
+            .filter { it.startsWith("[DIAG]") }
+
+        logger.debug("Nombre de lignes de diagnostic: ${diagLines.size}")
+
+        diagLines.forEach { line -&gt;
+            logger.info("  $line")
+
+            // Analyse spécifique par type de ligne
+            when {
+                line.contains("Project:") -&gt; {
+                    val projectName = line.substringAfter("Project:").trim()
+                    logger.debug("    → Nom du projet extrait: '$projectName'")
+                }
+                line.contains("Dependencies count:") -&gt; {
+                    val count = line.substringAfter("count:").trim()
+                    logger.debug("    → Nombre de dépendances: $count")
+                }
+            }
+        }
+
+        assertTrue(diagLines.isNotEmpty(), "Des lignes de diagnostic devraient être présentes")
+        logger.info("✓ Analyse structurée terminée - ${diagLines.size} lignes analysées")
+    }
+
+    @Test
+    fun `test with error handling`() {
+        logger.info("TEST: Gestion d'erreurs avec logging")
+
+        buildFile.writeText("""
+            plugins {
+                id("com.cheroliv.bakery")
+            }
+        """.trimIndent())
+
+        try {
+            logger.debug("Tentative d'exécution...")
+
+            val result = GradleRunner.create()
+                .forwardOutput()
+                .withPluginClasspath()
+                .withArguments("printJBakeClasspath")
+                .withProjectDir(projectDir)
+                .build()
+
+            val outcome = result.task(":printJBakeClasspath")?.outcome
+            logger.info("Outcome: $outcome")
+
+            if (outcome == TaskOutcome.SUCCESS) {
+                logger.info("✓ Exécution réussie")
+            } else {
+                logger.warn("⚠ Outcome inattendu: $outcome")
+            }
+
+            assertEquals(TaskOutcome.SUCCESS, outcome)
+
+        } catch (e: Exception) {
+            logger.error("✗ Échec du test", e)
+            logger.error("Type d'exception: ${e.javaClass.simpleName}")
+            logger.error("Message: ${e.message}")
+
+            // Log de la stack trace si nécessaire
+            if (logger.isDebugEnabled) {
+                logger.debug("Stack trace complète:", e)
+            }
+
+            throw e
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_schema_des_mehrstufigen_loggings">Schema des mehrstufigen Loggings</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-eed6bc78790bcf8a1acf45e2a1bea9a0.png" alt="Diagram" width="314" height="911">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_gute_praktiken">Gute Praktiken</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_empfohlene_logging_struktur">Empfohlene Logging-Struktur</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `mon test`() {
+    // 1. LOG: Début du test
+    logger.info("TEST: Description du test")
+
+    // 2. LOG: Préparation
+    logger.debug("Préparation des fichiers...")
+    buildFile.writeText("...")
+    logger.debug("✓ Fichiers préparés")
+
+    // 3. LOG: Exécution
+    logger.debug("Lancement du build...")
+    val startTime = System.currentTimeMillis()
+
+    val result = GradleRunner.create()
+        .forwardOutput()
+        .withArguments("task")
+        .build()
+
+    val duration = System.currentTimeMillis() - startTime
+    logger.info("Build terminé en ${duration}ms")
+
+    // 4. LOG: Analyse
+    logger.debug("Analyse des résultats...")
+    // ... validations ...
+
+    // 5. LOG: Conclusion
+    logger.info("✓ Test réussi")
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_visuelle_symbole_für_die_lesbarkeit">Visuelle Symbole für die Lesbarkeit</h3>
+<div class="paragraph">
+<p>Verwenden Sie Unicode-Symbole, um die Lesbarkeit der Logs zu verbessern :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">logger.info("✓ Succès")
+logger.info("✗ Échec")
+logger.info("⚠ Attention")
+logger.info("→ Étape suivante")
+logger.info("═".repeat(60)) // Séparateur principal
+logger.info("─".repeat(60)) // Séparateur secondaire</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_extraktion_von_informationen_aus_der_ausgabe">Extraktion von Informationen aus der Ausgabe</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// Recherche simple
+val hasMessage = result.output.contains("Expected message")
+
+// Extraction avec regex
+val versionRegex = Regex("Version: (.+)")
+val version = versionRegex.find(result.output)?.groupValues?.get(1)
+
+// Filtrage de lignes
+val errorLines = result.output.lines()
+    .filter { it.contains("ERROR") }
+
+errorLines.forEach { logger.error("Gradle error: $it") }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_vergleich_vornach">Vergleich Vor/Nach</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vorher_problematischer_ansatz">Vorher: Problematischer Ansatz</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class MyTest {
+    lateinit var logger: Logger // ❌ Initialisé tardivement
+
+    @BeforeEach
+    fun setup() {
+        logger = LoggerFactory.getLogger(...) // ❌ Dépendance
+    }
+
+    @Test
+    fun test() {
+        val runner = GradleRunner.create()
+        logger.info("Testing...") // ⚠ Peut échouer
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_nach_robustes_vorgehen">Nach: Robustes Vorgehen</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class MyTest {
+    companion object {
+        private val logger = LoggerFactory.getLogger(...) // ✓ Indépendant
+    }
+
+    @Test
+    fun test() {
+        logger.info("TEST: Starting...") // ✓ Toujours disponible
+
+        val result = GradleRunner.create()
+            .forwardOutput() // ✓ Capture la sortie
+            .build()
+
+        logger.debug("Output: ${result.output}") // ✓ Analyse
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_zusammenfassendes_diagramm">Zusammenfassendes Diagramm</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 9) ]
+
+@startuml
+
+
+
+
+...
+... ( skipping 129 lines )
+...
+}
+skinparam StereotypeI {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeN {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam UseCaseStereoType {
+  FontColor black
+  FontName Verdana
+}
+skinparam backgroundColor #FEFEFE
+
+title Vollständiger Logging-Fluss in den Funktionstests
+actor "Entwickler" as dev
+participant "JUnit" as junit
+participant "TestClass" as test
+participant "Logger
+^^^^^
+ Syntax Error? (Assumed diagram type: sequence)
+
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Vollständiger Logging-Fluss in den Funktionstests
+actor "Entwickler" as dev
+participant "JUnit" as junit
+participant "TestClass" as test
+participant "Logger
+(SLF4J)" as logger
+participant "Logback" as logback
+participant "GradleRunner" as runner
+participant "Konsole/Datei" as output
+
+dev -&gt; junit : lance les tests
+
+activate junit
+junit -&gt; test : charge la classe
+activate test
+
+test -&gt; logger : initialize (companion)
+activate logger
+logger -&gt; logback : configure
+activate logback
+logback --&gt; logger : ready
+deactivate logback
+logger --&gt; test : ✓
+deactivate logger
+
+== Phase de Setup ==
+
+junit -&gt; test : @BeforeAll
+test -&gt; logger : info("Initialisierung")
+logger -&gt; output : [INFO] Initialisation
+
+junit -&gt; test : @BeforeEach
+test -&gt; logger : debug("Einrichtung Test")
+logger -&gt; output : [DEBUG] Setup test
+
+== Phase de Test ==
+
+junit -&gt; test : @Test
+test -&gt; logger : info("TEST: Starten")
+logger -&gt; output : [INFO] TEST: Starting
+
+test -&gt; runner : create()
+activate runner
+
+test -&gt; runner : .forwardOutput()
+test -&gt; runner : .build()
+
+runner -&gt; runner : execute Gradle
+runner --&gt; test : BuildResult + output text
+deactivate runner
+
+test -&gt; logger : debug("Ausgabe analysieren")
+logger -&gt; output : [DEBUG] Analyzing output
+
+test -&gt; test : assertions
+test -&gt; logger : info("✓ Test bestanden")
+logger -&gt; output : [INFO] ✓ Test passed
+
+== Phase de Cleanup ==
+
+junit -&gt; test : @AfterEach
+test -&gt; logger : debug("Bereinigung")
+logger -&gt; output : [DEBUG] Cleanup
+
+junit -&gt; test : @AfterAll
+test -&gt; logger : info("Ende der Tests")
+logger -&gt; output : [INFO] Fin des tests
+
+test --&gt; junit : ✓ all tests passed
+deactivate test
+deactivate junit
+
+dev &lt;-- junit : rapport de tests
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fallen_zu_vermeiden">Fallen zu vermeiden</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_falle_nr_1_vergessen_forwardoutput">�❌ Falle Nr. 1 : Vergessen `.forwardOutput()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// MAUVAIS: La sortie Gradle n'est pas capturée
+val result = GradleRunner.create()
+    .withArguments("task")
+    .build()
+
+// result.output sera vide !</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// BON: La sortie est capturée
+val result = GradleRunner.create()
+    .forwardOutput() // ✓
+    .withArguments("task")
+    .build()</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_falle_nr_2_nicht_initialisierter_logger">❌ Falle Nr. 2: Nicht initialisierter Logger</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// MAUVAIS
+class Test {
+    lateinit var logger: Logger // Peut ne pas être initialisé
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// BON
+class Test {
+    companion object {
+        private val logger = LoggerFactory.getLogger(...) // Toujours initialisé
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_falle_nr_3_exzessives_logging">❌ Falle Nr. 3: Exzessives Logging</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// MAUVAIS: Trop de logs DEBUG en production
+logger.debug("Variable a = $a")
+logger.debug("Variable b = $b")
+logger.debug("Variable c = $c")
+// ... 100 lignes de logs</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// BON: Logging ciblé
+logger.info("Traitement de ${items.size} éléments")
+logger.debug("Détails: ${items.take(5)}...") // Échantillon seulement</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ergebnisse_und_kennzahlen">Ergebnisse und Kennzahlen</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Mit diesem Ansatz erhalten Sie:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 42.8571%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">metrisch</th>
+<th class="tableblock halign-left valign-top">Vor</th>
+<th class="tableblock halign-left valign-top">Nach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Codezeilen</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(Empty)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~80 Zeilen (+60%)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Debug-Zeit</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~30 Min</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~5 Min (-83%)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Erkannte Fehler</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Grundlegend</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">detailliert</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Wartung</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">schwierig</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Einfach</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unabhängigkeit</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">�❌ gekoppelt</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unabhängig</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fazit">Fazit</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die Implementierung eines robusten Logging-Systems in den funktionalen Tests von Gradle-Plugins beruht auf einem einfachen Prinzip:<strong>die Unabhängigkeit</strong>.</p>
+</div>
+<div class="paragraph">
+<p>Zu beachtende Punkte:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>unabhängiger Logger</strong>Initialisiert in einem`companion object`</p>
+</li>
+<li>
+<p><strong>SLF4J + Logback</strong>: erprobter und konfigurierbarer Stack</p>
+</li>
+<li>
+<p>**python</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>s = input() print(s, end='')**: Erfassen der Gradle-Ausgabe</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Strukturiertes Logging</strong>: INFO für die Schritte, DEBUG für die Details</p>
+</li>
+<li>
+<p><strong>Ausgabeanalyse</strong>: Extraktion von Informationen seit`result.output`</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Dieser Ansatz gewährleistet Tests<strong>wartbare</strong>, <strong>debuggbar</strong> et <strong>robuste</strong>, bei Einhaltung solider Gestaltungsprinzipien.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ressourcen">Ressourcen</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.gradle.org/current/userguide/test_kit.html">Gradle TestKit-Dokumentation</a></p>
+</li>
+<li>
+<p><a href="https://www.slf4j.org/manual.html">SLF4J Handbuch</a></p>
+</li>
+<li>
+<p><a href="https://logback.qos.ch/manual/configuration.html">Logback-Konfiguration</a></p>
+</li>
+<li>
+<p><a href="https://github.com/gradle/gradle/tree/master/subprojects/test-kit">Gradle TestKit-Quellcode</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_weitergehen">Weitergehen</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In einem kommenden Artikel werden wir erkunden:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Kontinuierliche Integration mit strukturiertem Logging</p>
+</li>
+<li>
+<p>HTML-Testberichte mit integrierten Protokollen</p>
+</li>
+<li>
+<p>Erweitertes Debugging mit JVM-Attach</p>
+</li>
+<li>
+<p>Die Performance und Optimierung des Loggings</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><em>Dieser Artikel ist Teil der Serie "Entwicklung von Gradle-Plugins" auf meinem technischen Blog.</em></p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0097_gradle_plugin_dev_func_test_logger_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

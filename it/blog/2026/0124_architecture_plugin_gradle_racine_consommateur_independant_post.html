@@ -1,0 +1,1168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="it">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>L&#39;architettura « Plugin Indipendente + Radice Consumatore » : Perché i miei build Gradle si duplicano — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="L&#39;architettura « Plugin Indipendente + Radice Consumatore » : Perché i miei build Gradle si duplicano — Cheroliv"/>
+        <meta property="og:description" content="Un clone, un `./gradlew tasks`, e il tuo plugin Gradle è funzionante. Zero configurazione, zero README da leggere. Ecco l&#39;architettura che ho distribuito sui miei 6 plugin foundry/public/ : una root consumer minimale + una cartella `{name}-plugin/` autonoma. Perché questo pattern di « duplicazione apparente » è il più produttivo per lo sviluppo di plugin Gradle — con dogfooding nativo, isolamento delle build e contratto DAG chiaro."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="L&#39;architettura « Plugin Indipendente + Radice Consumatore » : Perché i miei build Gradle si duplicano — Cheroliv"/>
+        <meta name="twitter:description" content="Un clone, un `./gradlew tasks`, e il tuo plugin Gradle è funzionante. Zero configurazione, zero README da leggere. Ecco l&#39;architettura che ho distribuito sui miei 6 plugin foundry/public/ : una root consumer minimale + una cartella `{name}-plugin/` autonoma. Perché questo pattern di « duplicazione apparente » è il più produttivo per lo sviluppo di plugin Gradle — con dogfooding nativo, isolamento delle build e contratto DAG chiaro."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.png"/>
+        <meta name="description" content="Un clone, un `./gradlew tasks`, e il tuo plugin Gradle è funzionante. Zero configurazione, zero README da leggere. Ecco l&#39;architettura che ho distribuito sui miei 6 plugin foundry/public/ : una root consumer minimale + una cartella `{name}-plugin/` autonoma. Perché questo pattern di « duplicazione apparente » è il più produttivo per lo sviluppo di plugin Gradle — con dogfooding nativo, isolamento delle build e contratto DAG chiaro."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — Feed RSS" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Attiva/disattiva navigazione">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Competenze</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contatti</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Seleziona il tema dell'interfaccia">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Chiaro
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Scuro
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Contrasto elevato
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Seleziona la lingua">
+                        <span class="me-1">🇮🇹</span>
+                        <span class="ms-1">IT</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"},
+                      "headline": "L'architettura \u00AB Plugin Indipendente + Radice Consumatore \u00BB : Perch\u00E9 i miei build Gradle si duplicano",
+                      "description": "Tutti i miei plugin Gradle in foundry\/public\/ ora seguono la stessa architettura: un build indipendente in `{name}-plugin\/` e una radice consumatore dogfood. Perch\u00E9 questa apparente duplicazione \u00E8 in realt\u00E0 il pattern pi\u00F9 produttivo che abbia mai adottato per scrivere plugin Gradle. Confronto con il monorepo classico, il composite build e il plugin isolato.",
+                      "datePublished": "2026-05-14",
+                      "dateModified": "2026-05-14",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "L'architettura \u00AB Plugin Indipendente + Radice Consumatore \u00BB : Perch\u00E9 i miei build Gradle si duplicano", "item": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">L&#39;architettura « Plugin Indipendente + Radice Consumatore » : Perché i miei build Gradle si duplicano</h1>
+                <p class="lead">
+                    <em>Publié le 14 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_il_problema_tre_architetture_che_mi_hanno_fatto_perdere_tempo">Il Problema: Tre Architetture Che Mi Hanno Fatto Perdere Tempo</a>
+<ul class="sectlevel2">
+<li><a href="#_integrazione_gradle"><mark>#</mark> Integrazione Gradle</a></li>
+</ul>
+</li>
+<li><a href="#_1_builder_le_plugin">1. Builder le plugin</a></li>
+<li><a href="#_2_lexercer_depuis_la_racine">2. L&#8217;exercer depuis la racine</a></li>
+<li><a href="#_la_boucle_est_fermée_le_plugin_est_testé_dans_des_conditions">La boucle est fermée. Le plugin est testé dans des conditions</a></li>
+<li><a href="#_réelles_de_consommation_par_le_projet_même_qui_lhéberge">réelles de consommation, par le projet même qui l&#8217;héberge.</a></li>
+<li><a href="#_la_seule_friction_du_pattern">La seule "friction" du pattern</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">tempo di lettura : 11 minutes</div>
+<p>Cloni un repository di plugin Gradle. Apri un terminale. Cosa digiti? poi?<code>./gradlew tasks</code>, certo. Ma in quale cartella? La radice? Il sottomodulo? Bisogna prima leggere un README per sapere come costruire? Se voi esitate, non sarebbe un attimo, l&#8217;architettura del progetto è rotta.</p>
+</div>
+<div class="paragraph">
+<p>Ecco come ho risolto questo problema una volta per tutte—e perché questo pattern è oggi la firma di tutti i miei plugin Gradle in`foundry/public/`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_il_problema_tre_architetture_che_mi_hanno_fatto_perdere_tempo">Il Problema: Tre Architetture Che Mi Hanno Fatto Perdere Tempo</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Prima di convergere verso il pattern attuale, ho vagato tra tre approcci classici per organizzare un plugin Gradle. Ognuna aveva un difetto fatale.</p>
+</div>
+<div class="sect2">
+<h3 id="_integrazione_gradle"><mark>#</mark> Integrazione Gradle</h3>
+<div class="paragraph">
+<p>JBake può essere integrato nelle build Gradle utilizzando il plugin Gradle di JBake o chiamando direttamente l&#8217;interfaccia a riga di comando di JBake:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">----
+tasks.register&lt;JavaExec&gt;("bake") {
+    mainClass.set("org.jbake.launcher.Main")
+    classpath = configurations["jbake"]
+    args = listOf(projectDir.absolutePath, "$buildDir/jbake")
+}
+----
+
+Opzione 1: Il Plugin Isolato (nessun dogfooding)
+
+Il progetto contiene solo il plugin. Nessun esempio di consumo. Nessun progetto che lo esercita. Per testarlo, è necessario creare un progetto esterno, y referenziare il plugin tramite`mavenLocal`o un composite build, e solo lì verificare che funzioni.
+
+[source,shell]
+----
+$ git clone mon-plugin
+$ cd mon-plugin
+$ ./gradlew build          # le plugin compile
+$ # ... et maintenant ? comment je l'essaie ?
+----
+
+[WARNING]
+====
+Un plugin Gradle senza un esempio di consumo, è una libreria senza test di integrazione. Non sai mai se l'ultima modifica a rovinato l'esperienza utente.
+====
+
+=== Opzione 2 : Il Monorepo Classico (`include(":plugin")`)
+
+Gradle `init`genera`settings.gradle.kts`con`include("plugin")`. Il root e il sottomodulo condividono lo stesso demone, le stesse configurazioni, gli stessi cataloghi. Pratico, ma collegato.
+
+[source,text]
+----
+.
+├── settings.gradle.kts   → include("plugin")
+├── build.gradle.kts      → plugins { id("mon-plugin") }
+├── plugin/
+│   └── build.gradle.kts  → java-gradle-plugin
+└── gradle/
+    └── libs.versions.toml
+----
+
+Il problema:
+
+* Il root**deve**avere la stessa versione di Gradle del sottomodulo.
+* `libs.versions.toml`è condiviso — versioni cataloghi comuni, dipendenze
+
+che fuggono da un modulo all'altro.
+
+* Impossibile costruire il plugin indipendentemente dalla radice.
+* Il CI deve costruire i due moduli, anche se solo il plugin è cambiato.
+
+=== Opzione 3: Build composito (`includeBuild()`)
+
+Si separano i due in build Gradle distinti e li colleghiamo tramite `includeBuild("mon-plugin")`in`settings.gradle.kts`.
+
+È già meglio. Il build del plugin è isolato. Ma il consumatore deve esplicitamente fare riferimento al build esterno — e l'output di `./gradlew tasks`alla radice dipende dalla corretta configurazione del composito. Il clonaggio non è zero-config: bisogna sapere che il Il plugin si trova in una cartella a parte, che il root lo riferisce, ecc.
+
+[source,shell]
+----
+.
+├── settings.gradle.kts   → includeBuild("plugin-build/")
+├── build.gradle.kts      → plugins { id("mon-plugin") }
+└── plugin-build/
+    ├── settings.gradle.kts
+    └── build.gradle.kts
+----
+
+Stavo cercando meglio. Molto meglio.
+
+== La Soluzione: Due Build Indipendenti, Una Radice Consumatore
+
+Ecco il pattern che ho finito per adottare:
+
+[source,text]
+----
+.
+├── settings.gradle.kts          ← racine consommateur
+├── build.gradle.kts              ← 3 lignes : apply plugin + dogfood
+├── gradle/
+│   └── libs.versions.toml        ← catalogue du consommateur
+├── {name}-plugin/                ← BUILD INDÉPENDANT
+│   ├── gradlew                    ← son propre wrapper
+│   ├── settings.gradle.kts        ← rootProject.name = "{name}-plugin"
+│   ├── build.gradle.kts           ← java-gradle-plugin, signing, publish
+│   ├── gradle/
+│   │   ├── libs.versions.toml     ← catalogue du plugin
+│   │   └── wrapper/
+│   ├── src/                       ← sources du plugin
+│   ├── .agents/                   ← gouvernance agent
+│   └── *.adoc                     ← AGENT, PROMPT_REPRISE, snapshot, etc.
+└── site.yml / slides-context.yml / ...   ← configs dogfood
+----
+
+[IMPORTANT]
+====
+La chiave :`{name}-plugin/`è un progetto Gradle *completo e autonomo*. Ha il suo wrapper, le sue impostazioni, il suo catalogo di versioni. Si clona, si build, si testa, e si pubblica senza che il root sia al corrente della sua esistenza.
+====
+
+Il root, lui, fa solo *una* cosa: applicare il plugin.
+
+[source,kotlin]
+----
+plugins {
+    alias(libs.plugins.bakery)
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+bakery { configPath = file("site.yml").absolutePath }
+----
+
+Tre righe nel caso di`bakery-gradle`. Niente di più. Zero`include()`, zero`includeBuild()`, zero sottoprogetto Un build Gradle classico che applica un plugin come qualsiasi Quale consumatore lo farebbe.
+
+=== Il flusso di lavoro
+
+[plantuml,architecture-deux-builds,svg]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+
+left to right direction
+
+package "RADICE (Consumatore)" #CCFFCC {
+    usecase "Clona il repository" as Clone
+    usecase "### Integrazione Gradle
+JBake può essere integrato nelle build Gradle utilizzando il plugin Gradle di JBake o chiamando direttamente l'interfaccia a riga di comando di JBake:
+
+```kotlin
+tasks.register&lt;JavaExec&gt;("bake") {
+    mainClass.set("org.jbake.launcher.Main")
+    classpath = configurations["jbake"]
+    args = listOf(projectDir.absolutePath, "$buildDir/jbake")
+}</code></pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="title">/gradlew tasks" as Tasks</div>
+<div class="content">
+<pre>    usecase "./gradlew bake" as Dogfood
+    note bottom of Dogfood
+        Exerce le plugin
+        Feedback immédiat
+        Zéro config
+    end note
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>package "{name}-plugin/ (Build indipendente)" #CCE5FF {
+    usecase "./gradlew build" as BuildPlugin
+    usecase "./gradlew publishToMavenLocal" as MavenLocal
+    usecase "./gradlew test" as TestPlugin
+    note bottom of BuildPlugin
+        Cycle de vie isolé
+        Tests unitaires + Cucumber
+        CI dédiée possible
+    end note
+}</p>
+</div>
+<div class="paragraph">
+<p>Clone -down&#8594; Tasks
+Tasks -down&#8594; Dogfood
+Dogfood ..&gt; MavenLocal : "dipende dal plugin
+pubblicato localmente"
+BuildPlugin -up&#8594; MavenLocal
+TestPlugin -up&#8594; BuildPlugin</p>
+</div>
+<div class="paragraph">
+<p>@enduml</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>=== Il workflow concreto
+
+[source,shell]</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<h1 id="_1_builder_le_plugin" class="sect0">1. Builder le plugin</h1>
+<div class="paragraph">
+<p>$ cd codebase-plugin
+$ ./gradlew publishToMavenLocal</p>
+</div>
+<h1 id="_2_lexercer_depuis_la_racine" class="sect0">2. L&#8217;exercer depuis la racine</h1>
+<div class="paragraph">
+<p>$ cd ..
+$ ./gradlew indexCodebase queryCodebase snapshot</p>
+</div>
+<h1 id="_la_boucle_est_fermée_le_plugin_est_testé_dans_des_conditions" class="sect0">La boucle est fermée. Le plugin est testé dans des conditions</h1>
+
+<h1 id="_réelles_de_consommation_par_le_projet_même_qui_lhéberge" class="sect0">réelles de consommation, par le projet même qui l&#8217;héberge.</h1>
+<div class="listingblock">
+<div class="content">
+<pre>== Perché questa architettura mi ha conquistato
+
+Tre benefici che, combinati, valgono il costo della « duplicazione» :
+
+=== 1. Dogfooding nativo, feedback istantaneo
+
+Il miglior test di un plugin Gradle è usarlo. Non un test unitario mockato. Non un`GradleRunner`con un progetto di test. Un *vero* build che applica il plugin su file reali.
+
+[source,shell]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>$ git clone bakery-gradle
+$ cd bakery-gradle
+$ ./gradlew bake    # ← le plugin est exercé immédiatement</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Se il plugin è rotto, il build radice lo dice. Non c'è bisogno di andare cercare un progetto di test esterno. Il dogfooding è la *prima* compito lanciato da un nuovo contributore. È il smoke test definitivo.
+
+[TIP]
+====
+### JBake CLI Commands ``` # Initialize a new JBake project jbake -i # Bake (generate) the site jbake -b # Bake and serve locally jbake -b -s # Bake and watch for changes jbake -b --reset # Specify source and destination jbake source_folder output_folder # Clear the output directory before baking jbake -b . output --reset ``` La regola è semplice : se la radice compila e`./gradlew tasks` mostra i tuoi task del plugin, il plugin è funzionante. Nessuna sorpresa in produzione.
+====
+
+=== 2. Clonaggio Zero-Config
+
+Un `git clone &amp;&amp; ./gradlew tasks`e il nuovo arrivato vede tutto camminare senza configurare nulla. Il`build.gradle.kts`radice è la documentazione vivente d'uso del plugin. Il`site.yml`accanto mostra la configurazione attesa.
+
+Confronta con l'alternativa : un README di tre paragrafi che spiega come builder il plugin e come builder il progetto di test. Un nuovo contributore legge il README in diagonale, apre un'issue — mentre l'informazione potrebbe essere *eseguibile*.
+
+[IMPORTANT]
+====
+La documentazione più robusta non è quella che si legge. È quella che**esegui**. Il build radice è la documentazione eseguibile del plugin.
+====
+
+=== 3. Builds Isolés, CI Indépendants
+
+Il plugin ha il suo wrapper Gradle proprio, il suo ciclo di vita proprio, i suoi test. Puoi :
+
+* Aggiornare Gradle nel plugin senza toccare la root
+* Aggiungere una dipendenza nel plugin senza che perda nella radice
+* Rompere il plugin senza impattare il build radice (finché tu non
+
+non pubblicare la versione rotta)
+
+* Avere una CI che build/test il plugin, e un'altra che esercita il
+
+root — indipendentemente
+
+[source,text]</pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">github/workflows/</div>
+<p>├── test-plugin.yml      → codebase-plugin/.gradlew build
+├── test-root.yml        → .gradlew tasks (vérifie que le plugin est consommable)
+└── publish.yml          → codebase-plugin/.gradlew publish</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>== L'anatomia della sottocartella `{name}-plugin/
+
+Diamo un'occhiata più da vicino a ciò che vive nella cartella del plugin :
+
+[source,text]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>codebase-plugin/
+├── gradlew                           ← wrapper indépendant
+├── settings.gradle.kts               ← @Suppress("UnstableApiUsage")
+│                                       + foobar-resolver-convention
+├── build.gradle.kts                  ← java-gradle-plugin + signing + publish
+├── gradle/
+│   ├── libs.versions.toml            ← catalogue complet (langchain4j, pgvector&#8230;&#8203;)
+│   └── wrapper/
+├── buildSrc/                         ← classes utilitaires buildSrc
+│   ├── build.gradle.kts
+│   └── src/main/kotlin/
+│       ├── codebase/                 ← CodebaseYmlAnonymizer, CodebaseConfiguration
+│       ├── benchmark/                ← BenchmarkConfig, BenchmarkProtocol
+│       ├── readme/                   ← ReadmeYmlAnonymizer
+│       ├── site/                     ← SiteYmlAnonymizer
+│       ├── slider/                   ← SliderYmlAnonymizer
+│       └── snapshot/                 ← SnapshotManager
+├── src/
+│   ├── main/kotlin/codebase/
+│   │   ├── CodebasePlugin.kt         ← class Plugin&lt;Project&gt;
+│   │   ├── rag/                      ← pgvector, embedding, anonymization&#8230;&#8203;
+│   │   ├── benchmark/                ← BenchmarkRunner, export, comparison&#8230;&#8203;
+│   │   └── walker/                   ← WorkspaceWalker
+│   └── test/
+│       ├── kotlin/codebase/scenarios/ ← steps Cucumber
+│       ├── features/                  ← .feature files
+│       └── resources/datasets/        ← fixtures .adoc, .yml, .json
+├── .agents/                          ← gouvernance agent (INDEX, SESSIONS, etc.)
+├── AGENT.adoc                        ← règles agent
+├── PROMPT_REPRISE.adoc              ← mission session
+├── BACKLOG.adoc                      ← backlog produit
+├── snapshot.adoc                     ← snapshot auto-généré du projet
+└── embeds.yml                        ← config RAG embeds</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Tutto è qui. Nessuna dispersione tra la radice e la sottocartella. Le développeur qui travaille sur le plugin n'a jamais besoin de lasciare`codebase-plugin/`. Lo sviluppatore che utilizza il plugin guarda solo alla radice — e il`build.gradle.kts`di 3 righe gli dice tutto ciò di cui ha bisogno di sapere
+
+=== Il Catalogo delle Versioni : Due File Distinti
+
+[cols="2,3,3"]
+|===
+| |`gradle/libs.versions.toml`(radice) |`{name}-plugin/gradle/libs.versions.toml` |Numero di dipendenze |2-3 (plugin + readme eventualmente) |30+ (langchain4j, pgvector, cucumber...) |Ruolo |Consumare il plugin |Builder il plugin |Chi lo legge |L'utente del plugin |Il sviluppatore del plugin
+|===
+
+Il root ha un catalogo intenzionalmente minimo. Il plugin ha un catalogo completo. La confusione è impossibile: ogni build ha il proprio ambito dipendenze.
+
+[NOTE]
+====
+Se hai già passato un'ora a debuggare una collisione di dipendenze tra il tuo plugin e il tuo progetto di test, comprendi il valore di questa separazione. I cataloghi indipendenti eliminano questo problema per costruzione.
+====
+
+== Ciò che non si fa
+
+Questo pattern non è magico. Impone un vincolo che io mi infligge volentieri :
+
+*Il root non effettua il build del plugin.* Devi`publishToMavenLocal` ou distribuire su un repository prima che il root possa consumarlo
+
+È un costo minimo, e questa è la *buona* vincolo. Il root consuma il plugin come un client esterno — tramite Maven. Esattamente come farebbe un progetto di terze parti. Se il plugin non è pubblicabile, La root Le lo dice immediatamente.
+
+[source,shell]</pre>
+</div>
+</div>
+<h1 id="_la_seule_friction_du_pattern" class="sect0">La seule "friction" du pattern</h1>
+<div class="paragraph">
+<p>$ cd codebase-plugin &amp;&amp; ./gradlew publishToMavenLocal &amp;&amp; cd ..
+$ ./gradlew tasks --group=codebase</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>== Confronto: Le tre architetture di fronte al dogfooding
+
+[cols="2,2,2,2,2"]
+|===
+| |Plugin isolato |Monorepo`include()` |composito`includeBuild()` |**Radice + plugin indipendente** |`git clone &amp;&amp; gradlew tasks`fornisce le attività del plugin |�❌ |&lt;/think&gt; (No output) |�✅ |✅ |Plugin di build indipendente dalla radice |(no output) |❌ |�✅ |(No output) |catalogo versioni separato |�✅ |�❌ |(no output) |&lt;/think&gt; |nessun`include()` ni `includeBuild()` |✅ |❌ |�❌ |�✅ |Dogfood nativo senza configurazione |�❌ |�✅ |⚠️ |(No output) |plug-in CI indipendente |�✅ |�❌ |�✅ |&lt;/think&gt; ✅ |Il root è un esempio di consumo reale |�❌ |(No output) |�✅ |(no output)
+|===
+
+La colonna di destra spunta tutte le caselle. È per questo che io non tornerò più indietro.
+
+== Il Contratto DAG : Una build radice non importa mai da una sottocartella
+
+Questa architettura si integra naturalmente nel DAG N0→N3 del mio workspace. Il pattern è : *il plugin N2 è il hub delle sue dipendenze, la radice N3 è un terminale chi applica i hub*
+
+[plantuml,contrat-dag-architecture,svg]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 11</p>
+</div>
+<div class="paragraph">
+<p>title Contratto DAG — Radice Consumatore vs Plugin Indipendente
+package "N3 — RADICE (deposito)" #FFCCCC {
+    [build.gradle.kts (3 lignes)] as ROOT
+    [libs.versions.toml (minimal)] as ROOT_TOML
+    note right of ROOT
+        plugins { bakery }
+        bakery { configPath = &#8230;&#8203; }
+        Aucune logique métier
+    end note
+}</p>
+</div>
+<div class="paragraph">
+<p>package "N2 — {name}-plugin/" #CCFFCC {
+    [build.gradle.kts (complet)] as PLUGIN
+    [src/main/kotlin/] as SRC
+    [gradle/libs.versions.toml] as PLUGIN_TOML
+    [buildSrc/] as BUILDSRC
+    note bottom of PLUGIN
+        java-gradle-plugin
+        signing + publish
+        Tests unitaires + Cucumber
+        CI dédiée
+    end note
+}</p>
+</div>
+<div class="paragraph">
+<p>ROOT_TOML -&#8594; ROOT : "versione plugin"
+ROOT -down&#8594; PLUGIN : "publishToMavenLocal"
+@enduml</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Le `codebase-gradle/build.gradle.kts`fa 6 righe. Nessun`src/`, nessun`buildSrc/`, nessun`gradle/rag-bench.gradle.kts`. Giusto `plugins { alias(libs.plugins.codebase) }`e i repository. Tutta la complessità vive in`codebase-plugin/`.
+
+== Conclusion : La Duplicazione Apparente Che Fa Risparmiare Tempo
+
+Quando mostro questa struttura a qualcuno, la prima reazione è spesso : « Ma hai due`gradlew`, due`settings.gradle.kts`, due`libs.versions.toml`— è una duplicazione!
+
+Sì. E no.
+
+La « duplicazione », è riprodurre la stessa informazione in due posti. Qui, sono due file *distinti* che servono due usi *distinti*: il catalogo del plugin (30+ dipendenze per builder) e il catalogo dalla radice (2-3 dipendenze da consumare). Il wrapper del plugin (versione bloccata per lo sviluppo) e il wrapper della radice (versione potenzialmente diversa, per l'esercizio del plugin).
+
+Non è una duplicazione. È una **separazione delle** responsabilità** applicata al sistema di build. Ogni build fa una cosa, e solo una. La radice consuma. Il plugin si compila.
+
+Il costo? Un ordine`publishToMavenLocal`tra la build del plugin e il build della radice. Il vantaggio? Una chiarezza architettonica che elimina ore di debugging a valle
+
+Da quando ho distribuito questo pattern su`bakery-gradle`, `plantuml-gradle`, `codebase-gradle`, e gli altri plugin di`foundry/public/`, non ho mai più esitato nell'aprire un terminale in uno dei miei repository. Le primo riflesso —`./gradlew tasks`— cammina sempre, dà sempre i buoni compiti, e mi dice istantaneamente se tutto è sano.
+
+Ed ecco l'architettura corretta. Non si legge in un README. Si verifica in un terminal, in meno di dieci secondi.
+
+== Riferimenti
+
+* xref:0105_integrer_graphify_workflow_gradle_post.adoc[Articolo 0105 — Integrare Graphify in un workflow Gradle]
+* xref:0117_granularisation_oss_css_repositorie_workspace_post.adoc[Article 0117 — La Granularizzazione OSS/CSS]
+* xref:0123_knowledge_graph_moteur_recommandation_articles_connexes_post.adoc[Article 0123 — Il Knowledge Graph come motore di raccomandazione]</pre>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Articoli correlati</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: Converti l&#39;AsciiDoc in video MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Il Knowledge Graph come motore di raccomandazione: come ho ucciso gli « articoli correlati » cronologici</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html" class="fw-semibold">Cumulare Due Abbonamenti Ollama Pro sulla Stessa Macchina con Docker</a>
+                                    <br/><small class="text-muted">08 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Si prega di attivare JavaScript per vedere le
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Commenti alimentati da Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Sviluppatore formatore specializzato in ingegneria pedagogica.
+Progettazione di soluzioni e-learning innovative per trasformare l'apprendimento.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="Feed RSS">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contatto">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigazione</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Risorse</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archivi</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> diapositive</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> formazioni</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> chiavetta avviabile</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Posizione</h6>
+                    <p class="mb-3">Situato nella regione parigina, interventi possibili in Francia e a distanza.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Francia</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Smart working disponibile</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Spostamenti in Francia</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

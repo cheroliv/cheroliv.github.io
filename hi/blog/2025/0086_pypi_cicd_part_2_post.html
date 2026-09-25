@@ -1,0 +1,1751 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>भाग 2 : औद्योगिक बनाना और सुरक्षित करना एक उन्नत Python CI/CD पाइपलाइन — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0086_pypi_cicd_part_2_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0086_pypi_cicd_part_2_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0086_pypi_cicd_part_2_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0086_pypi_cicd_part_2_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="भाग 2 : औद्योगिक बनाना और सुरक्षित करना एक उन्नत Python CI/CD पाइपलाइन — Cheroliv"/>
+        <meta property="og:description" content="भाग 2 - GitHub Actions के साथ एक मजबूत CI/CD पाइपलाइन स्थापित करने के लिए एक व्यापक गाइड, लिंटिंग और स्वचालित परीक्षणों से PyPI पर रिलीज़ के समय स्वचालित तैनाती तक।"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0086_pypi_cicd_part_2_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0086_pypi_cicd_part_2_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="भाग 2 : औद्योगिक बनाना और सुरक्षित करना एक उन्नत Python CI/CD पाइपलाइन — Cheroliv"/>
+        <meta name="twitter:description" content="भाग 2 - GitHub Actions के साथ एक मजबूत CI/CD पाइपलाइन स्थापित करने के लिए एक व्यापक गाइड, लिंटिंग और स्वचालित परीक्षणों से PyPI पर रिलीज़ के समय स्वचालित तैनाती तक।"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0086_pypi_cicd_part_2_post.png"/>
+        <meta name="description" content="भाग 2 - GitHub Actions के साथ एक मजबूत CI/CD पाइपलाइन स्थापित करने के लिए एक व्यापक गाइड, लिंटिंग और स्वचालित परीक्षणों से PyPI पर रिलीज़ के समय स्वचालित तैनाती तक।"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS फ़ीड" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="नेविगेशन टॉगल करें">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">स्वागत</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">विशेषज्ञताएँ</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ब्लॉग</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">संपर्क</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="इंटरफ़ेस थीम चुनें">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">प्रकाश</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>प्रकाश
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>गहरा
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>उच्च कंट्रास्ट
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="भाषा चुनें">
+                        <span class="me-1">🇮🇳</span>
+                        <span class="ms-1">HI</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0086_pypi_cicd_part_2_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0086_pypi_cicd_part_2_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0086_pypi_cicd_part_2_post.html"},
+                      "headline": "\u092D\u093E\u0917 2 : \u0914\u0926\u094D\u092F\u094B\u0917\u093F\u0915 \u092C\u0928\u093E\u0928\u093E \u0914\u0930 \u0938\u0941\u0930\u0915\u094D\u0937\u093F\u0924 \u0915\u0930\u0928\u093E \u090F\u0915 \u0909\u0928\u094D\u0928\u0924 Python CI\/CD \u092A\u093E\u0907\u092A\u0932\u093E\u0907\u0928",
+                      "description": "\u092D\u093E\u0917 2 - GitHub Actions \u0915\u0947 \u0938\u093E\u0925 \u090F\u0915 \u092E\u091C\u092C\u0942\u0924 CI\/CD \u092A\u093E\u0907\u092A\u0932\u093E\u0907\u0928 \u0938\u094D\u0925\u093E\u092A\u093F\u0924 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915 \u0935\u094D\u092F\u093E\u092A\u0915 \u0917\u093E\u0907\u0921, \u0932\u093F\u0902\u091F\u093F\u0902\u0917 \u0914\u0930 \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u092A\u0930\u0940\u0915\u094D\u0937\u0923\u094B\u0902 \u0938\u0947 PyPI \u092A\u0930 \u0930\u093F\u0932\u0940\u091C\u093C \u0915\u0947 \u0938\u092E\u092F \u0938\u094D\u0935\u091A\u093E\u0932\u093F\u0924 \u0924\u0948\u0928\u093E\u0924\u0940 \u0924\u0915\u0964",
+                      "datePublished": "2025-07-18",
+                      "dateModified": "2025-07-18",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0086_pypi_cicd_part_2_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u092D\u093E\u0917 2 : \u0914\u0926\u094D\u092F\u094B\u0917\u093F\u0915 \u092C\u0928\u093E\u0928\u093E \u0914\u0930 \u0938\u0941\u0930\u0915\u094D\u0937\u093F\u0924 \u0915\u0930\u0928\u093E \u090F\u0915 \u0909\u0928\u094D\u0928\u0924 Python CI\/CD \u092A\u093E\u0907\u092A\u0932\u093E\u0907\u0928", "item": "https:\/\/cheroliv.com\/blog\/2025\/0086_pypi_cicd_part_2_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">भाग 2 : औद्योगिक बनाना और सुरक्षित करना एक उन्नत Python CI/CD पाइपलाइन</h1>
+                <p class="lead">
+                    <em>Publié le 18 July 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_परिचय">परिचय</a></li>
+<li><a href="#_cicd_पाइपलाइन_की_वास्तुकला">CI/CD पाइपलाइन की वास्तुकला</a></li>
+<li><a href="#_प्रोजेक्ट_संरचना">प्रोजेक्ट संरचना</a></li>
+<li><a href="#_pyproject_toml_के_साथ_पैकेज_कॉन्फ़िगरेशन">pyproject.toml के साथ पैकेज कॉन्फ़िगरेशन</a></li>
+<li><a href="#_cicd_वर्कफ़्लो_परीक्षण_और_गुणवत्ता">CI/CD वर्कफ़्लो - परीक्षण और गुणवत्ता</a></li>
+<li><a href="#_रिलीज़_और_डिप्लॉयमेंट_वर्कफ़्लो">रिलीज़ और डिप्लॉयमेंट वर्कफ़्लो</a></li>
+<li><a href="#_आर्किटेक्चर_डायग्राम">आर्किटेक्चर डायग्राम</a>
+<ul class="sectlevel2">
+<li><a href="#_सीक्वेंस_आरेख_रिलीज़_प्रक्रिया">सीक्वेंस आरेख - रिलीज़ प्रक्रिया</a></li>
+<li><a href="#_स्थिति_आरेख_पैकेज_जीवन_चक्र">स्थिति आरेख - पैकेज जीवन चक्र</a></li>
+<li><a href="#_डिप्लॉयमेंट_आरेख_cicd_इन्फ्रास्ट्रक्चर">डिप्लॉयमेंट आरेख - CI/CD इन्फ्रास्ट्रक्चर</a></li>
+</ul>
+</li>
+<li><a href="#_पाइपलाइन_की_वस्तुएँ_और_मॉडल">पाइपलाइन की वस्तुएँ और मॉडल</a>
+<ul class="sectlevel2">
+<li><a href="#_क्लास_आरेख_cicd_मॉडल">क्लास आरेख - CI/CD मॉडल</a></li>
+</ul>
+</li>
+<li><a href="#_सिक्रेट्स_की_कॉन्फ़िगरेशन">सिक्रेट्स की कॉन्फ़िगरेशन</a>
+<ul class="sectlevel2">
+<li><a href="#_github_actions_के_रहस्य">GitHub Actions के रहस्य</a></li>
+<li><a href="#_pypi_टोकन_जनरेशन">PyPI टोकन जनरेशन</a></li>
+</ul>
+</li>
+<li><a href="#_स्थानीय_विकास_स्क्रिप्ट">स्थानीय विकास स्क्रिप्ट</a>
+<ul class="sectlevel2">
+<li><a href="#_makefile">Makefile</a></li>
+<li><a href="#_स्क्रिप्ट_संस्करण">स्क्रिप्ट संस्करण</a></li>
+</ul>
+</li>
+<li><a href="#_अच्छी_प्रथाएँ_और_सिफारिशें">अच्छी प्रथाएँ और सिफारिशें</a>
+<ul class="sectlevel2">
+<li><a href="#_समानार्थिक_संस्करण">समानार्थिक संस्करण</a></li>
+<li><a href="#_ब्रांचिंग_रणनीति">ब्रांचिंग रणनीति</a></li>
+<li><a href="#_टेस्ट_और_कवरेज">टेस्ट और कवरेज</a></li>
+<li><a href="#_सुरक्षा">सुरक्षा</a></li>
+</ul>
+</li>
+<li><a href="#_मॉनिटरिंग_और_ऑब्ज़र्वेबिलिटी">मॉनिटरिंग और ऑब्ज़र्वेबिलिटी</a>
+<ul class="sectlevel2">
+<li><a href="#_पाइपलाइन_मेट्रिक्स">पाइपलाइन मेट्रिक्स</a></li>
+<li><a href="#_सूचनाएँ">सूचनाएँ</a></li>
+</ul>
+</li>
+<li><a href="#_निष्कर्ष">निष्कर्ष</a></li>
+<li><a href="#_अतिरिक्त_संसाधन">अतिरिक्त संसाधन</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_परिचय">परिचय</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">उद्देश्य : एक साधारण पाइपलाइन को एक मजबूत औद्योगिक पाइपलाइन में बदलें, आधुनिक पैकेजिंग और सॉफ़्टवेयर इंजीनियरिंग मानकों का पालन करते हुए।</div>
+<p>इस श्रृंखला के पहले भाग में, हमने एक सरल लेकिन प्रभावी CI/CD पाइपलाइन बनाई जो Python पैकेज के परीक्षण और PyPI पर प्रकाशन को स्वचालित करती है।</p>
+</div>
+<div class="paragraph">
+<p>अब इस पाइपलाइन को पेशेवर बनाने का समय है। इस दूसरे भाग में, हम करेंगे :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>आधुनिक pyproject.toml मानक की ओर प्रवास करें,</p>
+</li>
+<li>
+<p>गुणवत्ता और सुरक्षा उपकरण जोड़ें (Black, Mypy, Bandit, Safety)</p>
+</li>
+<li>
+<p>बहु‑संस्करण परीक्षण सेट करें,</p>
+</li>
+<li>
+<p>Test PyPI के माध्यम से क्रमिक तैनाती एकीकृत करें,</p>
+</li>
+<li>
+<p>संस्करण को स्वचालित करें और पाइपलाइन निगरानी में सुधार करें।</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>एक कार्यात्मक पाइपलाइन से एक पेशेवर CI/CD बुनियादी ढांचे में संक्रमण के लिए खुद को तैयार करें।</p>
+</div>
+<div class="paragraph">
+<p>एक पाइथन एप्लिकेशन को PyPI पर तैनात करने के लिए एक मजबूत CI/CD पाइपलाइन की आवश्यकता होती है जो टेस्ट, बिल्ड और पैकेज प्रकाशन को स्वचालित करती है। इस लेख में GitHub Actions का उपयोग करके एक CLI Python एप्लिकेशन के लिए एक पूर्ण पाइपलाइन सेट अप करने की प्रक्रिया का विस्तृत विवरण दिया गया है, आधुनिक Python इकोसिस्टम की सर्वोत्तम प्रथाओं पर आधारित।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cicd_पाइपलाइन_की_वास्तुकला">CI/CD पाइपलाइन की वास्तुकला</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>वह पाइपलाइन जिसे हम निर्माण करने जा रहे हैं, कई चरणों की दृष्टिकोण का पालन करती है :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 18) ]
+
+@startuml
+
+
+
+
+...
+... ( skipping 138 lines )
+...
+skinparam UseCaseStereoType {
+  FontColor black
+  FontName Verdana
+}
+title पाइपलाइन CI/CD Python PyPI की ओर
+skinparam backgroundColor #f8f9fa
+skinparam componentStyle rectangle
+
+rectangle "डेवलपर" as dev
+rectangle "गिटहब रिपॉजिटरी" as repo {
+  rectangle ".github/कार्यप्रवाह/" as workflows
+  rectangle "टेस्ट्स/" as tests
+  rectangle "setup.py / pyproject.toml" as setup
+  rectangle "requirements.txt" as req
+}
+
+rectangle "गिटहब एक्शंस" as actions {
+  rectangle "टेस्ट रनर" as test_runner
+  rectangle "### Gradle एकीकरण
+JBake को JBake Gradle प्लगइन का उपयोग करके या JBake CLI को सीधे बुलाकर Gradle बिल्ड में एकीकृत किया जा सकता है:
+^^^^^
+ Syntax Error? (Assumed diagram type: activity)
+
+@startuml
+!theme plain
+title पाइपलाइन CI/CD Python PyPI की ओर
+skinparam backgroundColor #f8f9fa
+skinparam componentStyle rectangle
+
+rectangle "डेवलपर" as dev
+rectangle "गिटहब रिपॉजिटरी" as repo {
+  rectangle ".github/कार्यप्रवाह/" as workflows
+  rectangle "टेस्ट्स/" as tests
+  rectangle "setup.py / pyproject.toml" as setup
+  rectangle "requirements.txt" as req
+}
+
+rectangle "गिटहब एक्शंस" as actions {
+  rectangle "टेस्ट रनर" as test_runner
+  rectangle "### Gradle एकीकरण
+JBake को JBake Gradle प्लगइन का उपयोग करके या JBake CLI को सीधे बुलाकर Gradle बिल्ड में एकीकृत किया जा सकता है:
+
+```kotlin
+tasks.register&lt;JavaExec&gt;("bake") {
+    mainClass.set("org.jbake.launcher.Main")
+    classpath = configurations["jbake"]
+    args = listOf(projectDir.absolutePath, "$buildDir/jbake")
+}" as build
+  rectangle "सुरक्षा स्कैन" as security
+  rectangle "गुणवत्ता जाँच" as quality
+}
+
+rectangle "PyPI" as pypi {
+  rectangle "टेस्ट PyPI" as test_pypi
+  rectangle "उत्पादन PyPI" as prod_pypi
+}
+
+rectangle "उपयोगकर्ता" as users
+
+dev --&gt; repo : push/PR
+repo --&gt; actions : trigger workflow
+actions --&gt; test_runner : run tests
+actions --&gt; security : security checks
+actions --&gt; quality : code quality
+actions --&gt; build : build package
+build --&gt; test_pypi : deploy (pre-release)
+build --&gt; prod_pypi : deploy (release)
+prod_pypi --&gt; users : install package
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_प्रोजेक्ट_संरचना">प्रोजेक्ट संरचना</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>वितरण के लिए तैयार Python CLI एप्लिकेशन को एक मानकीकृत संरचना का पालन करना चाहिए :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="text">playlist-downloader/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       ├── release.yml
+│       └── security.yml
+├── src/
+│   └── playlist_downloader/
+│       ├── __init__.py
+│       ├── cli.py
+│       ├── core/
+│       └── adapters/
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── conftest.py
+├── docs/
+├── pyproject.toml
+├── requirements.txt
+├── requirements-dev.txt
+├── MANIFEST.in
+├── README.md
+├── LICENSE
+└── CHANGELOG.md</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pyproject_toml_के_साथ_पैकेज_कॉन्फ़िगरेशन">pyproject.toml के साथ पैकेज कॉन्फ़िगरेशन</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>फ़ाइल`pyproject.toml`यह Python पैकेज को कॉन्फ़िगर करने का आधुनिक मानक है :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="toml">[build-system]
+requires = ["setuptools&gt;=45", "wheel", "setuptools_scm&gt;=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "playlist-downloader"
+authors = [
+    {name = "Christophe Hérolivier", email = "cheroliv@example.com"},
+]
+description = "CLI tool for YouTube playlist management"
+readme = "README.md"
+requires-python = "&gt;=3.8"
+keywords = ["youtube", "playlist", "cli", "downloader"]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "typer&gt;=0.9.0",
+    "yt-dlp&gt;=2023.7.6",
+    "google-api-python-client&gt;=2.0.0",
+    "google-auth-oauthlib&gt;=1.0.0",
+    "pyyaml&gt;=6.0",
+    "rich&gt;=13.0.0",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest&gt;=7.0.0",
+    "pytest-cov&gt;=4.0.0",
+    "pytest-mock&gt;=3.10.0",
+    "black&gt;=23.0.0",
+    "flake8&gt;=6.0.0",
+    "mypy&gt;=1.0.0",
+    "pre-commit&gt;=3.0.0",
+    "tox&gt;=4.0.0",
+]
+test = [
+    "pytest&gt;=7.0.0",
+    "pytest-cov&gt;=4.0.0",
+    "pytest-mock&gt;=3.10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/cheroliv/playlist-downloader"
+Documentation = "https://github.com/cheroliv/playlist-downloader#readme"
+Repository = "https://github.com/cheroliv/playlist-downloader.git"
+"Bug Tracker" = "https://github.com/cheroliv/playlist-downloader/issues"
+
+[project.scripts]
+playlist-downloader = "playlist_downloader.cli:main"
+
+[tool.setuptools_scm]
+write_to = "src/playlist_downloader/_version.py"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src/playlist_downloader",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=85",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "yt_dlp.*",
+    "googleapiclient.*",
+    "google_auth_oauthlib.*",
+]
+ignore_missing_imports = true</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cicd_वर्कफ़्लो_परीक्षण_और_गुणवत्ता">CI/CD वर्कफ़्लो - परीक्षण और गुणवत्ता</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>मुख्य कार्यप्रवाह (<code>ci.yml</code>) कई Python संस्करणों पर टेस्ट चलाता है :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="yaml">name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.cache/pre-commit
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Lint with flake8
+      run: |
+        flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Check code formatting with Black
+      run: black --check src tests
+
+    - name: Type checking with mypy
+      run: mypy src
+
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=src/playlist_downloader \
+          --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      if: matrix.python-version == '3.11'
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml] safety
+
+    - name: Run security checks with bandit
+      run: bandit -r src/ -f json -o bandit-report.json
+
+    - name: Check dependencies with safety
+      run: safety check --json --output safety-report.json
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  build:
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build package
+      run: python -m build
+
+    - name: Check package with twine
+      run: twine check dist/*
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist/</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_रिलीज़_और_डिप्लॉयमेंट_वर्कफ़्लो">रिलीज़ और डिप्लॉयमेंट वर्कफ़्लो</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>रिलीज़ वर्कफ़्लो (<code>release.yml</code>) पाइपीआई पर स्वचालित प्रकाशन प्रबंधित करता है:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="yaml">name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+        - test
+        - production
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/') &amp;&amp; 'production' || 'test') }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build package
+      run: python -m build
+
+    - name: Check package
+      run: twine check dist/*
+
+    - name: Publish to Test PyPI
+      if: github.event.inputs.environment == 'test' || (startsWith(github.ref, 'refs/tags/') &amp;&amp; contains(github.ref, 'rc'))
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      run: |
+        twine upload --repository testpypi dist/*
+
+    - name: Publish to PyPI
+      if: github.event.inputs.environment == 'production' || (startsWith(github.ref, 'refs/tags/') &amp;&amp; !contains(github.ref, 'rc'))
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        twine upload dist/*
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: ${{ contains(github.ref, 'rc') }}
+
+  post-release:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Test installation from PyPI
+      run: |
+        sleep 60  # Attendre la propagation sur PyPI
+        pip install playlist-downloader
+        playlist-downloader --version
+
+    - name: Update documentation
+      run: |
+        # Script pour mettre à jour la documentation
+        echo "Documentation updated for version ${GITHUB_REF#refs/tags/}"</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_आर्किटेक्चर_डायग्राम">आर्किटेक्चर डायग्राम</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_सीक्वेंस_आरेख_रिलीज़_प्रक्रिया">सीक्वेंस आरेख - रिलीज़ प्रक्रिया</h3>
+<div class="imageblock">
+<div class="content">
+<img src="images/diag-plantuml-md5-2046d1c6354b22d072038f56dc40cdee.png" alt="Diagram" width="971" height="832">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_स्थिति_आरेख_पैकेज_जीवन_चक्र">स्थिति आरेख - पैकेज जीवन चक्र</h3>
+<div class="imageblock">
+<div class="content">
+<img src="images/diag-plantuml-md5-a7f83cedc9d2d7f434257d8d55623c38.png" alt="Diagram" width="525" height="740">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_डिप्लॉयमेंट_आरेख_cicd_इन्फ्रास्ट्रक्चर">डिप्लॉयमेंट आरेख - CI/CD इन्फ्रास्ट्रक्चर</h3>
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 16) ]
+
+@startuml
+
+
+
+
+...
+... ( skipping 136 lines )
+...
+  BorderColor black
+}
+skinparam UseCaseStereoType {
+  FontColor black
+  FontName Verdana
+}
+title डिप्लॉयमेंट इन्फ्रास्ट्रक्चर
+node "GitHub" {
+  component "रीपॉज़िटरी" as repo
+  component "एक्शन रनर" as runner
+  component "रहस्य स्टोर" as secrets
+}
+
+node "PyPI इंफ़्रास्ट्रक्चर" {
+  component "PyPI" as pypi
+  component "टेस्ट PyPI" as testpypi
+  database "पैकेज सूचक" as index
+}
+
+node "### JBake क्या है?
+^^^^^
+ Syntax Error? (Assumed diagram type: component)
+
+@startuml
+!theme plain
+title डिप्लॉयमेंट इन्फ्रास्ट्रक्चर
+node "GitHub" {
+  component "रीपॉज़िटरी" as repo
+  component "एक्शन रनर" as runner
+  component "रहस्य स्टोर" as secrets
+}
+
+node "PyPI इंफ़्रास्ट्रक्चर" {
+  component "PyPI" as pypi
+  component "टेस्ट PyPI" as testpypi
+  database "पैकेज सूचक" as index
+}
+
+node "### JBake क्या है?
+JBake एक Java-आधारित, ओपन सोर्स, स्थिर साइट/ब्लॉग जनरेटर है जो डेवलपर्स के लिए है।" {
+  component "Git क्लाइंट" as git
+  component "Python पर्यावरण" as python
+  component "IDE" as ide
+}
+
+node "उपयोगकर्ता वातावरण" {
+  component "पिप" as pip_client
+  component "पायथन रनटाइम" as py_runtime
+}
+
+git --&gt; repo : push code/tags
+repo --&gt; runner : trigger workflows
+runner --&gt; secrets : read API tokens
+runner --&gt; testpypi : upload pre-release
+runner --&gt; pypi : upload release
+pypi --&gt; index : store package
+pip_client --&gt; pypi : download package
+py_runtime &lt;-- pip_client : install package
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_पाइपलाइन_की_वस्तुएँ_और_मॉडल">पाइपलाइन की वस्तुएँ और मॉडल</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_क्लास_आरेख_cicd_मॉडल">क्लास आरेख - CI/CD मॉडल</h3>
+<div class="imageblock">
+<div class="content">
+<img src="images/diag-plantuml-md5-b297b21c69498b5bc74f0da88d80315f.png" alt="Diagram" width="814" height="635">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_सिक्रेट्स_की_कॉन्फ़िगरेशन">सिक्रेट्स की कॉन्फ़िगरेशन</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>पाइपलाइन काम करने के लिए, आपको GitHub में निम्नलिखित सीक्रेट्स कॉन्फ़िगर करने होंगे :</p>
+</div>
+<div class="sect2">
+<h3 id="_github_actions_के_रहस्य">GitHub Actions के रहस्य</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"># Dans Settings &gt; Secrets and variables &gt; Actions
+
+# Token PyPI pour la production
+PYPI_API_TOKEN=pypi-...
+
+# Token Test PyPI pour les pré-releases
+TEST_PYPI_API_TOKEN=pypi-...
+
+# Token GitHub pour créer les releases
+GITHUB_TOKEN=(automatiquement fourni)
+
+# Token Codecov (optionnel)
+CODECOV_TOKEN=...</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pypi_टोकन_जनरेशन">PyPI टोकन जनरेशन</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"># 1. Créer un compte sur PyPI et Test PyPI
+# 2. Aller dans Account Settings &gt; API tokens
+# 3. Créer un token avec scope "Entire account" ou spécifique au projet
+# 4. Format du token : pypi-AgEIcHlwaS5vcmc...</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_स्थानीय_विकास_स्क्रिप्ट">स्थानीय विकास स्क्रिप्ट</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>विकास को आसान बनाने के लिए, उपयोगिता स्क्रिप्ट बनाएँ :</p>
+</div>
+<div class="sect2">
+<h3 id="_makefile">Makefile</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="makefile">.PHONY: install test lint format security build clean release-test release-prod
+
+install:
+	pip install -e ".[dev]"
+
+test:
+	pytest tests/ -v --cov=src/playlist_downloader
+
+lint:
+	flake8 src tests
+	mypy src
+
+format:
+	black src tests
+
+security:
+	bandit -r src/
+	safety check
+
+build:
+	python -m build
+	twine check dist/*
+
+clean:
+	rm -rf build/ dist/ *.egg-info/
+	find . -type d -name __pycache__ -delete
+	find . -name "*.pyc" -delete
+
+release-test: clean build
+	twine upload --repository testpypi dist/*
+
+release-prod: clean build
+	twine upload dist/*
+
+pre-commit: format lint test security
+	@echo "✅ Prêt pour commit"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_स्क्रिप्ट_संस्करण">स्क्रिप्ट संस्करण</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python">#!/usr/bin/env python3
+"""Script pour gérer les versions du projet."""
+
+import sys
+import subprocess
+from pathlib import Path
+
+def get_current_version():
+    """Récupère la version actuelle depuis git."""
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return "0.0.0"
+
+def create_version_tag(version, message=None):
+    """Crée un tag de version."""
+    if not version.startswith('v'):
+        version = f'v{version}'
+
+    tag_message = message or f"Release {version}"
+
+    subprocess.run(["git", "tag", "-a", version, "-m", tag_message], check=True)
+    print(f"✅ Tag {version} créé")
+
+    # Push le tag
+    subprocess.run(["git", "push", "origin", version], check=True)
+    print(f"✅ Tag {version} poussé vers origin")
+
+if __name__ == "__main__":
+    if len(sys.argv) &lt; 2:
+        current = get_current_version()
+        print(f"Version actuelle: {current}")
+        print("Usage: python version.py &lt;new_version&gt; [message]")
+        sys.exit(1)
+
+    new_version = sys.argv[1]
+    message = sys.argv[2] if len(sys.argv) &gt; 2 else None
+
+    create_version_tag(new_version, message)</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_अच्छी_प्रथाएँ_और_सिफारिशें">अच्छी प्रथाएँ और सिफारिशें</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_समानार्थिक_संस्करण">समानार्थिक संस्करण</h3>
+<div class="paragraph">
+<p>सेमेंटिक वर्जनिंग (SemVer) का उपयोग करें:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>MAJOR.MINOR.PATCH</code> (ex: 1.2.3)</p>
+</li>
+<li>
+<p><code>MAJOR</code>: असंगत परिवर्तन</p>
+</li>
+<li>
+<p><code>MINOR</code>: नए संगत विशेषताएँ</p>
+</li>
+<li>
+<p>`PATCH`संगत बग सुधार</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ब्रांचिंग_रणनीति">ब्रांचिंग रणनीति</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="text">main          ──●──●──●──●──●────●── (releases stables)
+               /       /          /
+develop    ──●──●──●──●──●──●──●──●── (développement)
+            /     /        /
+feature/xxx  ●──●──●──●──●──/ (fonctionnalités)</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_टेस्ट_और_कवरेज">टेस्ट और कवरेज</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>कोड कवरेज न्यूनतम : 85%</p>
+</li>
+<li>
+<p>यूनिट टेस्ट व्यावसायिक तर्क के लिए</p>
+</li>
+<li>
+<p>एडेप्टर्स के लिए एकीकरण परीक्षण</p>
+</li>
+<li>
+<p>CLI के लिए एंड-टू-एंड परीक्षण</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_सुरक्षा">सुरक्षा</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>निर्भरताओं का स्वचालित स्कैन (Safety)</p>
+</li>
+<li>
+<p>कोड का स्थैतिक विश्लेषण (Bandit)</p>
+</li>
+<li>
+<p>कोड में कभी भी रहस्य नहीं</p>
+</li>
+<li>
+<p>विशिष्ट PyPI टोकन का उपयोग</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_मॉनिटरिंग_और_ऑब्ज़र्वेबिलिटी">मॉनिटरिंग और ऑब्ज़र्वेबिलिटी</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_पाइपलाइन_मेट्रिक्स">पाइपलाइन मेट्रिक्स</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="yaml"># .github/workflows/metrics.yml
+name: Pipeline Metrics
+
+on:
+  workflow_run:
+    workflows: ["CI", "Release"]
+    types: [completed]
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Collect metrics
+      run: |
+        echo "Pipeline: ${{ github.event.workflow_run.name }}"
+        echo "Status: ${{ github.event.workflow_run.conclusion }}"
+        echo "Duration: ${{ github.event.workflow_run.updated_at - github.event.workflow_run.created_at }}"
+        # Envoyer vers système de monitoring</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_सूचनाएँ">सूचनाएँ</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="yaml"># Ajout dans les workflows pour notifications
+- name: Notify on failure
+  if: failure()
+  uses: 8398a7/action-slack@v3
+  with:
+    status: failure
+    text: "❌ Pipeline failed for ${{ github.repository }}"
+  env:
+    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_निष्कर्ष">निष्कर्ष</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>यह पायथन के लिए पूर्ण CI/CD पाइपलाइन प्रदान करता है :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>पूर्ण स्वचालन</strong>: कोड की सत्यापन से प्रकाशन तक</p>
+</li>
+<li>
+<p><strong>सुरक्षा</strong>स्वचालित स्कैन और सुरक्षित रहस्य प्रबंधन</p>
+</li>
+<li>
+<p><strong>गुणवत्ता</strong>: बहु- संस्करणों के परीक्षण, लिंटिंग और कोड कवरेज</p>
+</li>
+<li>
+<p><strong>विश्वसनीयता</strong>: Test PyPI के माध्यम से क्रमिक तैनाती</p>
+</li>
+<li>
+<p><strong>ट्रेसेबिलिटी</strong>: artifacts, रिपोर्ट और releases GitHub</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>इन प्रथाओं को अपनाने से आपके Python CLI एप्लिकेशनों के लिए एक मजबूत और पेशेवर डिलीवरी प्रक्रिया सुनिश्चित होती है, जिससे आपके प्रोजेक्ट्स की रखरखाव और दीर्घकालिक विकास आसान हो जाता है।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_अतिरिक्त_संसाधन">अतिरिक्त संसाधन</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://packaging.python.org/">Python Packaging User Guide</a></p>
+</li>
+<li>
+<p><a href="https://docs.github.com/en/actions">GitHub Actions दस्तावेज़</a></p>
+</li>
+<li>
+<p><a href="https://pypi.org/help/">PyPI मदद दस्तावेज़</a></p>
+</li>
+<li>
+<p><a href="https://semver.org/">सेमेंटिक वर्ज़निंग विनिर्देश</a></p>
+</li>
+<li>
+<p><a href="https://keepachangelog.com/">चेंजलॉग रखें</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">संबंधित लेख</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0086_pypi_cicd_part_2_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    कृपया JavaScript सक्षम करें ताकि आप देख सकें
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">टिप्पणियाँ Disqus द्वारा संचालित</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        शिक्षण अभियांत्रिकी में विशेषज्ञ प्रशिक्षक डेवलपर।
+शिक्षा को बदलने के लिए नवीन ई-लर्निंग समाधान डिज़ाइन करना।
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="गिटहब">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS फ़ीड">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="संपर्क">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">नेविगेशन</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>होम</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ब्लॉग</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">संसाधन</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>आर्काइव्स</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> स्लाइड्स</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> प्रशिक्षण</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> बूट करने योग्य चाबी</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">स्थानीयकरण</h6>
+                    <p class="mb-3">पेरिस क्षेत्र में स्थित, फ्रांस और दूर से संभावित हस्तक्षेप।</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>इल-ड-फ़्रांस, फ़्रांस</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>घर से काम उपलब्ध</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>फ़्रांस में यात्रा</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. सर्वाधिकार सुरक्षित.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

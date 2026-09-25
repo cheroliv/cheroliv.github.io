@@ -1,0 +1,999 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>अनुच्छेद २ : TDD दृष्टिकोण के साथ एक Gradle प्लगइन विकसित करें — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0090_TDD_gradle_plugin_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0090_TDD_gradle_plugin_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0090_TDD_gradle_plugin_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0090_TDD_gradle_plugin_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="अनुच्छेद २ : TDD दृष्टिकोण के साथ एक Gradle प्लगइन विकसित करें — Cheroliv"/>
+        <meta property="og:description" content="इस लेख में, हम Gradle प्लगइन के लिए एक मजबूत विकास आधार स्थापित करने के तरीके का अन्वेषण करेंगे, टेस्ट-निर्देशित विकास (TDD - Test-Driven Development) दृष्टिकोण का उपयोग करके।"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0090_TDD_gradle_plugin_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0090_TDD_gradle_plugin_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="अनुच्छेद २ : TDD दृष्टिकोण के साथ एक Gradle प्लगइन विकसित करें — Cheroliv"/>
+        <meta name="twitter:description" content="इस लेख में, हम Gradle प्लगइन के लिए एक मजबूत विकास आधार स्थापित करने के तरीके का अन्वेषण करेंगे, टेस्ट-निर्देशित विकास (TDD - Test-Driven Development) दृष्टिकोण का उपयोग करके।"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0090_TDD_gradle_plugin_post.png"/>
+        <meta name="description" content="इस लेख में, हम Gradle प्लगइन के लिए एक मजबूत विकास आधार स्थापित करने के तरीके का अन्वेषण करेंगे, टेस्ट-निर्देशित विकास (TDD - Test-Driven Development) दृष्टिकोण का उपयोग करके।"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS फ़ीड" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="नेविगेशन टॉगल करें">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">स्वागत</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">विशेषज्ञताएँ</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ब्लॉग</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">संपर्क</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="इंटरफ़ेस थीम चुनें">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">प्रकाश</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>प्रकाश
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>गहरा
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>उच्च कंट्रास्ट
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="भाषा चुनें">
+                        <span class="me-1">🇮🇳</span>
+                        <span class="ms-1">HI</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0090_TDD_gradle_plugin_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0090_TDD_gradle_plugin_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0090_TDD_gradle_plugin_post.html"},
+                      "headline": "\u0905\u0928\u0941\u091A\u094D\u091B\u0947\u0926 \u0968 : TDD \u0926\u0943\u0937\u094D\u091F\u093F\u0915\u094B\u0923 \u0915\u0947 \u0938\u093E\u0925 \u090F\u0915 Gradle \u092A\u094D\u0932\u0917\u0907\u0928 \u0935\u093F\u0915\u0938\u093F\u0924 \u0915\u0930\u0947\u0902",
+                      "description": "\u0907\u0938 \u0932\u0947\u0916 \u092E\u0947\u0902, \u0939\u092E Gradle \u092A\u094D\u0932\u0917\u0907\u0928 \u0915\u0947 \u0932\u093F\u090F \u090F\u0915 \u092E\u091C\u092C\u0942\u0924 \u0935\u093F\u0915\u093E\u0938 \u0906\u0927\u093E\u0930 \u0938\u094D\u0925\u093E\u092A\u093F\u0924 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0924\u0930\u0940\u0915\u0947 \u0915\u093E \u0905\u0928\u094D\u0935\u0947\u0937\u0923 \u0915\u0930\u0947\u0902\u0917\u0947, \u091F\u0947\u0938\u094D\u091F-\u0928\u093F\u0930\u094D\u0926\u0947\u0936\u093F\u0924 \u0935\u093F\u0915\u093E\u0938 (TDD - Test-Driven Development) \u0926\u0943\u0937\u094D\u091F\u093F\u0915\u094B\u0923 \u0915\u093E \u0909\u092A\u092F\u094B\u0917 \u0915\u0930\u0915\u0947\u0964",
+                      "datePublished": "2025-09-24",
+                      "dateModified": "2025-09-24",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0090_TDD_gradle_plugin_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u0905\u0928\u0941\u091A\u094D\u091B\u0947\u0926 \u0968 : TDD \u0926\u0943\u0937\u094D\u091F\u093F\u0915\u094B\u0923 \u0915\u0947 \u0938\u093E\u0925 \u090F\u0915 Gradle \u092A\u094D\u0932\u0917\u0907\u0928 \u0935\u093F\u0915\u0938\u093F\u0924 \u0915\u0930\u0947\u0902", "item": "https:\/\/cheroliv.com\/blog\/2025\/0090_TDD_gradle_plugin_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">अनुच्छेद २ : TDD दृष्टिकोण के साथ एक Gradle प्लगइन विकसित करें</h1>
+                <p class="lead">
+                    <em>Publié le 24 September 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_परियोजना_प्रारम्भ">परियोजना प्रारम्भ</a></li>
+<li><a href="#_2_हमारा_पहला_tdd_चक्र_एक_कार्य_रिकॉर्ड_करें">2. हमारा पहला TDD चक्र : एक कार्य रिकॉर्ड करें</a>
+<ul class="sectlevel2">
+<li><a href="#_2_1_पहला_परीक्षण_जो_परीक्षण_असफल_होता_है">2.1. पहला परीक्षण (जो परीक्षण असफल होता है)</a></li>
+<li><a href="#_2_2_अगला_कोड_परीक्षा_पास_करना">2.2. अगला कोड (परीक्षा पास करना)</a></li>
+</ul>
+</li>
+<li><a href="#_3_दूसरा_चक्र_tdd_एक_डीएसएल_एक्सटेंशन_जोड़ें">3. दूसरा चक्र TDD: एक डीएसएल एक्सटेंशन जोड़ें</a>
+<ul class="sectlevel2">
+<li><a href="#_3_1_पहला_परीक्षण">3.1. पहला परीक्षण</a></li>
+<li><a href="#_3_2_कोड_फिर">3.2. कोड फिर</a></li>
+</ul>
+</li>
+<li><a href="#_4_कार्यात्मक_परीक्षण_एकीकरण_को_सत्यापित_करें">4. कार्यात्मक परीक्षण: एकीकरण को सत्यापित करें</a>
+<ul class="sectlevel2">
+<li><a href="#_4_1_एकीकरण_परीक्षण_एक_नियंत्रित_वातावरण_बनाएँ">4.1. एकीकरण परीक्षण: एक नियंत्रित वातावरण बनाएँ</a></li>
+<li><a href="#_4_2_लॉजिक_को_अंतिम_रूप_दें">4.2. लॉजिक को अंतिम रूप दें</a></li>
+</ul>
+</li>
+<li><a href="#_निष्कर्ष">निष्कर्ष</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>इस लेख में, हम जानेंगे कि Gradle प्लगिन के लिए एक मजबूत विकास आधार कैसे स्थापित करें, परीक्षण-निर्देशित विकास (TDD - Test-Driven Development) दृष्टिकोण का उपयोग करके। यह विधि सुनिश्चित करती है कि हमारा कोड मजबूत, रखरखाव योग्य और आवश्यकताओं को सटीक रूप से शुरू से ही पूरा करता है।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_परियोजना_प्रारम्भ">परियोजना प्रारम्भ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Gradle बहुत सहजता से एक नए प्लगइन के निर्माण को सुविधाजनक बनाता है, कमांड के माध्यम से।<code>gradle init</code>. कोटलिन के साथ एक 'Gradle Plugin' बनाने का चयन करके, हमें एक उपयोग के लिए तैयार प्रोजेक्ट संरचना मिलती है, जिसमें दो महत्वपूर्ण प्रकार के परीक्षण शामिल हैं:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>इकाई परीक्षण :</strong> Situés dans <code>src/test</code>, वे हमारे प्लगिन के अलग‑अलग घटकों को सत्यापित करने की अनुमति देते हैं, जैसे किसी कार्य की आंतरिक तर्क या किसी एक्सटेंशन की कॉन्फ़िगरेशन। वे तेज़ हैं और इन्हें ग्रैडल की पूर्ण निष्पादन की आवश्यकता नहीं है।</p>
+</li>
+<li>
+<p><strong>कार्यात्मक परीक्षण :</strong>में स्थित`src/functionalTest`, वे उपयोग करते हैं`GradleRunner`पूरी Gradle बिल्ड चलाने के लिए एक अस्थायी परीक्षण प्रोजेक्ट में। यह हमें नियंत्रित वातावरण में प्लगिन के वास्तविक व्यवहार को सत्यापित करने की अनुमति देता है।</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_2_हमारा_पहला_tdd_चक्र_एक_कार्य_रिकॉर्ड_करें">2. हमारा पहला TDD चक्र : एक कार्य रिकॉर्ड करें</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>हमारी पहली आवश्यकता सरल है: प्लगइन को एक नामित कार्य पंजीकृत करना होगा`printSiteConfig`.</p>
+</div>
+<div class="sect2">
+<h3 id="_2_1_पहला_परीक्षण_जो_परीक्षण_असफल_होता_है">2.1. पहला परीक्षण (जो परीक्षण असफल होता है)</h3>
+<div class="paragraph">
+<p>TDD के अनुसार, हम पहले एक परीक्षण लिखते हैं जो इस कार्य की मौजूदगी की जाँच करता है। में`SiteBakerPluginTest.kt`(हमारा यूनिट परीक्षण फ़ाइल), हम जोड़ते हैं:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `plugin registers task`() {
+    // Créer un projet de test en mémoire
+    val project = ProjectBuilder.builder().build()
+    project.plugins.apply("com.cheroliv.site-baker")
+
+    // Vérifier que la tâche a bien été enregistrée
+    assertNotNull(project.tasks.findByName("printSiteConfig"))
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह परीक्षण विफल होता है, क्योंकि हमने अभी तक अपने प्लगइन में कोई कोड नहीं लिखा है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_2_अगला_कोड_परीक्षा_पास_करना">2.2. अगला कोड (परीक्षा पास करना)</h3>
+<div class="paragraph">
+<p>अब हम आवश्यक न्यूनतम कोड लिख रहे हैं में`SiteBakerPlugin.kt`ताकि परीक्षा पास हो:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class SiteBakerPlugin: Plugin&lt;Project&gt; {
+    override fun apply(project: Project) {
+        // Enregistrer une tâche simple
+        project.tasks.register("printSiteConfig") { task -&gt;
+            // ... la logique de la tâche viendra plus tard
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>हम परीक्षणों को फिर से चला रहे हैं, और वे पास हो रहे हैं. हमारी पहली सुविधा मान्य है.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_3_दूसरा_चक्र_tdd_एक_डीएसएल_एक्सटेंशन_जोड़ें">3. दूसरा चक्र TDD: एक डीएसएल एक्सटेंशन जोड़ें</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>अगली आवश्यकता उपयोगकर्ताओं को उनके DSL ब्लॉक के माध्यम से हमारे प्लग़िन को कॉन्फ़िगर करने की अनुमति देना है`build.gradle.kts`. हम एक ब्लॉक चाहते हैं`site { &#8230;&#8203; }`जहाँ आप एक कॉन्फ़िगरेशन पथ निर्दिष्ट कर सकते हैं।</p>
+</div>
+<div class="sect2">
+<h3 id="_3_1_पहला_परीक्षण">3.1. पहला परीक्षण</h3>
+<div class="paragraph">
+<p>हम एक परीक्षण जोड़ रहे हैं ताकि यह सत्यापित किया जा सके कि एक्सटेंशन`site`यह ठीक से दर्ज की गई है और हम इसे मान दे सकते हैं।</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test
+fun `plugin registers extension`() {
+    val project = ProjectBuilder.builder().build()
+    project.plugins.apply("com.cheroliv.site-baker")
+
+    // Récupérer l'extension et lui affecter une valeur
+    project.extensions
+        .findByType(SiteExtension::class.java)!!
+        .configPath
+        .set("config.yml")
+
+    // Vérifier que la valeur a bien été prise en compte
+    assertEquals(
+        "config.yml",
+        project.extensions.findByType(SiteExtension::class.java)?.configPath?.get()
+    )
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह टेस्ट फेल हो जाता है क्योंकि न तो क्लास`SiteExtension`एक्सटेंशन का पंजीकरण भी मौजूद नहीं है।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_2_कोड_फिर">3.2. कोड फिर</h3>
+<div class="paragraph">
+<p>हम क्लास बनाते हैं`SiteBakerExtension.kt`और हम अपडेट करते हैं`SiteBakerPlugin.kt`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// SiteBakerExtension.kt
+open class SiteExtension @Inject constructor(objects: ObjectFactory) {
+    val configPath: Property&lt;String&gt; = objects.property(String::class.java)
+}
+
+// SiteBakerPlugin.kt
+class SiteBakerPlugin: Plugin&lt;Project&gt; {
+    override fun apply(project: Project) {
+        // Enregistrer l'extension
+        val extension = project.extensions.create("site", SiteExtension::class.java)
+
+        project.tasks.register("printSiteConfig") { task -&gt;
+            task.doLast {
+                // On utilisera l'extension plus tard
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>परीक्षण फिर से पास हो रहे हैं।</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_4_कार्यात्मक_परीक्षण_एकीकरण_को_सत्यापित_करें">4. कार्यात्मक परीक्षण: एकीकरण को सत्यापित करें</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>अब जब इकाइयाँ परीक्षण की गई हैं, हमें यह सुनिश्चित करने की आवश्यकता है कि सब कुछ एक वास्तविक बिल्ड में एक साथ काम करे। यह फ़ंक्शनल परीक्षण की भूमिका है`SiteBakerPluginFunctionalTest.kt`.</p>
+</div>
+<div class="sect2">
+<h3 id="_4_1_एकीकरण_परीक्षण_एक_नियंत्रित_वातावरण_बनाएँ">4.1. एकीकरण परीक्षण: एक नियंत्रित वातावरण बनाएँ</h3>
+<div class="paragraph">
+<p>यह परीक्षण हमारा प्लगइन का उपयोग करके एक वास्तविक प्रोजेक्ट का अनुकरण करेगा। इसे विश्वसनीय होने के लिए, इसे<strong>वायुरोधी</strong>, यानी इसे मौजूदा फ़ाइलों पर निर्भर नहीं रहना चाहिए। इसे स्वयं सभी आवश्यक शर्तें बनानी चाहिए जो इसके निष्पादन के लिए आवश्यक हैं।</p>
+</div>
+<div class="paragraph">
+<p>टेस्ट इसलिए:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>एक बनाना`build.gradle.kts`हमारा प्लगिन और इसका DSL का उपयोग करने वाला परीक्षण.</p>
+</li>
+<li>
+<p><strong>कॉन्फ़िगरेशन फ़ाइल बनाएँ</strong>(</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>(Note: The output preserves the exact characters, including spaces and the parenthesis, as there is no translatable text.)<code>managed-jbake-context.yml</code>) जो प्लगिन को पढ़ना चाहिए। यह परीक्षण की मजबूती के लिए एक महत्वपूर्ण चरण है।</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>कार्य को निष्पादित करें`printSiteConfig`के माध्यम से`GradleRunner`.</p>
+</li>
+<li>
+<p>निर्माण आउटपुट सही है, यह सुनिश्चित करें।</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>प्रत्येक निष्पादन में इस कॉन्फ़िगरेशन फ़ाइल को कॉपी करके या बनाकर, हम सुनिश्चित करते हैं कि परीक्षण है।<strong>पुनरावृत्ति योग्य</strong>और यह बाहरी स्थिति पर निर्भर नहीं करता है। यह हमारे परीक्षणों को फ़ाइल पढ़ने से संबंधित रिग्रेशन से सुरक्षित रखता है।</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Test fun `can run task with DSL`() {
+    // 1. Créer un build.gradle.kts de test
+    buildFile.writeText("""
+        plugins { id("com.cheroliv.site-baker") }
+        site { configPath = "managed-jbake-context.yml" }
+    """.trimIndent())
+
+    // 2. Créer le fichier de configuration pour un test contrôlé
+    val configFile = File(projectDir, "managed-jbake-context.yml")
+    configFile.writeText("site: { title: 'Mon Site de Test' }") // Contenu YAML simple
+
+    // 3. Exécuter la build
+    val runner = GradleRunner.create()
+    runner.withPluginClasspath()
+    runner.withArguments("printSiteConfig")
+    runner.withProjectDir(projectDir) // Spécifier le répertoire du projet de test
+    val result = runner.build()
+
+    // 4. Vérifier la sortie
+    assertTrue(result.output.contains("Site config path: managed-jbake-context.yml"))
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>यह परीक्षा तब तक असफल रहेगी जब तक कि कार्य`printSiteConfig`यह एक्सटेंशन का मान वास्तव में उपयोग नहीं करेगा।</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_2_लॉजिक_को_अंतिम_रूप_दें">4.2. लॉजिक को अंतिम रूप दें</h3>
+<div class="paragraph">
+<p>हम टास्क को अद्यतन कर रहे हैं में`SiteBakerPlugin.kt`इसे कॉन्फ़िगर किया गया मान प्रदर्शित करने के लिए :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.tasks.register("printSiteConfig") { task -&gt;
+    task.doLast {
+        println("Site config path: ${extension.configPath.get()}")
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>सभी परीक्षण, इकाई और कार्यात्मक, अब पास हैं।</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_निष्कर्ष">निष्कर्ष</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TDD दृष्टिकोण का पालन करते हुए, हमने एक प्लगइन को चरणबद्ध और सुरक्षित तरीके से बनाया। प्रत्येक छोटी सुविधा को तुरंत एक परीक्षण द्वारा मान्य किया जाता है, तेज़ इकाई परीक्षणों से लेकर पूरी एकीकरण को मान्य करने वाले कार्यात्मक परीक्षणों तक।</p>
+</div>
+<div class="paragraph">
+<p>अपने परीक्षणों को कार्यात्मक बनाने में सावधानी बरतते हुए<strong>हर्मेटिक</strong>— विशेषकर प्रोग्रामेटिक रूप से आवश्यक कॉन्फ़िगरेशन फ़ाइलों को बनाकर — हम एक अत्यंत मज़बूत सुरक्षा जाल बुन रहे हैं। यह सख़्ती हमें प्रभावी रूप से रिग्रेशन से बचाती है और हमें भविष्य में अधिक जटिल सुविधाएँ जोड़ने का भरोसा देता है, जैसे YAML कॉन्फ़िगरेशन फ़ाइल का पार्सिंग।</p>
+</div>
+<div class="paragraph">
+<p>यह मजबूत परीक्षण आधार प्लगइन के रखरखाव और भविष्य के विकास के लिए सबसे मूल्यवान संपत्ति है।</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">संबंधित लेख</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0090_TDD_gradle_plugin_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    कृपया JavaScript सक्षम करें ताकि आप देख सकें
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">टिप्पणियाँ Disqus द्वारा संचालित</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        शिक्षण अभियांत्रिकी में विशेषज्ञ प्रशिक्षक डेवलपर।
+शिक्षा को बदलने के लिए नवीन ई-लर्निंग समाधान डिज़ाइन करना।
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="गिटहब">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS फ़ीड">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="संपर्क">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">नेविगेशन</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>होम</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ब्लॉग</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">संसाधन</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>आर्काइव्स</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> स्लाइड्स</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> प्रशिक्षण</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> बूट करने योग्य चाबी</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">स्थानीयकरण</h6>
+                    <p class="mb-3">पेरिस क्षेत्र में स्थित, फ्रांस और दूर से संभावित हस्तक्षेप।</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>इल-ड-फ़्रांस, फ़्रांस</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>घर से काम उपलब्ध</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>फ़्रांस में यात्रा</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. सर्वाधिकार सुरक्षित.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

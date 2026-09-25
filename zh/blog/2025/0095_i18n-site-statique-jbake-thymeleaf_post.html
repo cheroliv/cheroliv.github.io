@@ -1,0 +1,1624 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>使用 Thymeleaf 的 JBake 静态站点国际化 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="使用 Thymeleaf 的 JBake 静态站点国际化 — Cheroliv"/>
+        <meta property="og:description" content="在JBake中使用Thymeleaf实现国际化的完整指南：用于UI的消息文件，按文件夹组织多语言文章。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="使用 Thymeleaf 的 JBake 静态站点国际化 — Cheroliv"/>
+        <meta name="twitter:description" content="在JBake中使用Thymeleaf实现国际化的完整指南：用于UI的消息文件，按文件夹组织多语言文章。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.png"/>
+        <meta name="description" content="在JBake中使用Thymeleaf实现国际化的完整指南：用于UI的消息文件，按文件夹组织多语言文章。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0095_i18n-site-statique-jbake-thymeleaf_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0095_i18n-site-statique-jbake-thymeleaf_post.html"},
+                      "headline": "\u4F7F\u7528 Thymeleaf \u7684 JBake \u9759\u6001\u7AD9\u70B9\u56FD\u9645\u5316",
+                      "description": "\u5B8C\u6574\u6307\u5357\uFF1A\u5728JBake\u751F\u6210\u7684\u9759\u6001\u7AD9\u70B9\u4E2D\u4F7F\u7528Thymeleaf\u5B9E\u73B0\u56FD\u9645\u5316",
+                      "datePublished": "2025-10-20",
+                      "dateModified": "2025-10-20",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0095_i18n-site-statique-jbake-thymeleaf_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u4F7F\u7528 Thymeleaf \u7684 JBake \u9759\u6001\u7AD9\u70B9\u56FD\u9645\u5316", "item": "https:\/\/cheroliv.com\/blog\/2025\/0095_i18n-site-statique-jbake-thymeleaf_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">使用 Thymeleaf 的 JBake 静态站点国际化</h1>
+                <p class="lead">
+                    <em>Publié le 20 October 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_介绍">介�绍</a>
+<ul class="sectlevel2">
+<li><a href="#_用例图_use_case">用例图 (Use Case)</a></li>
+</ul>
+</li>
+<li><a href="#_国际化架构">国际化架构</a>
+<ul class="sectlevel2">
+<li><a href="#_结构图文件组织">结构图（文件组织）</a></li>
+<li><a href="#_为什么采用这种方法">为什么采用这种方法？</a></li>
+<li><a href="#_组件图">组件图</a></li>
+</ul>
+</li>
+<li><a href="#_thymeleaf_模板国际化">Thymeleaf 模板国际化</a>
+<ul class="sectlevel2">
+<li><a href="#_消息文件的结构">消息文件的结构</a></li>
+<li><a href="#_消息文件的内容">消息文件的内容</a></li>
+<li><a href="#_在模板中使用">在模板中使用</a></li>
+<li><a href="#_时序图_国际化解决方案">时序图 - 国际化解决方案</a></li>
+<li><a href="#_jbake_的语言环境配置">JBake 的语言环境配置</a></li>
+</ul>
+</li>
+<li><a href="#_文章国际化按文件夹组织">文章国际化：按文件夹组织</a>
+<ul class="sectlevel2">
+<li><a href="#_流程图_flow_生成">流程图 (Flow) - 生成</a></li>
+<li><a href="#_文件夹结构">文件夹结构</a></li>
+<li><a href="#_这种方法的优势">这种方法的优势</a></li>
+<li><a href="#_文章的元数据">文章的元数据</a></li>
+<li><a href="#_url_配置">URL 配置</a></li>
+</ul>
+</li>
+<li><a href="#_多语言显示模板">多语言显示模板</a>
+<ul class="sectlevel2">
+<li><a href="#_带有语言选择器的文章模板">带有语言选择器的文章模板</a></li>
+<li><a href="#_按语言过滤的索引">按语言过滤的索引</a></li>
+</ul>
+</li>
+<li><a href="#_语言之间的导航">语言之间的导航</a>
+<ul class="sectlevel2">
+<li><a href="#_全局语言选择器">全局语言选择器</a></li>
+<li><a href="#_流程图_用户读取">流程图 - 用户读取</a></li>
+<li><a href="#_选择器的_css_样式">选择器的 CSS 样式</a></li>
+</ul>
+</li>
+<li><a href="#_按语言的_rss_订阅">按语言的 RSS 订阅</a></li>
+<li><a href="#_良好实践和技巧">良好实践和技巧</a>
+<ul class="sectlevel2">
+<li><a href="#_1_文章标识符的一致性">1. 文章标识符的一致性</a></li>
+<li><a href="#_2_日期一致">2. 日期一致</a></li>
+<li><a href="#_3_多语言标签">3. 多语言标签</a></li>
+<li><a href="#_4_未翻译项目的管理">4. 未翻译项目的管理</a></li>
+<li><a href="#_5_多语言站点地图">5. 多语言站点地图</a></li>
+</ul>
+</li>
+<li><a href="#_结论">结论</a>
+<ul class="sectlevel2">
+<li><a href="#_部署图">部署图</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_介绍">介�绍</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>静态网站的国际化（i18n）乍看起来可能很复杂，但JBake结合Thymeleaf提供了创建多语言站点的优雅解决方案。在本文中，我将展示我如何在我的博客上实现i18n，涵盖模板和多语言文章管理。</p>
+</div>
+<div class="sect2">
+<h3 id="_用例图_use_case">用例图 (Use Case)</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-3dc0e253ecd651c64e5bd6780c5c0b5c.png" alt="Diagram" width="367" height="401">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_国际化架构">国际化架构</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>我们的方法基于两个支柱：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>模板的国际化</strong>: 使用 Thymeleaf 消息文件用于界面元素</p>
+</li>
+<li>
+<p><strong>内容的 i18n</strong>按语言组织文章，放置在专用的文件夹结构中</p>
+</li>
+</ol>
+</div>
+<div class="sect2">
+<h3 id="_结构图文件组织">结构图（文件组织）</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-2f100fc3ec2ec37f9556818cdc246602.png" alt="Diagram" width="188" height="513">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_为什么采用这种方法">为什么采用这种方法？</h3>
+<div class="paragraph">
+<p>这种分离可以：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>保持界面一致性，无论语言如何</p>
+</li>
+<li>
+<p>独立管理文章的内容和翻译</p>
+</li>
+<li>
+<p>简化添加新语言，无需进行大规模重构</p>
+</li>
+<li>
+<p>允许仅在特定语言中可用的文章</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_组件图">组件图</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-7317c50fde667b195d96b66ad65876d9.png" alt="Diagram" width="1771" height="477">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_thymeleaf_模板国际化">Thymeleaf 模板国际化</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_消息文件的结构">消息文件的结构</h3>
+<div class="paragraph">
+<p>第一步是为每种支持的语言创建属性文件：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">src/jbake/templates/
+├── messages.properties        # Fallback par défaut
+├── messages_fr.properties     # Français
+├── messages_en.properties     # Anglais
+└── messages_de.properties     # Allemand</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_消息文件的内容">消息文件的内容</h3>
+<div class="paragraph">
+<p>这是一个文件示例`messages_fr.properties`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties"># Navigation
+nav.home=Accueil
+nav.blog=Blog
+nav.about=À propos
+nav.contact=Contact
+
+# Articles
+article.readmore=Lire la suite
+article.published=Publié le
+article.tags=Étiquettes
+article.also.available=Également disponible en
+
+# Interface
+site.title=Mon Blog Technique
+site.description=Partage de connaissances et expériences
+footer.copyright=© 2025 Tous droits réservés
+search.placeholder=Rechercher un article...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以及其英语等价`messages_en.properties`：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties"># Navigation
+nav.home=Home
+nav.blog=Blog
+nav.about=About
+nav.contact=Contact
+
+# Articles
+article.readmore=Read more
+article.published=Published on
+article.tags=Tags
+article.also.available=Also available in
+
+# Interface
+site.title=My Tech Blog
+site.description=Sharing knowledge and experiences
+footer.copyright=© 2025 All rights reserved
+search.placeholder=Search articles...</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_在模板中使用">在模板中使用</h3>
+<div class="paragraph">
+<p>在您的Thymeleaf模板中，使用语法`#{}`要访问消息 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;title th:text="#{site.title}"&gt;Mon Blog&lt;/title&gt;
+    &lt;meta name="description" th:content="#{site.description}" /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;nav&gt;
+        &lt;a th:href="@{/}" th:text="#{nav.home}"&gt;Accueil&lt;/a&gt;
+        &lt;a th:href="@{/blog/}" th:text="#{nav.blog}"&gt;Blog&lt;/a&gt;
+        &lt;a th:href="@{/about.html}" th:text="#{nav.about}"&gt;À propos&lt;/a&gt;
+    &lt;/nav&gt;
+
+    &lt;footer&gt;
+        &lt;p th:text="#{footer.copyright}"&gt;Copyright&lt;/p&gt;
+    &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_时序图_国际化解决方案">时序图 - 国际化解决方案</h3>
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 4) ]
+
+@startuml
+actor Auteur
+participant JBake
+participant "AsciiDoc
+^^^^^
+ Syntax Error? (Assumed diagram type: sequence)
+
+@startuml
+actor Auteur
+participant JBake
+participant "AsciiDoc
+解析器" as parser
+participant "Thymeleaf\n引擎" as thymeleaf
+participant "I18n
+解析器" as i18n
+database "messages_*.properties" as messages
+
+Auteur -&gt; JBake: jbake -b
+activate JBake
+
+JBake -&gt; parser: Lire article.fr.adoc
+activate parser
+parser --&gt; JBake: Contenu + métadonnées\n(lang=fr, article-id=xyz)
+deactivate parser
+
+JBake -&gt; parser: Lire article.en.adoc
+activate parser
+parser --&gt; JBake: Contenu + métadonnées\n(lang=en, article-id=xyz)
+deactivate parser
+
+JBake -&gt; thymeleaf: Générer page FR
+activate thymeleaf
+
+thymeleaf -&gt; i18n: Résoudre #{nav.home}
+activate i18n
+i18n -&gt; messages: Lire messages_fr.properties
+messages --&gt; i18n: "首页"
+i18n --&gt; thymeleaf: "首页"
+deactivate i18n
+
+thymeleaf -&gt; JBake: Rechercher traductions\n(article-id=xyz, lang!=fr)
+JBake --&gt; thymeleaf: article.en.html trouvé
+
+thymeleaf --&gt; JBake: /fr/blog/article.html
+deactivate thymeleaf
+
+JBake -&gt; thymeleaf: Générer page EN
+activate thymeleaf
+
+thymeleaf -&gt; i18n: Résoudre #{nav.home}
+activate i18n
+i18n -&gt; messages: Lire messages_en.properties
+messages --&gt; i18n: "首页"
+i18n --&gt; thymeleaf: "首页"
+deactivate i18n
+
+thymeleaf -&gt; JBake: Rechercher traductions\n(article-id=xyz, lang!=en)
+JBake --&gt; thymeleaf: article.fr.html trouvé
+
+thymeleaf --&gt; JBake: /en/blog/article.html
+deactivate thymeleaf
+
+JBake --&gt; Auteur: Site généré
+deactivate JBake
+@enduml</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_jbake_的语言环境配置">JBake 的语言环境配置</h3>
+<div class="paragraph">
+<p>在您的文件中`jbake.properties`, 设置默认语言环境 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties"># Locale par défaut
+thymeleaf.locale=fr
+
+# Encodage
+template.encoding=UTF-8</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_文章国际化按文件夹组织">文章国际化：按文件夹组织</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_流程图_flow_生成">流程图 (Flow) - 生成</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-2afbc0cd5fdf60b7aca5aa535a62f60e.png" alt="Diagram" width="285" height="1034">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_文件夹结构">文件夹结构</h3>
+<div class="paragraph">
+<p>与其在文件名中使用后缀，我选择了按文件夹组织的方式，这样更清晰且易于维护：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">content/blog/
+├── 2024/
+│   ├── fr/
+│   │   ├── introduction-jbake.adoc
+│   │   ├── guide-thymeleaf.adoc
+│   │   └── astuces-asciidoc.adoc
+│   └── en/
+│       ├── introduction-jbake.adoc
+│       ├── thymeleaf-guide.adoc
+│       └── asciidoc-tips.adoc
+└── 2025/
+    ├── fr/
+    │   └── internationalisation-jbake.adoc
+    └── en/
+        └── jbake-internationalization.adoc</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_这种方法的优势">这种方法的优势</h3>
+<div class="paragraph">
+<p>这种结构具有多个优势：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>清晰的分离</strong>: 每种语言都有自己的空间</p>
+</li>
+<li>
+<p><strong>灵活命名</strong>: 文件可以根据语言具有不同的名称</p>
+</li>
+<li>
+<p><strong>可扩展性</strong>: 容易添加一种新语言</p>
+</li>
+<li>
+<p><strong>自然组织</strong>: 遵循 JBake 的时间逻辑</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_文章的元数据">文章的元数据</h3>
+<div class="paragraph">
+<p>每篇文章都必须包含元数据以允许翻译之间的链接。以下是一个示例：</p>
+</div>
+<div class="paragraph">
+<p><strong>法文版</strong>(<code>2025/fr/internationalisation-jbake.adoc</code>) :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc">= Internationalisation d'un site statique JBake
+:jbake-type: post
+:jbake-status: published
+:jbake-date: 2025-10-20
+:jbake-lang: fr
+:jbake-article-id: jbake-i18n-thymeleaf
+:jbake-tags: jbake, thymeleaf, i18n
+:jbake-description: Guide pour mettre en place l'i18n avec JBake</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>英文版本</strong>(<code>2025/en/jbake-internationalization.adoc</code>) :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc">= Internationalizing a JBake Static Site
+:jbake-type: post
+:jbake-status: published
+:jbake-date: 2025-10-20
+:jbake-lang: en
+:jbake-article-id: jbake-i18n-thymeleaf
+:jbake-tags: jbake, thymeleaf, i18n
+:jbake-description: Guide to implement i18n with JBake</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意：该属性`:jbake-article-id:`至关重要：它能够将同一篇文章的不同译文关联起来。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_url_配置">URL 配置</h3>
+<div class="paragraph">
+<p>在`jbake.properties`, 配置 URL 模式以包含语言 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties"># Pattern d'URL avec langue
+post.permalink.pattern=:lang/blog/:year/:name.html
+
+# Langue par défaut
+site.default.lang=fr</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这将生成如下形式的 URL：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>/fr/blog/2025/internationalisation-jbake.html</code></p>
+</li>
+<li>
+<p><code>/en/blog/2025/jbake-internationalization.html</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_多语言显示模板">多语言显示模板</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_带有语言选择器的文章模板">带有语言选择器的文章模板</h3>
+<div class="paragraph">
+<p>创建一个模板`post.html`显示可用翻译：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;title th:text="${content.title}"&gt;Article&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;article&gt;
+        &lt;header&gt;
+            &lt;h1 th:text="${content.title}"&gt;Titre&lt;/h1&gt;
+
+            &lt;div class="article-meta"&gt;
+                &lt;time th:text="${#dates.format(content.date, 'dd MMMM yyyy')}"
+                      th:attr="datetime=${#dates.format(content.date, 'yyyy-MM-dd')}"&gt;
+                    Date
+                &lt;/time&gt;
+
+                &lt;!-- Sélecteur de traductions --&gt;
+                &lt;div class="translations" th:if="${content['article-id']}"&gt;
+                    &lt;span th:text="#{article.also.available}"&gt;Aussi disponible en :&lt;/span&gt;
+                    &lt;ul class="language-list"&gt;
+                        &lt;li th:each="post : ${published_posts}"
+                            th:if="${post['article-id'] == content['article-id'] and post.lang != content.lang}"&gt;
+                            &lt;a th:href="${post.uri}"
+                               th:text="${post.lang.toUpperCase()}"&gt;
+                                LANG
+                            &lt;/a&gt;
+                        &lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/header&gt;
+
+        &lt;div class="content" th:utext="${content.body}"&gt;
+            Contenu de l'article
+        &lt;/div&gt;
+
+        &lt;footer class="article-footer"&gt;
+            &lt;div class="tags" th:if="${content.tags}"&gt;
+                &lt;span th:text="#{article.tags}"&gt;Étiquettes :&lt;/span&gt;
+                &lt;span th:each="tag : ${content.tags}"&gt;
+                    &lt;a th:href="@{/tags/{tag}.html(tag=${tag})}"
+                       th:text="${tag}"&gt;tag&lt;/a&gt;
+                &lt;/span&gt;
+            &lt;/div&gt;
+        &lt;/footer&gt;
+    &lt;/article&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_按语言过滤的索引">按语言过滤的索引</h3>
+<div class="paragraph">
+<p>为每种语言创建索引模板：</p>
+</div>
+<div class="paragraph">
+<p><strong>index.html</strong>(法文索引) :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;title th:text="#{site.title}"&gt;Mon Blog&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;main&gt;
+        &lt;h1 th:text="#{nav.blog}"&gt;Blog&lt;/h1&gt;
+
+        &lt;div class="articles-list"&gt;
+            &lt;article th:each="post : ${published_posts}"
+                     th:if="${post.lang == 'fr'}"&gt;
+                &lt;h2&gt;
+                    &lt;a th:href="${post.uri}" th:text="${post.title}"&gt;Titre&lt;/a&gt;
+                &lt;/h2&gt;
+                &lt;time th:text="${#dates.format(post.date, 'dd MMMM yyyy')}"&gt;
+                    Date
+                &lt;/time&gt;
+                &lt;p th:text="${post.description}"&gt;Description&lt;/p&gt;
+                &lt;a th:href="${post.uri}" th:text="#{article.readmore}"&gt;
+                    Lire la suite
+                &lt;/a&gt;
+            &lt;/article&gt;
+        &lt;/div&gt;
+    &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>index_en.html</strong>(英文索引) :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;title th:text="#{site.title}"&gt;My Blog&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;main&gt;
+        &lt;h1 th:text="#{nav.blog}"&gt;Blog&lt;/h1&gt;
+
+        &lt;div class="articles-list"&gt;
+            &lt;article th:each="post : ${published_posts}"
+                     th:if="${post.lang == 'en'}"&gt;
+                &lt;h2&gt;
+                    &lt;a th:href="${post.uri}" th:text="${post.title}"&gt;Title&lt;/a&gt;
+                &lt;/h2&gt;
+                &lt;time th:text="${#dates.format(post.date, 'dd MMMM yyyy')}"&gt;
+                    Date
+                &lt;/time&gt;
+                &lt;p th:text="${post.description}"&gt;Description&lt;/p&gt;
+                &lt;a th:href="${post.uri}" th:text="#{article.readmore}"&gt;
+                    Read more
+                &lt;/a&gt;
+            &lt;/article&gt;
+        &lt;/div&gt;
+    &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_语言之间的导航">语言之间的导航</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_全局语言选择器">全局语言选择器</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_流程图_用户读取">流程图 - 用户读取</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-35c457cfbd1b9be0156f6bbbfb2925d1.png" alt="Diagram" width="494" height="761">
+</div>
+</div>
+<div class="paragraph">
+<p>在你的主模板中添加语言选择器：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;nav class="language-switcher"&gt;
+    &lt;a href="/index.html"
+       th:classappend="${content.lang == 'fr'} ? 'active'"
+       title="Français"&gt;
+        🇫🇷 FR
+    &lt;/a&gt;
+    &lt;a href="/en/index.html"
+       th:classappend="${content.lang == 'en'} ? 'active'"
+       title="English"&gt;
+        🇬🇧 EN
+    &lt;/a&gt;
+&lt;/nav&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_选择器的_css_样式">选择器的 CSS 样式</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-css hljs" data-lang="css">.language-switcher {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.language-switcher a {
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.language-switcher a:hover {
+    background: #e0e0e0;
+}
+
+.language-switcher a.active {
+    background: #007bff;
+    color: white;
+}
+
+.translations {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+}
+
+.language-list {
+    display: inline-flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.language-list li::after {
+    content: "•";
+    margin-left: 0.5rem;
+}
+
+.language-list li:last-child::after {
+    content: "";
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_按语言的_rss_订阅">按语言的 RSS 订阅</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>要获得按语言分离的 RSS 源，请创建单独的模板：</p>
+</div>
+<div class="paragraph">
+<p><strong>feed.xml</strong>(法语流) :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;rss version="2.0" xmlns:th="http://www.thymeleaf.org"&gt;
+    &lt;channel&gt;
+        &lt;title th:text="#{site.title}"&gt;Mon Blog&lt;/title&gt;
+        &lt;link th:text="${config.site_host}"&gt;http://example.com&lt;/link&gt;
+        &lt;description th:text="#{site.description}"&gt;Description&lt;/description&gt;
+        &lt;language&gt;fr&lt;/language&gt;
+
+        &lt;item th:each="post : ${published_posts}"
+              th:if="${post.lang == 'fr'}"&gt;
+            &lt;title th:text="${post.title}"&gt;Titre&lt;/title&gt;
+            &lt;link th:text="${config.site_host + post.uri}"&gt;Lien&lt;/link&gt;
+            &lt;pubDate th:text="${#dates.format(post.date, 'EEE, dd MMM yyyy HH:mm:ss Z')}"&gt;
+                Date
+            &lt;/pubDate&gt;
+            &lt;description th:text="${post.description}"&gt;Description&lt;/description&gt;
+        &lt;/item&gt;
+    &lt;/channel&gt;
+&lt;/rss&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_良好实践和技巧">良好实践和技巧</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_文章标识符的一致性">1. 文章标识符的一致性</h3>
+<div class="paragraph">
+<p>请确保`:jbake-article-id:`对于同一文章的所有翻译都是相同的。 请使用一致的格式：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>请使用英文标识符以实现通用性</p>
+</li>
+<li>
+<p>使用短横线来分隔单词</p>
+</li>
+<li>
+<p>避免使用特殊字符</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_日期一致">2. 日期一致</h3>
+<div class="paragraph">
+<p>一篇文章的所有翻译必须有相同的出版日期`:jbake-date:`). 这有助于排序和按时间顺序显示。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_多语言标签">3. 多语言标签</h3>
+<div class="paragraph">
+<p>对于标签，您有两种选择：</p>
+</div>
+<div class="paragraph">
+<p><strong>选项1：通用英文标签</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc">:jbake-tags: java, spring-boot, microservices</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>选项 2：使用映射翻译的标签</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc"># Version française
+:jbake-tags: java, spring-boot, microservices
+
+# Version anglaise
+:jbake-tags: java, spring-boot, microservices</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_未翻译项目的管理">4. 未翻译项目的管理</h3>
+<div class="paragraph">
+<p>不需要翻译所有文章。如果某篇文章只存在于一种语言中，它将不会出现在另一种语言的列表中。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_多语言站点地图">5. 多语言站点地图</h3>
+<div class="paragraph">
+<p>生成一个包含所有语言的站点地图：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org"&gt;
+    &lt;url th:each="post : ${published_posts}"&gt;
+        &lt;loc th:text="${config.site_host + post.uri}"&gt;URL&lt;/loc&gt;
+        &lt;lastmod th:text="${#dates.format(post.date, 'yyyy-MM-dd')}"&gt;Date&lt;/lastmod&gt;
+
+        &lt;!-- Liens alternatifs pour les traductions --&gt;
+        &lt;xhtml:link th:each="translation : ${published_posts}"
+                    th:if="${translation['article-id'] == post['article-id'] and translation.lang != post.lang}"
+                    rel="alternate"
+                    th:attr="hreflang=${translation.lang},href=${config.site_host + translation.uri}" /&gt;
+    &lt;/url&gt;
+&lt;/urlset&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_结论">结论</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>使用 Thymeleaf 对 JBake 站点进行国际化是一种健壮且可维护的方法。通过将 i18n 与模板分离（通过消息文件）以及将内容的 i18n 通过目录组织来分离，您可以获得一个灵活、易于演进的系统。</p>
+</div>
+<div class="paragraph">
+<p>要点如下：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Thymeleaf 消息文件</strong>对于用户界面</p>
+</li>
+<li>
+<p><strong>按文件夹组织</strong>(年/语言) 用于文章</p>
+</li>
+<li>
+<p><strong>文章标识符</strong>用于链接翻译</p>
+</li>
+<li>
+<p><strong>专用模板</strong>对于每种语言</p>
+</li>
+<li>
+<p><strong>显式 URL</strong>包含语言代码</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_部署图">部署图</h3>
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 15) ]
+
+@startuml
+node "开发机器" {
+  artifact "来源" {
+    folder "content/"
+    folder "模板/"
+    folder "资产/"
+  }
+
+  component "JBake 命令行界面" as jbake
+
+  Sources --&gt; jbake : jbake -b
+}
+
+node "构建服务器\n(CI/CD)" {
+  component "GitHub Actions
+^^^^^
+ Syntax Error? (Assumed diagram type: component)
+
+@startuml
+node "开发机器" {
+  artifact "来源" {
+    folder "content/"
+    folder "模板/"
+    folder "资产/"
+  }
+
+  component "JBake 命令行界面" as jbake
+
+  Sources --&gt; jbake : jbake -b
+}
+
+node "构建服务器\n(CI/CD)" {
+  component "GitHub Actions
+或 GitLab CI" as ci
+
+  jbake --&gt; ci : push
+}
+
+cloud "CDN / 托管" {
+  node "静态Web服务器" {
+    artifact "已生成的网站" {
+      folder "/fr/blog/"
+      folder "/en/blog/"
+      folder "/assets/"
+    }
+  }
+}
+
+ci --&gt; "已生成的网站" : déploiement
+
+actor "读者" as users
+
+users --&gt; "静态Web服务器" : HTTPS
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这种架构让您可以简单地使用两种语言开始，并且可以在不进行大规模重构的情况下添加更多语言。整个系统保持完全静态且高性能，忠实于JBake的理念。</p>
+</div>
+<div class="paragraph">
+<p>祝您多语言开发顺利！🌍</p>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0095_i18n-site-statique-jbake-thymeleaf_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

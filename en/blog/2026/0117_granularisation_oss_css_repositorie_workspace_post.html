@@ -1,0 +1,1124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>The OSS/CSS Granularization — Why I Split foundry/ Into Two — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="The OSS/CSS Granularization — Why I Split foundry/ Into Two — Cheroliv"/>
+        <meta property="og:description" content="foundry/` mixed open source code and private code in the same folder. The RAG and the knowledge graph couldn&#39;t tell the difference. The solution? Split this functional area into two — OSS/ for the public (Apache 2.0, free indexing), CSS/ for the closed source (private dataset only). No need to tell the LLM to be careful. The filesystem does it for him. And I took the opportunity to put cheroliv.com where it should always have been: in office/sites/."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="The OSS/CSS Granularization — Why I Split foundry/ Into Two — Cheroliv"/>
+        <meta name="twitter:description" content="foundry/` mixed open source code and private code in the same folder. The RAG and the knowledge graph couldn&#39;t tell the difference. The solution? Split this functional area into two — OSS/ for the public (Apache 2.0, free indexing), CSS/ for the closed source (private dataset only). No need to tell the LLM to be careful. The filesystem does it for him. And I took the opportunity to put cheroliv.com where it should always have been: in office/sites/."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="foundry/` mixed open source code and private code in the same folder. The RAG and the knowledge graph couldn&#39;t tell the difference. The solution? Split this functional area into two — OSS/ for the public (Apache 2.0, free indexing), CSS/ for the closed source (private dataset only). No need to tell the LLM to be careful. The filesystem does it for him. And I took the opportunity to put cheroliv.com where it should always have been: in office/sites/."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertise</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option active" href="0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0117_granularisation_oss_css_repositorie_workspace_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0117_granularisation_oss_css_repositorie_workspace_post.html"},
+                      "headline": "The OSS\/CSS Granularization \u2014 Why I Split foundry\/ Into Two",
+                      "description": "How does the physical separation of OSS (`Open Source Software`) \/ CSS (`Closed Source Software`) in foundry\/ solve the problem of LLM indexing on private code \u2014 without prompt, without guardrail, without trust.",
+                      "datePublished": "2026-05-03",
+                      "dateModified": "2026-05-03",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0117_granularisation_oss_css_repositorie_workspace_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "The OSS\/CSS Granularization \u2014 Why I Split foundry\/ Into Two", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0117_granularisation_oss_css_repositorie_workspace_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">The OSS/CSS Granularization — Why I Split foundry/ Into Two</h1>
+                <p class="lead">
+                    <em>Published on 03 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_the_accident_waiting_to_happen">The Accident Waiting to Happen</a>
+<ul class="sectlevel2">
+<li><a href="#_the_true_question">The True Question</a></li>
+</ul>
+</li>
+<li><a href="#_the_solution_oss_and_css">The Solution: OSS/ and CSS/</a></li>
+<li><a href="#_why_oss_and_css_and_not_public_and_private">Why "OSS" and "CSS" and Not "Public" and "Private</a>
+<ul class="sectlevel2">
+<li><a href="#_the_complete_tree_four_zones_not_three">The Complete Tree — Four Zones, Not Three</a></li>
+</ul>
+</li>
+<li><a href="#_the_special_case_cheroliv_com">The Special Case: cheroliv.com</a>
+<ul class="sectlevel2">
+<li><a href="#_bakery_gradle_doesnt_care">bakery-gradle doesn&#8217;t care</a></li>
+</ul>
+</li>
+<li><a href="#_impact_on_governance_agent">Impact on Governance Agent</a></li>
+<li><a href="#_what_we_gain_and_what_we_lose">What We Gain (And What We Lose)</a></li>
+<li><a href="#_conclusion_the_physical_signal_beats_the_software_signal">Conclusion: The Physical Signal Beats the Software Signal</a></li>
+<li><a href="#_references">References</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">reading time: 10 minutes</div>
+<p><code>foundry/</code>— the functional area that hosts the code of my workspace — contains 18 projects. Eight are open source under Apache 2.0. One is closed source — the SaaS Edster. For months, these nine projects coexisted. in the same folder, separated only by&#8230;&#8203; nothing. Their public/private status It was information in my head, not in the file system.</p>
+</div>
+<div class="paragraph">
+<p>And then I wanted to hook up a RAG. And then everything fell apart.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_accident_waiting_to_happen">The Accident Waiting to Happen</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In April 2026, I started implementing the pgvector RAG for slider-gradle. The principle: indexing all repositories of`foundry/<code>, producing some embeddings, and inject them into the LLM context so that it has a perception" of the file`foundry/</code>}.</p>
+</div>
+<div class="paragraph">
+<p>The pipeline was simple:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val repos = fileTree(rootDir) {
+    include("**/*.adoc", "**/*.kts", "**/*.kt", "**/*.json", "**/*.yml")
+}
+val chunks = repos.map { chunk(it) }
+val embeddings = chunks.map { embed(it) }
+pgvector.insert(embeddings)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Simple. Effective. And<strong>dangerous</strong>.</p>
+</div>
+<div class="paragraph">
+<p>Because this`fileTree`does not distinguish between`plantuml-gradle/` (Apache 2.0, public) and`edster/`(closed source, private). He eats everything. And if one day I publish these embeddings — on a dashboard, in a response LLM, in a training dataset — Edster&#8217;s proprietary code is leaking.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="🔒"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The problem isn&#8217;t that an LLM reads closed-source code. The problem, It&#8217;s that this code ends up in a public vector embedding — irreversible, non-deletable, non-auditable</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_the_true_question">The True Question</h3>
+<div class="paragraph">
+<p>It is not "how to prevent the LLM from leaking code?". It is "how make escape structurally impossible?</p>
+</div>
+<div class="paragraph">
+<p>The answer is not a prompt. The answer is to cut the folder in half.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_solution_oss_and_css">The Solution: OSS/ and CSS/</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">foundry/
+├── plantuml-gradle/       ← public
+├── bakery-gradle/         ← public
+├── magic-stick/           ← public
+├── edster/                ← PRIVÉ
+├── slider-gradle/         ← public
+└── ...                    ← mélange invisible</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">foundry/
+├── OSS/                   ← tout est Apache 2.0
+│   ├── plantuml-gradle/
+│   ├── bakery-gradle/
+│   ├── magic-stick/
+│   ├── slider-gradle/
+│   └── ...
+└── CSS/                   ← tout est closed source / private
+    └── edster/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `fileTree`becomes :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val ossRepos = fileTree(File(rootDir, "OSS")) {
+    include("**/*.adoc", "**/*.kts", "**/*.kt", "**/*.json", "**/*.yml")
+}
+val cssRepos = fileTree(File(rootDir, "CSS")) {
+    include("**/*.adoc", "**/*.kts", "**/*.kt", "**/*.json", "**/*.yml")
+}
+
+// Embeddings publics — OSS seulement
+pgvectorPublic.insert(ossRepos.map { chunk(it) }.map { embed(it) })
+
+// Dataset fine-tuning privé — CSS seulement
+fineTuningDataset.insert(cssRepos.map { chunk(it) })  // jamais publié</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Public RAG never sees`CSS/`. The closed-source code feeds a dataset deprived of fine-tuning — an internal model that never leaves my home. The The separation is mechanical, not declarative.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_oss_and_css_and_not_public_and_private">Why "OSS" and "CSS" and Not "Public" and "Private</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The choice of the acronyms OSS (Open Source Software) and CSS (Closed Source Software) it is resolved:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Public"/"Private" describes the<strong>visibility</strong>(what GitHub sees)</p>
+</li>
+<li>
+<p>OSS"/"CSS" describes the<strong>nature</strong>code (what the LLM must know)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>GitHub visibility is metadata for the remote repository. The nature of the code is a property of the content. The LLM does not have access to the GitHub API — but it has access to the file system.<code>CSS/`he said to him, "Attention, this code is not under license free" without needing to read a`LICENSE`or to parse a`package.json</code>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="💡"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The folder name is the most robust metadata you can give to an LLM. It cannot be mis-parsed, ignored, or misinterpreted. The LLM sees`CSS/edster/`in the file path — it knows.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_the_complete_tree_four_zones_not_three">The Complete Tree — Four Zones, Not Three</h3>
+<div class="paragraph">
+<p>The OSS/CSS granularization complements the three-zone ontology. The zone `foundry/`goes from 1 to 2 functional sub-zones:</p>
+</div>
+<div id="diag-four-zone-workspace" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-b2aba53505ebdf7e303e04717de762e4.svg" alt="L&#8217;organisation de foundry/ en deux sous-zones OSS et CSS" width="1783" height="5736">
+</div>
+</div>
+<div class="paragraph">
+<p>| Zone | GDPR | Public RAG indexing | Dataset fine-tuning | | Root | Level 0 — Intimate | ✗ | ✗ | |<code>configuration/</code>| Level 1 — Restricted | ✗ | ✗ | (empty)<code>office/</code>| Level 2 — Collaborative | ✓ Filtered | ✓ Filtered | | <code>foundry/private/</code>| Level 3 — Conditional open | ✗ | ✓ Private | |<code>foundry/public/</code>| Level 4 — Native audience | ✓ Free | ✓ Public |</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_special_case_cheroliv_com">The Special Case: cheroliv.com</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While I was at it, I fixed another inconsistency. My site <code>cheroliv.com`lived in`foundry/`as a software project fully-fledged — with its own Gradle build, its own CI, its own governance</code>.agents/`.</p>
+</div>
+<div class="paragraph">
+<p>But blog posts are not code. They are <strong>data</strong> editorials** of Cercle 2 — on an equal footing with the framings of`office/pilotage/` or the training of`office/formations/`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">AVANT                            APRÈS
+foundry/                office/
+  cheroliv.com/                    sites/
+    site/jbake/content/blog/         cheroliv.com/
+      2026/0117_....adoc               2026/0117_....adoc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>What changes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The articles are in`office/`→ confidentiality of Circle 2</p>
+</li>
+<li>
+<p>The task`publishSite`becomes a capability of`engine`</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>via`bakery-gradle`— the plugin receives a`FileTree`, he does not know that the articles come from`office/`</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>One CI, one governance — zero duplication</p>
+</li>
+<li>
+<p>The Vision/Opinion classifier (Rule 2bis) applies automatically:</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>the articles in`office/`are filtered before publishing</p>
+</div>
+<div class="sect2">
+<h3 id="_bakery_gradle_doesnt_care">bakery-gradle doesn&#8217;t care</h3>
+<div class="paragraph">
+<p>And that&#8217;s what&#8217;s beautiful. The plugin`bakery-gradle`has not been modified. It receives an AsciiDoc content directory, it generates HTML, it pushes on GitHub Pages. That this directory is called`site/jbake/content/` ou <code>office/sites/cheroliv/</code>— the plugin doesn&#8217;t care.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// engine/build.gradle.kts
+task("publishBlog") {
+    doLast {
+        val articles = fileTree("../../office/sites/cheroliv/2026/")
+        bakery.generate(articles)  // ← bakery ne sait pas d'où ça vient
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The interface contract is a Gradle task. Not a REST API. Not a webhook. A task — typed, testable, executable locally and in CI.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_impact_on_governance_agent">Impact on Governance Agent</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The OSS/CSS granularization modifies the agent governance on three points:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>RAG public</strong> : the indexing scope changes from`foundry/**`</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>à <code>foundry/public/<strong></code> + <code>office/Vision/</strong></code>. The code closed source is excluded from the index by task configuration, not by prompt.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Knowledge Graph</strong> : graphify-gradle produces two graphs :</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>*<code>office/graph.json</code>(public) — relations between OSS artifacts + office/Vision *<code>configuration/graph_private.json</code>(gitignored, private) — relations between CSS artifacts, never published</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Dataset fine-tuning</strong>:`codebase-gradle`now has two sources :</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>*<code>OSS/</code>→ public datasets (community models, benchmarks) *<code>CSS/</code>→ private datasets (internal model, proprietary fine‑tuning)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_we_gain_and_what_we_lose">What We Gain (And What We Lose)</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1436%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Front (flat file)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">After (OSS/CSS + office/sites)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ls foundry/</code>→ public/private mix</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ls foundry/public/</code>→ everything is publishable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RAG indexes everything without discrimination</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RAG indexes`OSS/`+`office/Vision`exclusively</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Impossible to know if a project is open source</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The path`OSS/` ou `CSS/`the said</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cheroliv.com has its own CI, its own governance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CI and governance are pooled in engine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Blog posts are in a 'code' repository</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Blog posts are in`office/sites/`— data, not code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Risk of leaking closed-source code in public embeddings</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Structurally impossible —`CSS/`out of scope RAG</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The only cost: a`git mv`overall across the 17 OSS repositories + a refactor of the <code>build.gradle.kts</code> de <code>engine</code>. This is a cold migration — no data in flight, no users impacted.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion_the_physical_signal_beats_the_software_signal">Conclusion: The Physical Signal Beats the Software Signal</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>What I did this afternoon was replace an invisible convention by a visible separation in the area`foundry/<code>. Before, you had to <strong>to know</strong> that`edster/`was closed source. Now you <strong>see</strong> it — the folder is called`CSS/</code>.</p>
+</div>
+<div class="paragraph">
+<p>It&#8217;s the same principle as Unix permissions, network VLANs, or the Fire compartments in a database. Safety must not be information that you must remember. It must be a property <strong>physics</strong>of the system.</p>
+</div>
+<div class="paragraph">
+<p>OSS/CSS granularization is the translation of this principle into the field of LLM governance. The LLM does not need to know that Edster is confidential. It needs to be unable to index it.</p>
+</div>
+<div class="paragraph">
+<p>And that&#8217;s exactly what`CSS/`guarantees.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_references">References</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="0118_matrice_gouvernance_llm_zone_acces_workspace_post.html">Article 0117 — The LLM Governance Matrix</a></p>
+</li>
+<li>
+<p><a href="0114_gouvernance_cercles_confiance_ontologie_spatiale_alignement_llm_post.html">Article 0114 — The Trust Circles</a></p>
+</li>
+<li>
+<p><a href="0116_compartimentage_epistemique_automatise_llm_post.html">Article 0116 — Automated Epistemic Compartmentalization</a></p>
+</li>
+<li>
+<p><a href="0108_gouvernance_agent_opencode_eager_lazy_post.html">Article 0108 — Governing an AI Agent with AsciiDoc</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: Convert AsciiDoc to MP4 video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit of My LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Is Shaking the Global Market</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &#39;Independent Plugin + Consumer Root&#39; Architecture: Why My Gradle Builds Duplicate</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a recommendation engine: how I killed the chronological &#39;related articles&#39;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0117_granularisation_oss_css_repositorie_workspace_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

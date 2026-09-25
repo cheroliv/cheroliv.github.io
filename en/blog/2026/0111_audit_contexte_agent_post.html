@@ -1,0 +1,1586 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Agent Context Audit: When Your Own Governance Becomes the Problem — and How to Fix It Without Losing Anything — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/en/blog/2026/0111_audit_contexte_agent_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0111_audit_contexte_agent_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0111_audit_contexte_agent_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0111_audit_contexte_agent_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Agent Context Audit: When Your Own Governance Becomes the Problem — and How to Fix It Without Losing Anything — Cheroliv"/>
+        <meta property="og:description" content="After two articles on structuring and backing up the agent context, I discover that the file documenting the method itself has become the biggest token consumer. Section-by-section audit of a `AGENT_MODUS_OPERANDI` of 627 lines, identification of duplicates, and an encyclopedic split solution that preserves the engineering without saturating the context."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/en/blog/2026/0111_audit_contexte_agent_post.html"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:image" content="https://cheroliv.com/en/og-images/en/blog/2026/0111_audit_contexte_agent_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Agent Context Audit: When Your Own Governance Becomes the Problem — and How to Fix It Without Losing Anything — Cheroliv"/>
+        <meta name="twitter:description" content="After two articles on structuring and backing up the agent context, I discover that the file documenting the method itself has become the biggest token consumer. Section-by-section audit of a `AGENT_MODUS_OPERANDI` of 627 lines, identification of duplicates, and an encyclopedic split solution that preserves the engineering without saturating the context."/>
+        <meta name="twitter:image" content="https://cheroliv.com/img/cheroliv_logo_icon.png"/>
+        <meta name="description" content="After two articles on structuring and backing up the agent context, I discover that the file documenting the method itself has become the biggest token consumer. Section-by-section audit of a `AGENT_MODUS_OPERANDI` of 627 lines, identification of duplicates, and an encyclopedic split solution that preserves the engineering without saturating the context."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/en/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags for SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Developer Trainer | Instructional Design",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Developer Trainer | Instructional Design",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertise</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select interface theme">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Light
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dark
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>High Contrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Select language">
+                        <span class="me-1">🇬🇧</span>
+                        <span class="ms-1">EN</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option active" href="0111_audit_contexte_agent_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0111_audit_contexte_agent_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0111_audit_contexte_agent_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0111_audit_contexte_agent_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0111_audit_contexte_agent_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0111_audit_contexte_agent_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0111_audit_contexte_agent_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0111_audit_contexte_agent_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0111_audit_contexte_agent_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0111_audit_contexte_agent_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0111_audit_contexte_agent_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0111_audit_contexte_agent_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0111_audit_contexte_agent_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0111_audit_contexte_agent_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/en\/blog\/2026\/0111_audit_contexte_agent_post.html"},
+                      "headline": "Agent Context Audit: When Your Own Governance Becomes the Problem \u2014 and How to Fix It Without Losing Anything",
+                      "description": "Third part of my series on agent governance. I audit my own context files \u2014 1414 lines automatically loaded \u2014 and I discover that the largest expense item is my own Eager\/Lazy methodology. How I broke this monolithic block into a lightweight essential and a cold encyclopedia, without losing a single line of engineering.",
+                      "datePublished": "2026-04-27",
+                      "dateModified": "2026-04-27",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/en\/blog\/2026\/0111_audit_contexte_agent_post.html",
+                      "inLanguage": "en"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/en\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Agent Context Audit: When Your Own Governance Becomes the Problem \u2014 and How to Fix It Without Losing Anything", "item": "https:\/\/cheroliv.com\/en\/blog\/2026\/0111_audit_contexte_agent_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Agent Context Audit: When Your Own Governance Becomes the Problem — and How to Fix It Without Losing Anything</h1>
+                <p class="lead">
+                    <em>Published on 27 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_the_scene_session_051_somethings_off">The scene: session 051, something&#8217;s off</a></li>
+<li><a href="#_the_audit_dissecting_the_627_lines">The audit: dissecting the 627 lines</a></li>
+<li><a href="#_the_fear_of_losing_the_engineering">The fear of losing the engineering</a></li>
+<li><a href="#_the_solution_encyclopedic_split">The solution: encyclopedic split</a></li>
+<li><a href="#_the_content_of_the_file_essentials">The content of the file ESSENTIALS</a></li>
+<li><a href="#_the_result_50_eager_context">The result: -50% EAGER context</a></li>
+<li><a href="#_why_is_the_folder_called_encyclopedies">Why is the folder called `encyclopedies/</a></li>
+<li><a href="#_the_logical_continuation_of_the_series">The logical continuation of the series</a></li>
+<li><a href="#_what_i_would_have_done_differently">What I would have done differently</a></li>
+<li><a href="#_the_guide_to_audit_your_own_context">The guide to audit your own context</a></li>
+<li><a href="#_a_living_governance">A living governance</a></li>
+<li><a href="#_links">Links</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">reading time: 14 minutes</div>
+<p>You have spent weeks building an immaculate agent governance. Eager/Lazy, end‑of‑session procedure, rotating backups. The system is running. Then one day, the agent becomes slow. Responses are diluted. You measure: 1414 lines loaded automatically. And the worst part is that the culprit is not the code, nor the backlog, nor the session archives. The culprit is the file documenting your method.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">tic</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_scene_session_051_somethings_off">The scene: session 051, something&#8217;s off</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>April 30, 2026, 4:00 PM. I am in the middle of a session on`magic-stick`, mon projet de build d&#8217;ISO Linux live. L&#8217;agent Opencode a chargé automatiquement mes fichiers Eager comme d&#8217;habitude —<code>AGENT.adoc</code>, <code>PROMPT_REPRISE.adoc</code>, <code>.agents/INDEX.adoc</code>. Everything is normal.</p>
+</div>
+<div class="paragraph">
+<p>Except that the responses are weak. The agent takes two more seconds to reason. He forgets a detail he had right in front of him three messages earlier. It&#8217;s not a crash, not an error — it&#8217;s a slow degradation, the kind you don&#8217;t notice right away.</p>
+</div>
+<div class="paragraph">
+<p>I had already experienced that in session 048, when I discovered that the governance files weighed 5200 lines cumulatively. I then conceptualized the Hot/Warm/Cold mechanism with its sliding window of 10 sessions, its identical cold waves, its two-trigger sensor. The problem was solved. In theory.</p>
+</div>
+<div class="paragraph">
+<p>But now we are at session 051. The backup rotation did take place — the EAGER files went from 2087 to 500 lines. Yet the context remains heavy. Something eludes me.</p>
+</div>
+<div class="paragraph">
+<p>I open a terminal and I type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">wc -l AGENT.adoc AGENT_MODUS_OPERANDI.adoc PROMPT_REPRISE.adoc \
+  .agents/INDEX.adoc .agents/SESSIONS_HISTORY.adoc \
+  .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">  287 AGENT.adoc
+  627 AGENT_MODUS_OPERANDI.adoc
+   51 PROMPT_REPRISE.adoc
+  218 .agents/INDEX.adoc
+   18 .agents/SESSIONS_HISTORY.adoc
+  213 .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc
+ 1414 total</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>1414 lines. The backup rotation trimmed well in INDEX, SESSIONS_HISTORY and COMPLETED_TASKS — they are clean. But there is an elephant in the room that I hadn&#8217;t seen:<strong>627 lines</strong>in a single file.<code>AGENT_MODUS_OPERANDI.adoc</code>.</p>
+</div>
+<div class="paragraph">
+<p>This file, it&#8217;s the one I wrote in session 1 to document the Eager/Lazy strategy. It&#8217;s the manual of the method. And it has become, by itself, 44% of the EAGER context.</p>
+</div>
+<div id="diag-before-audit" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 9) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title EAGER Context — 1414 lines
+rectangle "AGENT_MODUS_OPERANDI
+**627 lines (44%)**" as MOD #FFCDD2
+rectangle "AGENT.adoc\n287 lines (20%)" as AG #BBDEFB
+rectangle "INDEX.adoc
+218 lines (15%)" as IDX #C8E6C9
+^^^^^
+ Syntax Error? (Assumed diagram type: activity)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title EAGER Context — 1414 lines
+rectangle "AGENT_MODUS_OPERANDI
+**627 lines (44%)**" as MOD #FFCDD2
+rectangle "AGENT.adoc\n287 lines (20%)" as AG #BBDEFB
+rectangle "INDEX.adoc
+218 lines (15%)" as IDX #C8E6C9
+rectangle "COMPLETED_TASKS\n213 lines (15%)" as ARC #FFF9C4
+rectangle "PROMPT_REPRISE
+51 lines (4%)" as PRO #E1BEE7
+rectangle "SESSIONS_HISTORY
+18 lines (1%)" as HIS #FFE0B2
+
+note bottom of MOD
+  Le fichier qui documente
+  la méthode est devenu
+  le plus gros poste de dépense
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The irony is total. The file designed to <strong>save</strong> context has become the main <strong>consumer</strong> of context. It&#8217;s as if your car&#8217;s user manual weighed more than the engine.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_audit_dissecting_the_627_lines">The audit: dissecting the 627 lines</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I decide to do a section-by-section audit. Not to delete — but to <strong>understand</strong> what deserves to be in EAGER and what could live elsewhere without loss of knowledge.</p>
+</div>
+<div class="paragraph">
+<p>Here is the exact structure of`AGENT_MODUS_OPERANDI.adoc`and what I find there:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2739%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lines</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Content</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Already present in&#8230;&#8203;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P1 — Overview</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Problem solved, fundamental principles, dashboard vs manual analogy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P2 — Structure of files</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">97</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tree structure, loading policy, when to load what</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P3 — Absolute rules</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">34</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Git forbidden, destructive commands forbidden, secrets forbidden</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AGENT.adoc</code>+<code>INDEX.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P4 — Session life cycle</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">133</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Opening template, work rules, 6 steps end of session, checklist</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AGENT.adoc</code>§End session +<code>INDEX.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P5 — Metrics and thresholds</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">49</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ideal session (15-30 min, 1-3 files), warning signs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P6 — Types of sessions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">72</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detection table, proposal format, exceptions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P7 — Continuous improvement</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tracking metrics, weekly review</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P8 — Startup checklist</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bootstrap new project</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P9 — References</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reference files, external resources</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AGENT.adoc</code>(files EAGER/LAZY)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Annexes A+B</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Glossary, version history</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The verdict is final:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Complete duplicates</strong>(167 lines) : P3, P4, P9 — everything is already in`AGENT.adoc` ou <code>INDEX.adoc</code>, often word for word</p>
+</li>
+<li>
+<p><strong>Never consulted in practice</strong>(215 lines): P5, P6, P7, P8, Annexes — meta‑governance that has never been used in any session</p>
+</li>
+<li>
+<p><strong>Unique knowledge</strong>(161 lines) : P1 and P2 — the LAZY/EAGER vocabulary, the analogy, the loading policy</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>On 627 lines,<strong>382 are noise</strong>. And these 382 lines are loaded <strong>at each session start</strong>, consumed by the agent, diluting his attention even before I say hello.</p>
+</div>
+<div id="diag-audit-result" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 8) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title Audit of AGENT_MODUS_OPERANDI.adoc — 627 lines
+left to right direction
+
+rectangle "�🟡 **Duplicates**
+^^^^^
+ Syntax Error? (Assumed diagram type: class)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title Audit of AGENT_MODUS_OPERANDI.adoc — 627 lines
+left to right direction
+
+rectangle "�🟡 **Duplicates**
+167 lines (27%)" as DUP #FFF9C4 {
+  card "P3 — Absolute rules
+(34 lines)" as D1
+  card "P4 — Life cycle
+(133 lines)" as D2
+  card "P9 — References
+(30 lines)" as D3
+}
+
+rectangle "🔴 **Never consulted**
+215 lines (34%)" as JAM #FFCDD2 {
+  card "P5 — Metrics
+(49 lines)" as J1
+  card "P6 — Detection\n(72 lines)" as J2
+  card "P7 — Improvement
+(39 lines)" as J3
+  card "P8 — Bootstrap
+(13 lines)" as J4
+  card "Annexes — Glossary
+(42 lines)" as J5
+}
+
+rectangle "🟢 **Unique knowledge**
+161 lines (26%)" as UNI #C8E6C9 {
+  card "P1 — Overview\n(64 lines)" as U1
+  card "P2 — File structure\n(97 lines)" as U2
+}
+
+note bottom of UNI
+  C'est ÇA qu'il faut garder en EAGER.
+  Le reste → cold storage.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This diagram is the key to everything. The duplicates (yellow) are pure noise — the agent reads them twice, in two different files. The never consulted (red) is dead documentation — written with care, never used. Only the green contains knowledge that the agent cannot find elsewhere.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_fear_of_losing_the_engineering">The fear of losing the engineering</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>At this point, I have the evidence before me: I must reduce.<code>AGENT_MODUS_OPERANDI.adoc</code>. But I hesitate.</p>
+</div>
+<div class="paragraph">
+<p>This file, I wrote it by hand. Each section is the result of a lesson learned in a real session. The P3 part was born from a`rm -rf`accidental on`bakery-plugin`that cost me real Firebase tokens. Part P4 is the result of fifteen sessions where I forgot to archive and lost the thread. The 6‑step procedure didn’t come from a book — it came from pain.</p>
+</div>
+<div class="paragraph">
+<p>Deleting these sections would be throwing away the history of my own engineering. The lessons that produced them, the sessions during which I discovered them, the mistakes I never want to repeat again. This isn&#8217;t text — it&#8217;s crystallized experience.</p>
+</div>
+<div class="paragraph">
+<p>This is where I formulate the principle that will guide the solution:</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ <strong>Never delete. Always relocate.</strong>Knowledge does not need to disappear from the project; it just needs to not be loaded automatically when it is not necessary. </em>_</em></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_solution_encyclopedic_split">The solution: encyclopedic split</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The model I propose is simple and draws inspiration from how Wikipedia grew: when an article becomes too long, we don&#8217;t cut it — we create a detailed article and keep a summary in the main article.</p>
+</div>
+<div class="paragraph">
+<p>For`AGENT_MODUS_OPERANDI.adoc`, that gives:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Extract</strong>the 161 unique knowledge lines (P1 + P2) in a new file`LAZY_EAGER_ESSENTIALS.adoc`— compacted to ~50 lines, strictly EAGER</p>
+</li>
+<li>
+<p><strong>Rename</strong> <code>AGENT_MODUS_OPERANDI.adoc</code> en <code>.agents/encyclopedies/LAZY_EAGER_ENCYCLOPEDIE.adoc</code>— the original file of 627 lines, preserved <strong>intact</strong>, in cold storage</p>
+</li>
+<li>
+<p><strong>Never charge</strong>le fichier encyclopedia automatically — it&#8217;s there for the human, for future distillation, for the agent we will invoke in six months with a better model</p>
+</li>
+</ol>
+</div>
+<div id="diag-split-solution" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 8) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title Encyclopedic Split — AGENT_MODUS_OPERANDI
+left to right direction
+
+rectangle "**AGENT_MODUS_OPERANDI.adoc**
+^^^^^
+ Syntax Error? (Assumed diagram type: class)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title Encyclopedic Split — AGENT_MODUS_OPERANDI
+left to right direction
+
+rectangle "**AGENT_MODUS_OPERANDI.adoc**
+627 lines
+(before split)" as BEFORE #FFCDD2 {
+}
+
+rectangle " " as ARROW1
+rectangle " " as ARROW2
+
+rectangle "**LAZY_EAGER_ESSENTIALS.adoc**
+**~50 lines — EAGER**" as ESS #C8E6C9 {
+  card "Condensed P1\n(15 lines)" as E1
+  card "P2 condensed
+(35 lines)" as E2
+}
+
+rectangle "**.agents/encyclopedies/**
+**LAZY_EAGER_ENCYCLOPEDIE.adoc**
+627 lines — COLD" as ENC #BBDEFB {
+  card "P1 to Appendices
+(complete, intact)" as C1
+}
+
+BEFORE -[#4CAF50]-&gt; ESS : "Extraction of\ncritical knowledge"
+BEFORE -[#2196F3]-&gt; ENC : "Complete preservation
+of engineering"
+
+note bottom of ESS
+  Chargé automatiquement
+  en début de session
+  → L'agent comprend le vocabulaire
+end note
+
+note bottom of ENC
+  Jamais chargé automatiquement
+  Consultable par l'humain
+  Matériau brut pour distillation future
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The name`encyclopedies/`It&#8217;s not trivial. An encyclopedia is not an archive file — it&#8217;s an organized collection of knowledge, consultable but not portable. You don&#8217;t read Encyclopædia Universalis on the subway. You keep it in the library, and you go there when you have a specific question.</p>
+</div>
+<div class="paragraph">
+<p>This is exactly the role of this folder: a cold, structured, exhaustive reference library — that the agent does not touch automatically.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_content_of_the_file_essentials">The content of the file ESSENTIALS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Here is what the new file actually looks like`LAZY_EAGER_ESSENTIALS.adoc`, extracted and compacted from P1 and P2 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc">= Stratégie LAZY/EAGER — Principes Essentiels
+
+[abstract]
+Ce fichier définit la stratégie de gestion du contexte agent.
+Chargé automatiquement (EAGER) en début de session.
+
+== Principes
+
+|===
+| EAGER | LAZY
+| Tableau de bord | Manuel du propriétaire
+| Chargé automatiquement | Chargé sur demande
+| &lt;= 100 lignes, &lt;= 10k tokens | Illimité, détaillé
+| Règles absolues, mission courante | Archives, historique, références
+|===
+
+== Politique de Chargement
+
+|===
+| Fichier | Type | Quand charger
+| PROMPT_REPRISE.adoc | EAGER | Début session (auto)
+| *_ESSENTIALS.adoc | EAGER | Début session si EPIC active
+| .agents/INDEX.adoc | EAGER | Début session (auto)
+| *_REFERENCE.adoc | LAZY | Sur besoin (détails architecture)
+| .agents/sessions/N-*.adoc | LAZY | Sur demande (détails session)
+| .agents/encyclopedies/*.adoc | COLD | Jamais auto (humain seulement)
+|===
+
+== Comment l'Agent Sait Quoi Charger
+
+Début session → PROMPT_REPRISE + INDEX + ESSENTIALS actifs.
+Besoin de détails → charger les *_REFERENCE et sessions/ en LAZY.
+Connaissance froide → encyclopedies/, jamais automatique.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Fifty lines. That&#8217;s all the agent needs to understand the mechanics. Everything else — the lesson history, detailed analogies, step‑by‑step procedures, annexes — lives in the encyclopedia.</p>
+</div>
+<div class="paragraph">
+<p>And the most important:<strong>Nothing has been removed</strong>. The 627 engineering lines are still there, in`.agents/encyclopedies/LAZY_EAGER_ENCYCLOPEDIE.adoc`. They are just stored in the library rather than on the countertop.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_result_50_eager_context">The result: -50% EAGER context</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before the split :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"> 287 AGENT.adoc
+ 627 AGENT_MODUS_OPERANDI.adoc
+  51 PROMPT_REPRISE.adoc
+ 218 .agents/INDEX.adoc
+  18 .agents/SESSIONS_HISTORY.adoc
+ 213 .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc
+1414 total</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After the split:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"> 287 AGENT.adoc
+  50 LAZY_EAGER_ESSENTIALS.adoc       ← remplace 627 lignes
+  51 PROMPT_REPRISE.adoc
+ 218 .agents/INDEX.adoc
+  18 .agents/SESSIONS_HISTORY.adoc
+ 213 .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc
+ 837 total                              ← -41%</code></pre>
+</div>
+</div>
+<div id="diag-after-audit" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 7) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title EAGER context after encyclopedic split — 837 lines (-41%)
+rectangle "AGENT.adoc\n287 lines (34%)" as AG #BBDEFB
+rectangle "INDEX.adoc
+218 lines (26%)" as IDX #C8E6C9
+^^^^^
+ Syntax Error? (Assumed diagram type: activity)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+
+title EAGER context after encyclopedic split — 837 lines (-41%)
+rectangle "AGENT.adoc\n287 lines (34%)" as AG #BBDEFB
+rectangle "INDEX.adoc
+218 lines (26%)" as IDX #C8E6C9
+rectangle "COMPLETED_TASKS\n213 lines (25%)" as ARC #FFF9C4
+rectangle "PROMPT_REPRISE\n51 lines (6%)" as PRO #E1BEE7
+rectangle "ESSENTIALS\n50 lines (6%)" as ESS #A5D6A7
+rectangle "SESSIONS_HISTORY
+18 lines (2%)" as HIS #FFE0B2
+
+note bottom of ESS
+  De 627 → 50 lignes
+  577 lignes d'ingénierie
+  préservées en cold storage
+
+  Rien de perdu. Tout de relocalisé.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The biggest consumer (AGENT_MODUS_OPERANDI, 627 lines) has been replaced by a 50‑line file. The gain is immediate: 577 lines of context freed up. The agent breathes.</p>
+</div>
+<div class="paragraph">
+<p>And in`.agents/encyclopedies/`, the original file of 627 lines waits. Intact. With all its sections — including those that are duplicates, including those that have never been used. Because one day, a better model or a human data scientist will want to cross these angles, these assumed redundancies, these lessons learned. And that day, the raw material will be there.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_is_the_folder_called_encyclopedies">Why is the folder called `encyclopedies/</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Choosing the name is not cosmetic. It encodes the philosophy of the mechanism.</p>
+</div>
+<div class="paragraph">
+<p>An <strong>archive</strong> (<code>archives/</code>) contains historical data organized chronologically — like the monthly COMPLETED_TASKS. A <strong>backup</strong> (<code>backup/</code>) is a timestamped snapshot — a backup of a past state.</p>
+</div>
+<div class="paragraph">
+<p>An <strong>encyclopedia</strong> is something else. It is a collection of thematic knowledge, structured by subject, exhaustive but non-linear. One does not read an encyclopedia from beginning to end. One dives into it to answer a specific question.</p>
+</div>
+<div class="paragraph">
+<p>That is exactly the contract of this case:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Role</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Granularity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>archives/</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Historical data (tasks completed per month)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LAZY, structured</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Chronological</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backup/</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cold snapshots (waves of 10 sessions)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">COLD, full copy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Chronological</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>encyclopedies/</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exhaustive thematic knowledge (methodology, patterns)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">COLD, never auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Thematic</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>This distinction avoids the catch-all. Each file knows where it should live according to <strong>what it contains</strong>, not according to <strong>when it was created</strong>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_logical_continuation_of_the_series">The logical continuation of the series</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If you have read the first two articles, here is how the three pieces fit together:</p>
+</div>
+<div id="diag-trilogie" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 9) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 220
+
+title Agent Governance Trilogy
+left to right direction
+
+package "📖 **Article 0108**
+^^^^^
+ Syntax Error? (Assumed diagram type: class)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 220
+
+title Agent Governance Trilogy
+left to right direction
+
+package "📖 **Article 0108**
+Strategy Eager/Lazy" as A1 #E8F5E9 {
+  card "Agent memory\nbetween sessions" as M1
+  card "Files EAGER\n(auto-loaded)" as M2
+  card "Files LAZY\n(on request)" as M3
+  card "Procedure 6 steps" as M4
+}
+
+package "🧊 **Article 0110**
+Hot/Warm/Cold Mechanism" as A2 #FFF9C4 {
+  card "Aging
+of the context" as V1
+  card "Sliding window
+10 sessions" as V2
+  card "Cold wave
+identical" as V3
+  card "Sensor with two triggers" as V4
+}
+
+package "🔍 **Article 0111**\nAudit + Encyclopedic Solution" as A3 #BBDEFB {
+  card "Audit of files
+EAGER" as E1
+  card "Identification
+of waste" as E2
+  card "Split
+ESSENTIALS/encyclopedia" as E3
+  card "Preservation
+of engineering" as E4
+}
+
+A1 --&gt; A2 : "Memory grows
+→ we need an aging mechanism"
+A2 --&gt; A3 : "Aging is not enough
+→ we must audit what
+deserves to be in EAGER"
+
+note bottom of A3
+  ✅ Les trois couches sont en place
+  sur 6 projets actifs
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>0108</strong>Responds to: “How to give memory to the agent between two sessions?”</p>
+</li>
+<li>
+<p><strong>0110</strong>responds to: "How to prevent this memory from suffocating the agent?</p>
+</li>
+<li>
+<p><strong>0111</strong> responds to: « And if the problem isn&#8217;t the size of the archives, but what we have <strong>chosen</strong> to put in EAGER?</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The first article built the structure. The second added the aging mechanism. The third audits the content — and discovers that the methodology itself has become the problem.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_i_would_have_done_differently">What I would have done differently</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In hindsight, I see the initial design error.`AGENT_MODUS_OPERANDI.adoc`was created as a single document — a manifesto. That was the right approach to formalize thinking. But once thinking had been formalized, the document should have been split immediately: the essentials in EAGER, the exhaustive in cold.</p>
+</div>
+<div class="paragraph">
+<p>I didn&#8217;t do it because I was proud of the document. 627 lines of pure engineering, handwritten, each section the fruit of a lesson session. It was my work. And like any author, I struggled to cut it.</p>
+</div>
+<div class="paragraph">
+<p>The lesson:<strong>Just because a document is good doesn&#8217;t mean it has to be loaded automatically.</strong>. The quality of the content is unrelated to its relevance for the agent&#8217;s immediate context.</p>
+</div>
+<div class="paragraph">
+<p>Today, the rule is simple: any document over 100 lines in the EAGER context is a suspect. It deserves an audit. Not a conviction — an audit. And the question is never "should we delete it?" but "should we load it every session?</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_guide_to_audit_your_own_context">The guide to audit your own context</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If you have followed the first two articles and set up your own Eager/Lazy governance, here is a five‑step audit procedure:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Measure</strong>:`wc -l`on all your EAGER files. The total should be under 1000 lines.</p>
+</li>
+<li>
+<p><strong>Identify the biggest</strong>The file that weighs more than 20% of the total is suspect number one.</p>
+</li>
+<li>
+<p><strong>Audit section by section</strong>: for each section, ask yourself: 'Is this information already elsewhere? Has the agent already read it in another file? Has it been used in the last 5 sessions?'</p>
+</li>
+<li>
+<p><strong>Classifier</strong>duplicate, never used, unique knowledge.</p>
+</li>
+<li>
+<p><strong>Split or relocate</strong>: what is unique and critical → ESSENTIALS compacted. Everything else →<code>encyclopedies/</code>.</p>
+</li>
+</ol>
+</div>
+<div id="diag-audit-checklist" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-0881c6be79261193863e90aa10d89922.svg" alt="Procédure d&#8217;audit en 5 étapes" width="372" height="741">
+</div>
+</div>
+<div class="paragraph">
+<p>This procedure takes 15 minutes. On a project of 50 sessions, it saves hundreds of tokens per future session. The ROI is immediate.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_a_living_governance">A living governance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>What this series of three articles taught me is that agent governance is not a finished product. It&#8217;s a<strong>living organism</strong>. She grows with the project. She catches growth-related diseases. She requires regular check-ups.</p>
+</div>
+<div class="paragraph">
+<p>Session 048 revealed that the archives are swelling. Session 051 revealed that the methodology itself is swelling. Session 060 will likely reveal something else. That&#8217;s normal. That&#8217;s healthy. A governance that never questions itself is a dead governance.</p>
+</div>
+<div class="paragraph">
+<p>The three mechanisms put in place — Eager/Lazy, Hot/Warm/Cold, encyclopedic split — form a layered defense system against context saturation. None is sufficient on its own. Together, they complement each other:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Eager/Lazy</strong>Structure the information by availability</p>
+</li>
+<li>
+<p><strong>Hot/Warm/Cold</strong>structure the information <strong>by freshness</strong></p>
+</li>
+<li>
+<p><strong>Encyclopedic audit</strong>structure the information <strong>by density</strong></p>
+</li>
+</ul>
+</div>
+<div id="diag-defense-in-depth" class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 6) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam nodeBackgroundColor #E3F2FD
+
+title Defense in Depth against Context Saturation
+node "**Agent Context**
+^^^^^
+ Syntax Error? (Assumed diagram type: sequence)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam nodeBackgroundColor #E3F2FD
+
+title Defense in Depth against Context Saturation
+node "**Agent Context**
+~800 lines
+healthy" as CTX #C8E6C9
+
+node "Layer 1\n**EAGER / LAZY**" as C1 #BBDEFB
+node "Layer 2
+**HOT / WARM / COLD**" as C2 #BBDEFB
+node "Layer 3
+**ESSENTIALS / ENCYCLOPEDIA**" as C3 #BBDEFB
+
+CTX --&gt; C1 : "Structure by
+
+**availability**"
+CTX --&gt; C2 : "Structure by\n**freshness**"
+CTX --&gt; C3 : "Structure by
+**density**"
+
+note bottom of C3
+  Les trois couches sont nécessaires.
+  Aucune n'est suffisante seule.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With these three layers, the agent context on`magic-stick`went from 2087 lines (before any optimization) to about 800 lines — a division by 2.6. Without having lost a single line of documentation, a single session archive, a single lesson learned.</p>
+</div>
+<div class="paragraph">
+<p>Everything is there. Just better organized.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_links">Links</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Article 0108 — Strategy Eager/Lazy :<a href="/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html">Governing an AI Agent with AsciiDoc</a></p>
+</li>
+<li>
+<p>Article 0110 — Hot/Warm/Cold Mechanism:<a href="/blog/2026/0110_mecanisme_backup_contexte_agent_post.html">Sliding Window and Cold Wave</a></p>
+</li>
+<li>
+<p>My site: <a href="https://cheroliv.com" class="bare">https://cheroliv.com</a></p>
+</li>
+<li>
+<p>The project`magic-stick`: <a href="https://github.com/cheroliv/magic-stick" class="bare">https://github.com/cheroliv/magic-stick</a></p>
+</li>
+</ul>
+</div>
+<hr>
+<div class="paragraph">
+<p>Knowledge does not have to disappear; it merely needs to stay unloaded when it is not necessary.</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Related articles (internal SEO links) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Related articles</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: Convert AsciiDoc to MP4 video</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit of My LLM Consumption: SQLite, OpenCode, Ollama Cloud, and Why My Pro Subscription Is Shaking the Global Market</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">The &#39;Independent Plugin + Consumer Root&#39; Architecture: Why My Gradle Builds Duplicate</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">The Knowledge Graph as a recommendation engine: how I killed the chronological &#39;related articles&#39;</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Disqus Comments Section -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0111_audit_contexte_agent_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Please enable JavaScript to view the
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comments powered by Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Developer trainer specialized in instructional design.
+                        Designing innovative e-learning solutions to transform learning.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contact">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>About</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Resources</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Training</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archives</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Cheat Sheets</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> trainings</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootable key</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Video tutorials</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Contact me</h6>-->
+<!--                    <p class="mb-3">A question? A project? Feel free to contact me.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Contact form-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Response within 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Location</h6>
+                    <p class="mb-3">Based in the Paris region, available for on-site work in France and remote.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, France</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Remote work available</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Travel across France</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

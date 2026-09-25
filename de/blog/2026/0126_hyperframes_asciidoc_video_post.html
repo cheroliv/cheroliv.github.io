@@ -1,0 +1,1288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0126_hyperframes_asciidoc_video_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0126_hyperframes_asciidoc_video_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0126_hyperframes_asciidoc_video_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0126_hyperframes_asciidoc_video_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln — Cheroliv"/>
+        <meta property="og:description" content="Das Plugin `hyperframes-gradle` wandelt AsciiDoc in ein MP4-Video über HyperFrames um. AsciidoctorJ führt das Konfigurations-DSL aus. Die Node.js-Brücke ist hinter ProcessBuilder isoliert. Dieses Plugin schließt die Lücke zwischen Slides und eigenständigen Videos. Hier ist, warum es existiert, wie es mit capsule-gradle zusammenarbeitet, und welchen Mehrwert es für den Content-Produktionspipeline bietet."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0126_hyperframes_asciidoc_video_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0126_hyperframes_asciidoc_video_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln — Cheroliv"/>
+        <meta name="twitter:description" content="Das Plugin `hyperframes-gradle` wandelt AsciiDoc in ein MP4-Video über HyperFrames um. AsciidoctorJ führt das Konfigurations-DSL aus. Die Node.js-Brücke ist hinter ProcessBuilder isoliert. Dieses Plugin schließt die Lücke zwischen Slides und eigenständigen Videos. Hier ist, warum es existiert, wie es mit capsule-gradle zusammenarbeitet, und welchen Mehrwert es für den Content-Produktionspipeline bietet."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0126_hyperframes_asciidoc_video_post.png"/>
+        <meta name="description" content="Das Plugin `hyperframes-gradle` wandelt AsciiDoc in ein MP4-Video über HyperFrames um. AsciidoctorJ führt das Konfigurations-DSL aus. Die Node.js-Brücke ist hinter ProcessBuilder isoliert. Dieses Plugin schließt die Lücke zwischen Slides und eigenständigen Videos. Hier ist, warum es existiert, wie es mit capsule-gradle zusammenarbeitet, und welchen Mehrwert es für den Content-Produktionspipeline bietet."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0126_hyperframes_asciidoc_video_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0126_hyperframes_asciidoc_video_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0126_hyperframes_asciidoc_video_post.html"},
+                      "headline": "HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln",
+                      "description": "hyperframes-gradle ist ein Gradle-Plugin, das AsciiDoc direkt in ein MP4-Video umwandelt, indem es den HyperFrames-Engine von HeyGen (22,7k Sterne, Apache 2.0) verwendet, ohne \u00FCber reveal.js zu gehen. AsciidoctorJ dient als DSL-Konfiguration, ProcessBuilder als Node.js-Br\u00FCcke und eine erg\u00E4nzende Positionierung zu capsule-gradle in der Videokette.",
+                      "datePublished": "2026-05-31",
+                      "dateModified": "2026-05-31",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0126_hyperframes_asciidoc_video_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln", "item": "https:\/\/cheroliv.com\/blog\/2026\/0126_hyperframes_asciidoc_video_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</h1>
+                <p class="lead">
+                    <em>Publié le 31 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_das_loch_in_der_video_pipeline">Das Loch in der Video-Pipeline</a></li>
+<li><a href="#_hyperframes_der_motor">HyperFrames : Der Motor</a></li>
+<li><a href="#_die_architektur_des_plugins">Die Architektur des Plugins</a>
+<ul class="sectlevel2">
+<li><a href="#_die_pipeline_in_vier_schritten">Die Pipeline in vier Schritten</a></li>
+<li><a href="#_die_dsl_asciidoc">Die DSL AsciiDoc</a></li>
+<li><a href="#_die_bridge_node_js">Die Bridge Node.js</a></li>
+</ul>
+</li>
+<li><a href="#_zwei_video_plugins_zwei_nutzungen">Zwei Video-Plugins, Zwei Nutzungen</a></li>
+<li><a href="#_die_6_epics_der_roadmap">Die 6 EPICs der Roadmap</a></li>
+<li><a href="#_warum_funktioniert_es">Warum funktioniert es?</a></li>
+<li><a href="#_schlussfolgerung_das_fehlende_glied">Schlussfolgerung : Das fehlende Glied</a></li>
+<li><a href="#_referenzen">Referenzen</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">lesezeit: 8 minutes</div>
+<p>Vor zwei Wochen habe ich gestartet`capsule-gradle`— ein Plugin, das ein Deck transformiert reveal.js in WebM-Video-Kapsel mit TTS. Heute füge ich ein neues Plugin hinzu: <code>hyperframes-gradle</code>. Es macht etwas, das capsule-gradle nicht tut: AsciiDoc <strong>direkt</strong> in ein MP4-Video umwandeln, ohne reveal.js zu verwenden.</p>
+</div>
+<div class="paragraph">
+<p>Hier ist der Grund, warum dieses Plug-in existiert, wie es sich an das Bestehende anschließt, und was der HeyGen HyperFrames-Motor zur Content-Produktions-Pipeline bringt.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_das_loch_in_der_video_pipeline">Das Loch in der Video-Pipeline</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Meine dokumentarische Pipeline produziert zwei Arten von Videos:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Wiederholungskapsel</strong> (capsule-gradle) — ein reveal.js-Deck, das in WebM aufgezeichnet wurde, mit</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>narration TTS. Perfekt, um ein Modul zu wiederholen.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>animierte Folien</strong> (slider-gradle) — ein interaktives reveal.js HTML Deck für</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>der Dozent vor Ort.</p>
+</div>
+<div class="paragraph">
+<p>Aber es fehlt ein drittes Format: das <strong>vidéo standalone</strong>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5555%;">
+<col style="width: 5.5565%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use case</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aktuelle Lösung</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mangel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Folien des Trainers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">slider-gradle → reveal.js</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">�✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kapsel Revision</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">capsule-gradle → WebM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Teaser-Video</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>animierte technische Demo</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Dokument-zu-Video</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Der erste Use Case ist kritisch: Wie lässt sich automatisch generieren? ein Video von 60 Sekunden, das ein Projekt oder ein Modul vorstellt, mit GSAP-Animationen, Erzählung TTS und Hintergrundmusik – alles aus derselben AsciiDoc-Datei Und die Folien?</p>
+</div>
+<div class="paragraph">
+<p>Capsule-gradle kann nicht antworten: Es muss bereits ein reveal.js-Deck haben. slider-gradle erzeugt dieses Deck gut, aber es ist nicht für das Videorendering konzipiert. Wir brauchten eine <strong>direkte</strong> Pipeline: AsciiDoc → Video.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hyperframes_der_motor">HyperFrames : Der Motor</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ich habe entdeckthttps://github.com/heygen-com/hyperframes[HyperFrames] il y a einige Tage. Es ist ein Open-Source-Framework (Apache 2.0), das von HeyGen erstellt wurde, Das Einhorn der KI-Video. 22.700 Sterne auf GitHub. Der Pitch passt in ein Satz:</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p><strong>HTML schreiben. Video rendern. Für Agenten entwickelt.</strong></p>
+</div>
+</blockquote>
+</div>
+<div class="paragraph">
+<p>Das Prinzip: Sie schreiben HTML mit`data-*`attributes, Sie referenzieren eine GSAP-Animation (oder CSS, Lottie, Three.js…), und der Motor rendert alles als MP4 via Puppeteer (headless Chrome) + FFmpeg. Deterministisches Ergebnis: gleiche Eingabe, gleiche Frames, gleiches Video.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html">&lt;div id="stage" data-composition-id="intro" data-start="0" data-width="1920" data-height="1080"&gt;
+  &lt;video class="clip" data-start="0" data-duration="6" data-track-index="0"
+         src="background.mp4" muted playsinline&gt;&lt;/video&gt;
+
+  &lt;h1 id="title" class="clip" data-start="1" data-duration="4" data-track-index="1"&gt;
+    Formation Docker &amp; Kubernetes
+  &lt;/h1&gt;
+
+  &lt;audio data-start="0" data-duration="6" data-track-index="2"
+         data-volume="0.3" src="music.wav"&gt;&lt;/audio&gt;
+
+  &lt;script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+    const tl = gsap.timeline({ paused: true });
+    tl.from("#title", { opacity: 0, y: 40, duration: 0.8 }, 1);
+    window.__timelines = window.__timelines || {};
+    window.__timelines.intro = tl;
+  &lt;/script&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Was macht HyperFrames anders als Remotion? Kein React, kein Bundler, kein JSX. Rohes HTML, das KI-Agenten nativ schreiben können. Es ist <strong>exakt</strong> für meine Pipeline zugeschnitten: planner-gradle mit deepseek kann dieses HTML aus einem SPG/SPD-Plan erzeugen, und ein Gradle-Plugin kann es in MP4 konvertieren.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_architektur_des_plugins">Die Architektur des Plugins</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>hyperframes-gradle folgt dem gleichen Muster wie alle meine Plugins: der <a href="0124_architecture_plugin_gradle_racine_consommateur_independant_post.html">Muster « Plugin Unabhängig + Konsumenten-Wurzel »</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">hyperframes-gradle/
+├── settings.gradle.kts          ← racine consommateur (dogfood)
+├── build.gradle.kts              ← 3 lignes : apply plugin hyperframes
+├── hyperframes-plugin/           ← BUILD INDÉPENDANT
+│   ├── gradlew                    ← son propre wrapper
+│   ├── build.gradle.kts           ← java-gradle-plugin
+│   ├── src/main/kotlin/education/cccp/hyperframes/
+│   │   ├── HyperframesPlugin.kt
+│   │   ├── GenerateHyperframesHtmlTask.kt
+│   │   ├── RenderHyperframesTask.kt
+│   │   └── HyperframesExtension.kt
+│   ├── .agents/                   ← gouvernance agent
+│   └── doc/
+│       └── HYPERFRAMES_ARCHITECTURE.adoc
+└── video.yml                      ← configuration dogfood</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_die_pipeline_in_vier_schritten">Die Pipeline in vier Schritten</h3>
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 8) ]
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 11
+
+title Pipeline hyperframes-gradle
+
+rectangle "AsciiDoc
+Quelle" as adoc #LightYellow
+^^^^^
+ Syntax Error? (Assumed diagram type: activity)
+
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 11
+
+title Pipeline hyperframes-gradle
+
+rectangle "AsciiDoc
+Quelle" as adoc #LightYellow
+rectangle "AsciidoctorJ" as asciidoctorj #LightBlue
+rectangle "HTML HyperFrames\n(data-* Attribute)" as html #LightGreen
+rectangle "HyperFrames CLI\n(Node.js 22+)" as cli #Lavender
+rectangle "video.mp4" as mp4 #Gold
+
+adoc -right-&gt; asciidoctorj : parse blocs customs
+asciidoctorj -right-&gt; html : génère HTML
+html -right-&gt; cli : ProcessBuilder\nnpx hyperframes render
+cli -right-&gt; mp4 : Puppeteer + FFmpeg
+@enduml</pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>AsciidoctorJ</strong> analysiert den AsciiDoc-Quellcode und extrahiert die benutzerdefinierten Blöcke</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><code>[hyperframes-composition]</code>, <code>[hyperframes-track]</code>, <code>[hyperframes-animation]</code>.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>GenerateHyperframesHtmlTask</strong> generiert den HyperFrames-HTML mit dem</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>`data-*`entsprechende Attribute.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>RenderHyperframesTask</strong> ruft die HyperFrames-CLI über`ProcessBuilder`:</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><code>npx hyperframes render --input index.html --output video.mp4</code>.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>MP4 wird bereitgestellt in`output/`mit einem`metadata.json`für die Orchestrierung.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_die_dsl_asciidoc">Die DSL AsciiDoc</h3>
+<div class="paragraph">
+<p>Der wirkliche Mehrwert des Plugins ist das AsciiDoc‑DSL. Der Benutzer Er schreibt niemals HTML. Er annotiert sein bestehendes AsciiDoc-Dokument :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc">= Formation Docker &amp; Kubernetes
+:hyperframes-width: 1920
+:hyperframes-height: 1080
+:hyperframes-fps: 30
+
+[hyperframes-composition, id="intro"]
+== Introduction
+
+Le titre apparaît avec un fondu GSAP sur fond vidéo.
+
+[hyperframes-track, index=0, start=0, duration=6]
+video::assets/background.mp4[muted, playsinline]
+
+[hyperframes-track, index=1, start=1, duration=4]
+Formation Docker &amp; Kubernetes
+
+[hyperframes-animation, type=gsap]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>const tl = gsap.timeline({ paused: true }); tl.from("#title", { opacity: 0, y: 40, duration: 0.8 }, 1); window.<em>timelines = window.</em>timelines || {}; window.__timelines.intro = tl;</p>
+</div>
+<div class="paragraph">
+<p>Die docinfo-Attribute (<code>:hyperframes-width:</code>) legen die Dimensionen fest. Die benutzerdefinierten Blöcke definieren die Kompositionen und die Spuren. Der Block `[hyperframes-animation]`enthält den rohen GSAP-Code — dass der KI-Agent kann aus einer Beschreibung in natürlicher Sprache generieren.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_die_bridge_node_js">Die Bridge Node.js</h3>
+<div class="paragraph">
+<p>Der einzige technische Reibungspunkt: HyperFrames ist in Node.js/TypeScript, und meine Plugins sind in Kotlin/JVM. Die Lösung ist ein`ProcessBuilder`:</p>
+</div>
+<div class="paragraph">
+<p>Note: The output preserves the exact spacing and punctuation as provided. No translation is needed for punctuation.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class RenderHyperframesTask : DefaultTask() {
+
+    @TaskAction
+    fun render() {
+        val process = ProcessBuilder(
+            "npx", "hyperframes", "render",
+            "--input", inputHtml.absolutePath,
+            "--output", outputMp4.absolutePath
+        )
+            .inheritIO()
+            .start()
+
+        val exitCode = process.waitFor()
+        require(exitCode == 0) {
+            "HyperFrames render failed with exit code $exitCode"
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Keine Kopplung JVM-Code ↔ Node.js. Der Vertrag erfolgt über die Kommandozeile. und Dateien auf der Festplatte. Das ist das gleiche Muster wie`plantuml-gradle` (die die PlantUML-CLI aufruft) oder`slider-gradle`(der AsciidoctorJ aufruft) Nichts Neues unter der Sonne — nur auf ein neueres Werkzeug angewendet.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_zwei_video_plugins_zwei_nutzungen">Zwei Video-Plugins, Zwei Nutzungen</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.7619%;">
+<col style="width: 4.762%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">capsule-gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">hyperframes-gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[empty]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deck reveal.js (existierendes HTML)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AsciiDoc → HTML HyperFrames</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Anwendungsfall</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Revisionskapsel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Eigenständiges Erklärvideo</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Natur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Folien → Video</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dokument → Video</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rendering</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Playwright Java → WebM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HyperFrames CLI → MP4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Animation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Übergänge reveal.js eingebaute</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GSAP/CSS-Datenattribute</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stapel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">100% JVM (Kotlin)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JVM + externe Node.js-CLI</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Sie ersetzen sich nicht. Sie ergänzen sich. Die vollständige Wertschöpfungskette:</p>
+</div>
+<div class="paragraph">
+<p>AsciiDoc ──→ slider-gradle ──→ deck reveal.js ──→ capsule-gradle ──→ WebM Wiederholungskapsel</p>
+</div>
+<div class="paragraph">
+<p>AsciiDoc ──→ hyperframes-gradle ──→ MP4 (Standalone-Video)</p>
+</div>
+<div class="paragraph">
+<p>Der Benutzer schreibt eine einzige AsciiDoc-Datei. slider-gradle erzeugt die Folien. capsule-gradle erzeugt die Überarbeitungskapsel. hyperframes-gradle erzeugt das Teaser-Video und die technischen Demos</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_6_epics_der_roadmap">Die 6 EPICs der Roadmap</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Das Plugin ist in 6 EPICs strukturiert:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1666%;">
+<col style="width: 4.1682%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EPIC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Beschreibung</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Priorität</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bootstrap Governance + Architekturabgrenzung</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">�✅ ERLEDIGT</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle-Stub-Plugin + AsciidoctorJ-Integration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">P0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Brücke CLI HyperFrames (ProcessBuilder → npx → MP4)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">P1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DSL AsciiDoc Gepflogenheiten (Blöcke, Docinfo, Vorlagen)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">P1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Integration Runner-Gradle (metadata.json)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">P2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fertige Vorlagen (title-card, code-diff, captions)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">P3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HF-6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CI + Veröffentlichung Maven Central / Gradle Portal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">P3</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Die Sitzung 000 (bootstrap) ist bereits abgeschlossen. Die Sitzung 001 wird HF-1 angreifen: der Stub des Gradle-Plugins und die AsciidoctorJ-Integration.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_warum_funktioniert_es">Warum funktioniert es?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Drei Gründe:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>HyperFrames ist "built for agents"</strong>. Mein Pipeline beruht auf KI-Agenten.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>(planner-gradle + deepseek) erzeugen Inhalt. HyperFrames akzeptiert HTML roh — das Format, das die LLMs am besten meistern. Kein React, nicht von JSX, keine Lernkurve für den Agenten.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Der AsciiDoc-DSL ist natürlich</strong>. Mein ganzes Ökosystem spricht AsciiDoc.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>slider-gradle, codex-gradle, training-gradle — alle verbrauchen davon`.adoc`. Benutzerdefinierte Blöcke hinzufügen`[hyperframes-composition]`ist eine Erweiterung logisch, kein Bruch.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Die Node.js Bridge ist ein bewährtes Muster</strong>. ProcessBuilder außerhalb der JVM,</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Das ist das, was ich bereits für PlantUML, Graphviz, Piper mache. HyperFrames hinzufügen Es ändert nichts an der Architektur — es ist nur ein weiteres externes Werkzeug, gesteuert von Gradle.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ℹ️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Die wahre Stärke des Patterns besteht darin, dass es <strong>keine</strong> npm-Abhängigkeit gibt Der Gradle-Build. Das Plugin importiert keinen Node.js-Code. Es führt eine Shell-Befehl. Wenn HyperFrames sich weiterentwickelt oder kaputt geht, ist das Plugin nicht gekoppelt. — Es reicht, den Befehl zu aktualisieren.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_schlussfolgerung_das_fehlende_glied">Schlussfolgerung : Das fehlende Glied</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Mit hyperframes-gradle ist mein Video-Pipeline vollständig. Ich habe:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Die <strong>interaktive Slides</strong> (slider-gradle)</p>
+</li>
+<li>
+<p>Die <strong>Revisionskapseln</strong> (capsule-gradle)</p>
+</li>
+<li>
+<p>Die <strong>Standalone-Videos</strong> (hyperframes-gradle)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Drei Formate. Eine einzige Quelldatei: AsciiDoc.</p>
+</div>
+<div class="paragraph">
+<p>Das nächste Ziel ist HF-1 : das Plugin zu kompilieren und zu generieren ein erste HTML HyperFrames aus einem annotierten AsciiDoc-Dokument. Die Sitzung 001 ist bereits gerahmt.</p>
+</div>
+<div class="paragraph">
+<p>hyperframes-gradle existiert. Die Governance ist eingerichtet. Der Backlog ist geschrieben. Die Architektur ist dokumentiert. Das Plugin ist geboren.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_referenzen">Referenzen</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="0124_architecture_plugin_gradle_racine_consommateur_independant_post.html">Artikel 0124 — Die Architektur des unabhängigen Plugins + Verbraucher-Wurzel</a></p>
+</li>
+<li>
+<p><a href="https://github.com/heygen-com/hyperframes">HyperFrames — GitHub</a></p>
+</li>
+<li>
+<p><a href="https://hyperframes.heygen.com/introduction">HyperFrames — Dokumentation</a></p>
+</li>
+<li>
+<p><code>foundry/public/hyperframes-gradle/hyperframes-plugin/doc/HYPERFRAMES_ARCHITECTURE.adoc</code>— Detaillierte Architektur</p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0126_hyperframes_asciidoc_video_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

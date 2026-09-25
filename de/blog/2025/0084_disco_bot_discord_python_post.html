@@ -1,0 +1,1246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Entwicklung eines Discord-Musik-Bots: Funktionale Architektur und Log-getriebene Entwicklung — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0084_disco_bot_discord_python_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Entwicklung eines Discord-Musik-Bots: Funktionale Architektur und Log-getriebene Entwicklung — Cheroliv"/>
+        <meta property="og:description" content="Dieser Artikel präsentiert einen methodischen Ansatz zur Entwicklung eines musikalischen Discord-Bots mithilfe der Spotify- und YouTube-APIs mit Python."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0084_disco_bot_discord_python_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0084_disco_bot_discord_python_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Entwicklung eines Discord-Musik-Bots: Funktionale Architektur und Log-getriebene Entwicklung — Cheroliv"/>
+        <meta name="twitter:description" content="Dieser Artikel präsentiert einen methodischen Ansatz zur Entwicklung eines musikalischen Discord-Bots mithilfe der Spotify- und YouTube-APIs mit Python."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0084_disco_bot_discord_python_post.png"/>
+        <meta name="description" content="Dieser Artikel präsentiert einen methodischen Ansatz zur Entwicklung eines musikalischen Discord-Bots mithilfe der Spotify- und YouTube-APIs mit Python."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0084_disco_bot_discord_python_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0084_disco_bot_discord_python_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0084_disco_bot_discord_python_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0084_disco_bot_discord_python_post.html"},
+                      "headline": "Entwicklung eines Discord-Musik-Bots: Funktionale Architektur und Log-getriebene Entwicklung",
+                      "description": "Dieser Artikel pr\u00E4sentiert einen methodischen Ansatz zur Entwicklung eines musikalischen Discord-Bots mithilfe der Spotify- und YouTube-APIs mit Python.",
+                      "datePublished": "2025-07-16",
+                      "dateModified": "2025-07-16",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0084_disco_bot_discord_python_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Entwicklung eines Discord-Musik-Bots: Funktionale Architektur und Log-getriebene Entwicklung", "item": "https:\/\/cheroliv.com\/blog\/2025\/0084_disco_bot_discord_python_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Entwicklung eines Discord-Musik-Bots: Funktionale Architektur und Log-getriebene Entwicklung</h1>
+                <p class="lead">
+                    <em>Publié le 16 July 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_einführung">Einführung</a></li>
+<li><a href="#_kontext_und_aktuelle_herausforderungen">Kontext und aktuelle Herausforderungen</a>
+<ul class="sectlevel2">
+<li><a href="#_entwicklung_der_musik_apis">Entwicklung der Musik-APIs</a></li>
+<li><a href="#_ansatz_log_getriebene_entwicklung">Ansatz Log-getriebene Entwicklung</a></li>
+</ul>
+</li>
+<li><a href="#_konzeptionelle_architektur">Konzeptionelle Architektur</a></li>
+<li><a href="#_stack_technik_und_funktionales_paradigma">Stack-Technik und funktionales Paradigma</a>
+<ul class="sectlevel2">
+<li><a href="#_technologische_auswahl">Technologische Auswahl</a></li>
+<li><a href="#_angewandte_funktionale_prinzipien">Angewandte funktionale Prinzipien</a></li>
+</ul>
+</li>
+<li><a href="#_agile_methodik_und_backlog">Agile-Methodik und Backlog</a>
+<ul class="sectlevel2">
+<li><a href="#_haupt_epics">Haupt-Epics</a>
+<ul class="sectlevel3">
+<li><a href="#_episch_1_infrastruktur_bot_discord">Episch 1: Infrastruktur-Bot Discord</a></li>
+<li><a href="#_epic_2_integration_spotify">Epic 2: Integration Spotify</a></li>
+<li><a href="#_epic_3_youtube_integration">Epic 3: YouTube-Integration</a></li>
+<li><a href="#_epic_4_musikfunktionen">Epic 4: Musikfunktionen</a></li>
+</ul>
+</li>
+<li><a href="#_detaillierte_user_stories">detaillierte User Stories</a>
+<ul class="sectlevel3">
+<li><a href="#_us1_1_initialisierung_des_bots">US1.1: Initialisierung des Bots</a></li>
+<li><a href="#_us2_1_intelligente_spotify_suche">US2.1 : Intelligente Spotify-Suche</a></li>
+<li><a href="#_us3_1_extraktion_youtube_resiliente">US3.1 : Extraktion YouTube Resiliente</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_ansatz_des_logdrivendevelopment">Ansatz des Log‑Driven‑Development</a>
+<ul class="sectlevel2">
+<li><a href="#_logging_strategie">Logging-Strategie</a></li>
+<li><a href="#_logstruktur">Logstruktur</a></li>
+<li><a href="#_beispiel_des_log_designs">Beispiel des Log-Designs</a></li>
+</ul>
+</li>
+<li><a href="#_validierungsarchitektur_mit_pydantic">Validierungsarchitektur mit Pydantic</a>
+<ul class="sectlevel2">
+<li><a href="#_datenmodelle">Datenmodelle</a></li>
+</ul>
+</li>
+<li><a href="#_funktionale_fehlerverwaltung">Funktionale Fehlerverwaltung</a>
+<ul class="sectlevel2">
+<li><a href="#_monaden_und_fehlerbehandlung">Monaden und Fehlerbehandlung</a></li>
+</ul>
+</li>
+<li><a href="#_strategie_zur_umgehung_der_beschränkungen">Strategie zur Umgehung der Beschränkungen</a>
+<ul class="sectlevel2">
+<li><a href="#_multi_quelle_ansatz">Multi-Quelle-Ansatz</a></li>
+</ul>
+</li>
+<li><a href="#_iterativer_entwicklungsplan">Iterativer Entwicklungsplan</a>
+<ul class="sectlevel2">
+<li><a href="#_sprintplanung">Sprintplanung</a></li>
+<li><a href="#_qualitätsmetriken">Qualitätsmetriken</a></li>
+</ul>
+</li>
+<li><a href="#_bereitstellung_und_monitoring">Bereitstellung und Monitoring</a>
+<ul class="sectlevel2">
+<li><a href="#_produktionsarchitektur">Produktionsarchitektur</a></li>
+<li><a href="#_proaktives_monitoring">Proaktives Monitoring</a></li>
+</ul>
+</li>
+<li><a href="#_fazit_und_ausblick">Fazit und Ausblick</a>
+<ul class="sectlevel2">
+<li><a href="#_nächste_schritte">Nächste Schritte</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_einführung"><a class="anchor" href="#_einführung"></a>Einführung</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die Entwicklung eines Discord-Bots, der die Spotify- und YouTube-APIs integriert, stellt eine moderne technische Herausforderung dar, insbesondere angesichts der jüngsten Beschränkungen und Weiterentwicklungen der Plattformen. Dieser Artikel stellt einen methodischen Ansatz vor, der auf dem<strong>Loggetriebene Entwicklung</strong>(LDD), eine Erweiterung der testgetriebenen Entwicklung, angewendet in einem funktionalen Paradigma mit Python.</p>
+</div>
+<div class="paragraph">
+<p>Unser Ziel ist es, einen robusten, wartbaren und erweiterbaren Bot zu schaffen, der in der Lage ist, den aktuellen Beschränkungen der Musik‑APIs zu begegnen, während er gleichzeitig ein flüssiges Benutzererlebnis auf Discord bietet.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_kontext_und_aktuelle_herausforderungen"><a class="anchor" href="#_kontext_und_aktuelle_herausforderungen"></a>Kontext und aktuelle Herausforderungen</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_entwicklung_der_musik_apis"><a class="anchor" href="#_entwicklung_der_musik_apis"></a>Entwicklung der Musik-APIs</h3>
+<div class="paragraph">
+<p>Musikplattformen haben ihre Zugriffsrichtlinien erheblich verschärft:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Spotify</strong>Beschränkungen beim Zugriff auf Metadaten, Beschränkung der Kontingente</p>
+</li>
+<li>
+<p><strong>YouTube</strong>: Verschärfte Anti-Bot-Politik, Komplexifizierung der Authentifizierung</p>
+</li>
+<li>
+<p><strong>Uneinigkeit</strong>: Neue Sicherheits- und Leistungsanforderungen</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ansatz_log_getriebene_entwicklung"><a class="anchor" href="#_ansatz_log_getriebene_entwicklung"></a>Ansatz Log-getriebene Entwicklung</h3>
+<div class="paragraph">
+<p>LDD erweitert TDD, indem es die Protokolle in das Herz des Entwicklungsprozesses stellt :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Definition der Logs</strong>vor der Implementierung</p>
+</li>
+<li>
+<p><strong>Validierung durch Beobachtung</strong>erwartete Verhaltensweisen</p>
+</li>
+<li>
+<p><strong>Vollständige Rückverfolgbarkeit</strong>Datenflüsse</p>
+</li>
+<li>
+<p><strong>Proaktives Debugging</strong>in Erwartung von Fehlern</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_konzeptionelle_architektur"><a class="anchor" href="#_konzeptionelle_architektur"></a>Konzeptionelle Architektur</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-28c10471b469a73f843490e8e60f75f1.png" alt="Diagram" width="777" height="618">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_stack_technik_und_funktionales_paradigma"><a class="anchor" href="#_stack_technik_und_funktionales_paradigma"></a>Stack-Technik und funktionales Paradigma</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_technologische_auswahl"><a class="anchor" href="#_technologische_auswahl"></a>Technologische Auswahl</h3>
+<div class="paragraph">
+<p>Unser Stack dreht sich um funktionale Programmierung:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>PyMonade</strong></dt>
+<dd>
+<p>Umgang mit Nebeneffekten und Funktionskomposition</p>
+</dd>
+<dt class="hdlist1"><strong>Pydantic</strong></dt>
+<dd>
+<p>Typesichere Datenvalidierung und Serialisierung</p>
+</dd>
+<dt class="hdlist1"><strong>Asyncio</strong></dt>
+<dd>
+<p>Asynchrone Programmierung für APIs</p>
+</dd>
+<dt class="hdlist1"><strong>Structlog</strong></dt>
+<dd>
+<p>Strukturiertes Logging für das LDD</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_angewandte_funktionale_prinzipien"><a class="anchor" href="#_angewandte_funktionale_prinzipien"></a>Angewandte funktionale Prinzipien</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-bd6883864cee4f4eb3738c642eaf0b8f.png" alt="Diagram" width="687" height="554">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_agile_methodik_und_backlog"><a class="anchor" href="#_agile_methodik_und_backlog"></a>Agile-Methodik und Backlog</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_haupt_epics"><a class="anchor" href="#_haupt_epics"></a>Haupt-Epics</h3>
+<div class="paragraph">
+<p>Unsere Entwicklung ist um vier Haupt-Epics organisiert:</p>
+</div>
+<div class="sect3">
+<h4 id="_episch_1_infrastruktur_bot_discord"><a class="anchor" href="#_episch_1_infrastruktur_bot_discord"></a>Episch 1: Infrastruktur-Bot Discord</h4>
+<div class="paragraph">
+<p><strong>Geschäftswert</strong> : solide und erweiterbare Basis</p>
+</div>
+<div class="paragraph">
+<p><strong>Akzeptanzkriterien</strong> : - Stabile Discord-Verbindung mit Wiederverbindungsverwaltung - Modulares Befehlssystem - integriertes strukturiertes Logging Zentrale Fehlerbehandlung</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_epic_2_integration_spotify"><a class="anchor" href="#_epic_2_integration_spotify"></a>Epic 2: Integration Spotify</h4>
+<div class="paragraph">
+<p><strong>Geschäftswert</strong> : Zugriff auf Musikmetadaten</p>
+</div>
+<div class="paragraph">
+<p><strong>Akzeptanzkriterien</strong>: Sichere OAuth2-Authentifizierung - Suche nach Tracks mit intelligentem Cache API-Quotenverwaltung - Fallback bei Netzwerkfehlern</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_epic_3_youtube_integration"><a class="anchor" href="#_epic_3_youtube_integration"></a>Epic 3: YouTube-Integration</h4>
+<div class="paragraph">
+<p><strong>Geschäftswert</strong> : Zugriff auf Audioinhalte</p>
+</div>
+<div class="paragraph">
+<p><strong>Akzeptanzkriterien</strong> : - Legale Umgehung der Einschränkungen - Optimierte Audioextraktion - Verwaltung der privaten/gelöschten Videos - Respect des ToS YouTube</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_epic_4_musikfunktionen"><a class="anchor" href="#_epic_4_musikfunktionen"></a>Epic 4: Musikfunktionen</h4>
+<div class="paragraph">
+<p><strong>Geschäftswert</strong> : vollständige Benutzererfahrung</p>
+</div>
+<div class="paragraph">
+<p><strong>Akzeptanzkriterien</strong> : - Audio-Vortrag hoher Qualität - Intelligente Wiedergabeliste - Commandes vocales Discord plattformübergreifende Synchronisation</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_detaillierte_user_stories"><a class="anchor" href="#_detaillierte_user_stories"></a>detaillierte User Stories</h3>
+<div class="sect3">
+<h4 id="_us1_1_initialisierung_des_bots"><a class="anchor" href="#_us1_1_initialisierung_des_bots"></a>US1.1: Initialisierung des Bots</h4>
+<div class="paragraph">
+<p><strong>Als</strong> Entwickler <strong>Ich will</strong> ein Discord-Bot, der sich zuverlässig verbindet <strong>Um</strong> die Verfügbarkeit des Dienstes zu gewährleisten</p>
+</div>
+<div class="paragraph">
+<p><strong>DoD (Definition of Done)</strong> : - [ ] Der Bot verbindet sich automatisch beim Start - [ ] Strukturierte logs dokumentieren jeden Schritt - [ ] Automatische Wiederverbindung bei Unterbrechung - [ ] Integrations-Tests bestehen</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_us2_1_intelligente_spotify_suche"><a class="anchor" href="#_us2_1_intelligente_spotify_suche"></a>US2.1 : Intelligente Spotify-Suche</h4>
+<div class="paragraph">
+<p><strong>Als Discord-Nutzer *Ich möchte</strong> nach Titeln über Spotify suchen <strong>Um</strong> Musik zu entdecken und zu teilen</p>
+</div>
+<div class="paragraph">
+<p><strong>DoD</strong> : - [ ] Bestellung`/search`funktional - [ ] Relevante Ergebnisse mit Metadaten - [ ] Lokaler Cache zur Optimierung der Anfragen - [ ] Gemeisterte Behandlung von API-Fehlern</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_us3_1_extraktion_youtube_resiliente"><a class="anchor" href="#_us3_1_extraktion_youtube_resiliente"></a>US3.1 : Extraktion YouTube Resiliente</h4>
+<div class="paragraph">
+<p><strong>Als</strong> System <strong>Ich will</strong> YouTube-Audio zuverlässig extrahieren Um die Kontinuität des Dienstes aufrechtzuerhalten</p>
+</div>
+<div class="paragraph">
+<p><strong>DoD</strong> : - [ ] Extraktion ohne Verstoß gegen die ToS - [ ] Optimale Audioqualität - [ ] Verwaltung der geografischen Beschränkungen - [ ] detaillierte Logs der Vorgänge</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ansatz_des_logdrivendevelopment"><a class="anchor" href="#_ansatz_des_logdrivendevelopment"></a>Ansatz des Log‑Driven‑Development</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_logging_strategie"><a class="anchor" href="#_logging_strategie"></a>Logging-Strategie</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-a24fccfd99076527841aa57c892fa54b.png" alt="Diagram" width="687" height="633">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_logstruktur"><a class="anchor" href="#_logstruktur"></a>Logstruktur</h3>
+<div class="paragraph">
+<p>Unser LDD-Ansatz verwendet strukturierte Logs mit semantischen Ebenen:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>SPUR</strong></dt>
+<dd>
+<p>Detaillierter Datenfluss</p>
+</dd>
+<dt class="hdlist1"><strong>DEBUG</strong></dt>
+<dd>
+<p>Interne Zustände der Funktionen</p>
+</dd>
+<dt class="hdlist1"><strong>INFO</strong></dt>
+<dd>
+<p>erfolgreiche Geschäftsprozesse</p>
+</dd>
+<dt class="hdlist1"><strong>WARN</strong></dt>
+<dd>
+<p>Verschlechterte, aber kontrollierte Situationen</p>
+</dd>
+<dt class="hdlist1"><strong>Fehler</strong></dt>
+<dd>
+<p>Fehler, die Eingreifen erfordern</p>
+</dd>
+<dt class="hdlist1"><strong>KRITISCH</strong></dt>
+<dd>
+<p>Systemausfälle</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_beispiel_des_log_designs"><a class="anchor" href="#_beispiel_des_log_designs"></a>Beispiel des Log-Designs</h3>
+<div class="paragraph">
+<p>Bevor wir die Spotify-Suchfunktion implementieren, definieren wir ihre Protokolle :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">INFO: spotify.search.start query="bohemian rhapsody" user_id=123456
+DEBUG: spotify.search.validation query_length=16 safe_chars=true
+DEBUG: spotify.search.api_call endpoint="/search" params={...}
+INFO: spotify.search.success results_count=15 duration_ms=340</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_validierungsarchitektur_mit_pydantic"><a class="anchor" href="#_validierungsarchitektur_mit_pydantic"></a>Validierungsarchitektur mit Pydantic</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_datenmodelle"><a class="anchor" href="#_datenmodelle"></a>Datenmodelle</h3>
+<div class="paragraph">
+<p>Unser funktionaler Ansatz bevorzugt die frühzeitige Validierung:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-ebd4e1dfbd7b19d5a6054ecf213e9e2d.png" alt="Diagram" width="696" height="339">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_funktionale_fehlerverwaltung"><a class="anchor" href="#_funktionale_fehlerverwaltung"></a>Funktionale Fehlerverwaltung</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_monaden_und_fehlerbehandlung"><a class="anchor" href="#_monaden_und_fehlerbehandlung"></a>Monaden und Fehlerbehandlung</h3>
+<div class="paragraph">
+<p>Die Verwendung von PyMonade ermöglicht eine elegante Fehlerbehandlung:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-9aa66ba98ba7a86d7710fd9828d281bb.png" alt="Diagram" width="492" height="494">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_strategie_zur_umgehung_der_beschränkungen"><a class="anchor" href="#_strategie_zur_umgehung_der_beschränkungen"></a>Strategie zur Umgehung der Beschränkungen</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_multi_quelle_ansatz"><a class="anchor" href="#_multi_quelle_ansatz"></a>Multi-Quelle-Ansatz</h3>
+<div class="paragraph">
+<p>Angesichts der Beschränkungen der APIs verfolgen wir eine Diversifizierungsstrategie:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-f5784c39f064ff48b27fd4d449d99a4f.png" alt="Diagram" width="665" height="744">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_iterativer_entwicklungsplan"><a class="anchor" href="#_iterativer_entwicklungsplan"></a>Iterativer Entwicklungsplan</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_sprintplanung"><a class="anchor" href="#_sprintplanung"></a>Sprintplanung</h3>
+<div class="paragraph">
+<p>Unsere Entwicklung folgt einem Zyklus aus zweiwöchigen Sprints:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>Sprint 1-2</strong></dt>
+<dd>
+<p>Infrastruktur und Discord Bot Kern</p>
+</dd>
+<dt class="hdlist1"><strong>Sprint 3-4</strong></dt>
+<dd>
+<p>Integration Spotify mit LDD</p>
+</dd>
+<dt class="hdlist1"><strong>Sprint 5-6</strong></dt>
+<dd>
+<p>YouTube-Integration und Umgehungen</p>
+</dd>
+<dt class="hdlist1"><strong>Sprint 7-8</strong></dt>
+<dd>
+<p>Erweiterte musikalische Features</p>
+</dd>
+<dt class="hdlist1"><strong>Sprint 9-10</strong></dt>
+<dd>
+<p>Optimierung und Produktion</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_qualitätsmetriken"><a class="anchor" href="#_qualitätsmetriken"></a>Qualitätsmetriken</h3>
+<div class="paragraph">
+<p>Jeder Sprint wird nach Folgendem bewertet:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Log-Abdeckung</strong>: &gt;90% der kritischen Pfade</p>
+</li>
+<li>
+<p><strong>Zuverlässigkeit API</strong>: &lt;1% nicht behandelte Fehler</p>
+</li>
+<li>
+<p><strong>Leistung</strong>: &lt;500ms durchschnittliche Antwortzeit</p>
+</li>
+<li>
+<p><strong>Wartbarkeit</strong>: Zyklomatische Komplexität &lt;10</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bereitstellung_und_monitoring"><a class="anchor" href="#_bereitstellung_und_monitoring"></a>Bereitstellung und Monitoring</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_produktionsarchitektur"><a class="anchor" href="#_produktionsarchitektur"></a>Produktionsarchitektur</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-f4abeba5d725d8526c4f32f7d97c6960.png" alt="Diagram" width="938" height="381">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_proaktives_monitoring"><a class="anchor" href="#_proaktives_monitoring"></a>Proaktives Monitoring</h3>
+<div class="paragraph">
+<p>Der LDD erleichtert ein intelligentes Monitoring:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Warnungen basierend auf Log-Mustern</strong></p>
+</li>
+<li>
+<p><strong>Verhaltensanomalien-Erkennung</strong></p>
+</li>
+<li>
+<p><strong>Echtzeit-Geschäftsmetriken</strong></p>
+</li>
+<li>
+<p><strong>Debugging unterstützt durch Log-Korrelation</strong></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fazit_und_ausblick"><a class="anchor" href="#_fazit_und_ausblick"></a>Fazit und Ausblick</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Diese methodische Herangehensweise kombiniert die Vorteile des funktionalen Paradigmas mit der Robustheit des Log‑Driven‑Development. Sie ermöglicht uns :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Anticiper les problèmes</strong>dank den im Voraus konzipierten Logs</p>
+</li>
+<li>
+<p><strong>Die Qualität aufrechterhalten</strong>durch die kontinuierliche Validierung</p>
+</li>
+<li>
+<p><strong>Schnell anpassen</strong>zu den Änderungen der APIs</p>
+</li>
+<li>
+<p><strong>Die Rückverfolgbarkeit sicherstellen</strong>vollständige Vorgänge</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Die iterative Entwicklung und die modulare Architektur gewährleisten Skalierbarkeit angesichts der sich ändernden Einschränkungen der Musikplattformen.</p>
+</div>
+<div class="sect2">
+<h3 id="_nächste_schritte"><a class="anchor" href="#_nächste_schritte"></a>Nächste Schritte</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Phase 1</strong>: Implementierung des Kernels mit PyMonade</p>
+</li>
+<li>
+<p><strong>Phase 2</strong>Spotify-Integration mit intelligentem Cache</p>
+</li>
+<li>
+<p><strong>Phase 3</strong>resiliente YouTube-Lösung</p>
+</li>
+<li>
+<p><strong>Phase 4</strong>: Erweiterte Features und Optimierung</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Dieses solide konzeptionelle Fundament wird es uns ermöglichen, technische Herausforderungen zu meistern, während wir ein außergewöhnliches Benutzererlebnis bieten.</p>
+</div>
+<hr>
+<div class="paragraph">
+<p>Dieser Artikel wird von einer technischen Reihe gefolgt, die die Implementierung jeder Komponente mit Codebeispielen und funktionalen Mustern beschreibt.</p>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0084_disco_bot_discord_python_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

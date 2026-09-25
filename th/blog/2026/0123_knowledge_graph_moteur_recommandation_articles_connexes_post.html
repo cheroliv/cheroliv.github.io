@@ -1,0 +1,1339 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe — Cheroliv"/>
+        <meta property="og:description" content="Die aktuellen « verwandte Artikel » auf cheroliv.com sind einfach die 4 zuletzt veröffentlichten Beiträge. Eine semantische Aberration, korrigiert durch einen Empfehlungsmotor mit drei Ebenen: explizite Referenzen (xref), emergente Ontologie (NLP-Cluster) und chronologisches Fallback. Das Ganze ist an den Knowledge Graph von graphify angebunden, wird von bakery konsumiert — ohne dass engine etwas davon weiß."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe — Cheroliv"/>
+        <meta name="twitter:description" content="Die aktuellen « verwandte Artikel » auf cheroliv.com sind einfach die 4 zuletzt veröffentlichten Beiträge. Eine semantische Aberration, korrigiert durch einen Empfehlungsmotor mit drei Ebenen: explizite Referenzen (xref), emergente Ontologie (NLP-Cluster) und chronologisches Fallback. Das Ganze ist an den Knowledge Graph von graphify angebunden, wird von bakery konsumiert — ohne dass engine etwas davon weiß."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.png"/>
+        <meta name="description" content="Die aktuellen « verwandte Artikel » auf cheroliv.com sind einfach die 4 zuletzt veröffentlichten Beiträge. Eine semantische Aberration, korrigiert durch einen Empfehlungsmotor mit drei Ebenen: explizite Referenzen (xref), emergente Ontologie (NLP-Cluster) und chronologisches Fallback. Das Ganze ist an den Knowledge Graph von graphify angebunden, wird von bakery konsumiert — ohne dass engine etwas davon weiß."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS-Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Startseite</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Expertisen</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Kontakt</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Oberflächenthema auswählen">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Hell
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Dunkel
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Hoher Kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Sprache auswählen">
+                        <span class="me-1">🇩🇪</span>
+                        <span class="ms-1">DE</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"},
+                      "headline": "Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch \u00AB verwandten Artikel \u00BB get\u00F6tet habe",
+                      "description": "Ersetze die chronologischen \u00AB verwandte Artikel \u00BB von JBake durch einen semantischen Empfehlungs-Engine basierend auf dem Knowledge Graph und der entstehenden Ontologie des Korpus. Drei-Schichten-Architektur, keine hei\u00DFen LLM-Aufrufe, deterministischer Gradle-Pipeline.",
+                      "datePublished": "2026-05-12",
+                      "dateModified": "2026-05-12",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch \u00AB verwandten Artikel \u00BB get\u00F6tet habe", "item": "https:\/\/cheroliv.com\/blog\/2026\/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Der Knowledge Graph als Empfehlungs-Engine: Wie ich die chronologisch « verwandten Artikel » getötet habe</h1>
+                <p class="lead">
+                    <em>Publié le 12 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_die_szene_dienstag_12_mai_1730">Die Szene: Dienstag, 12. Mai, 17:30</a></li>
+<li><a href="#_die_diagnose_drei_arten_von_beziehungen_die_kein_template_sieht">Die Diagnose: Drei Arten von Beziehungen, die kein Template sieht</a></li>
+<li><a href="#_die_lösung_ein_gradle_pipeline_kein_hot_llm_aufruf">Die Lösung: Ein Gradle-Pipeline, kein Hot-LLM-Aufruf</a>
+<ul class="sectlevel2">
+<li><a href="#_die_architektur_bakery_importiert_graphify_nicht_engine">Die Architektur: Bakery importiert Graphify, nicht Engine</a></li>
+<li><a href="#_die_pipeline_scan_graph_vorlage">Die Pipeline : Scan → Graph → Vorlage</a></li>
+<li><a href="#_chronologisches_fallback">Chronologisches Fallback</a></li>
+</ul>
+</li>
+<li><a href="#_die_emergente_ontologie_wenn_die_artikel_sich_zusammen_schließen_ohne_sich_zu_kennen">Die emergente Ontologie: Wenn die Artikel sich zusammen schließen, ohne sich zu kennen</a></li>
+<li><a href="#_der_dag_vertrag_wer_wen_wichtig_findet">Der DAG-Vertrag : Wer wen wichtig findet</a></li>
+<li><a href="#_was_wir_gewinnen_und_was_wir_nicht_gewinnen">Was Wir Gewinnen (Und Was Wir Nicht Gewinnen)</a></li>
+<li><a href="#_perspektiven_der_blog_als_öffentliches_wissensgraph">Perspektiven: Der Blog als öffentliches Wissensgraph</a></li>
+<li><a href="#_fazit_das_dateisystem_weiß_was_die_vorlage_ignoriert">Fazit : Das Dateisystem weiß, was die Vorlage ignoriert.</a></li>
+<li><a href="#_referenzen">Referenzen</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">Lesezeit : 14 minutes</div>
+<p>Sie lesen einen Artikel über die Integration von pgvector mit LangChain4j. Am Ende der Seite, JBake schlägt Ihnen « Verwandte Artikel » vor. Sie klicken. Es handelt sich um einen Artikel über&#8230;&#8203; die Konfiguration. von Kitty Terminal. Was ist der einzige gemeinsame Punkt zwischen ihnen? Sie wurden veröffentlicht weniger als fünfzehn Tage Abstand. Das ist keine Empfehlung. Es ist ein als getarnter Kalender redaktionell.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_szene_dienstag_12_mai_1730">Die Szene: Dienstag, 12. Mai, 17:30</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ich lese einen meiner Artikel erneut — <a href="0106_knowledge_graph_outil_compréhension_codebase_post.html">dieser über das Knowledge Graph als Werkzeug zum Verständnis der Codebasis</a>. Der Inhalt ist dicht: Knoten, Kanten, Communities, PlantUML, Onboarding. Ein Artikel 15-minütige Lesetechnik, die mobilisiert`graphify-gradle`, <code>plantuml-gradle</code>, und die Konzepte der Graphentopologie.</p>
+</div>
+<div class="paragraph">
+<p>Unten auf der Seite schlagen die « Verwandte Artikel » mir vor:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ein Artikel über Firebase Contact Form (0113)</p>
+</li>
+<li>
+<p>Ein Artikel über den Eager/Lazy-Mechanismus (0108)</p>
+</li>
+<li>
+<p>Ein Artikel über die Migration von Gradle‑Skript → Plugin (0102)</p>
+</li>
+<li>
+<p>Ein Artikel über die Kumulierung von Ollama Pro-Abonnements (0120)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Drei dieser vier Artikel haben <strong>keinen</strong> Bezug zum Knowledge Graph. Sie sind da, weil sie die letzten veröffentlichten sind — zeitliche Nähe, nicht semantische Nachbarschaft</p>
+</div>
+<div class="paragraph">
+<p>Ich schaue mir das Template an`post.thyme`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xhtml hljs" data-lang="xhtml">&lt;!-- Articles connexes (liens internes SEO) --&gt;
+&lt;th:block th:each="post,postStat : ${published_posts}"&gt;
+    &lt;th:block th:if="${!post.uri.equals(content.uri) and postStat.index lt 4}"&gt;
+        ...
+    &lt;/th:block&gt;
+&lt;/th:block&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`published_posts`ist eine chronologische Liste.`postStat.index lt 4`nimmt sie Die ersten vier, die nicht der aktuelle Beitrag sind. Das ist alles. Keine Logik der Ähnlichkeit. Kein Begriff des Inhalts. Nur eine Schleife.`for`verkleidet als Empfehlung.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="⚠️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Das ist kein Bug von JBake. Das ist das Standardverhalten von allem Statischer Site-Generator: Die Liste der Posts ist flach und nach Datum sortiert. Die Vorlage macht, was sie kann, mit dem, was sie hat.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Aber das ist kein Grund, es zu akzeptieren.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_diagnose_drei_arten_von_beziehungen_die_kein_template_sieht">Die Diagnose: Drei Arten von Beziehungen, die kein Template sieht</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Mein Artikelkorpus — 23 Beiträge in 4 Monaten — hat eine reiche Struktur, die die chronologische Vorlage überschreibt vollständig:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Explizite Referenzen</strong> : Ich verwende`xref:`massiv in meinen Artikeln.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Der Artikel 0122 verweist auf 0106 (knowledge graph) und 0116 (compartimentage) epistemisch). Diese Links sind redaktionelles <strong>hard linking</strong> — ich habe absichtlich entschieden, diese Konzepte zu verbinden.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Gemeinsame Tags</strong> : jeder Artikel hat`:jbake-tags:`. Der Artikel über</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Graphify + PlantUML (0105) a`gradle, graphify, plantuml, knowledge-graph`. Der Artikel über das Knowledge Graph (0106) hat <code>knowledge-graph, graphify, plantuml</code>. Drei gemeinsame Tags von sieben — 43% Überschneidung.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Ko-occurrente benannte Entitäten</strong> : « pgvector », « RAG », « embedding</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>erscheinen zusammen in vier verschiedenen Artikeln. « LangChain4j » ,  Ollama », « plugin Gradle » in sechs anderen. Das sind keine Tags — das sind <strong>emergente Muster</strong> des Korpus, die nur ein NLP kann erkennen.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/trois-couches-relation-articles.svg" alt="trois couches relation articles" width="1742" height="5492">
+</div>
+</div>
+<div class="paragraph">
+<p>Heute nutzt meine Seite <strong>keine</strong> dieser drei Schichten. Sie nutzt Die Nullschicht: die Einfügereihenfolge in einer Java-Liste.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_lösung_ein_gradle_pipeline_kein_hot_llm_aufruf">Die Lösung: Ein Gradle-Pipeline, kein Hot-LLM-Aufruf</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die erste Versuchung wäre, während des Bake einen LLM aufzurufen: « Für Dieser Artikel findet die drei ähnlichsten Artikel im Korpus. Machen Sie das nicht.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Ein LLM-Aufruf zu jedem`./gradlew bake`Kostet Zeit, Geld, und Führt Nichtdeterminismus in deinem Build ein. Die Antwort des LLM kann zwischen zwei Builds wechseln, ohne dass der Inhalt sich geändert hat. Ihr CI wird nicht reproduzierbar, werden deine Tests flaky.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Die Lösung ist deterministisch: eine Gradle‑Pipeline, die den Graphen vorher berechnet. von Ähnlichkeit und speichert es in`graph.json`. Die Vorlage liest das Ergebnis — er löst nie eine Berechnung aus.</p>
+</div>
+<div class="sect2">
+<h3 id="_die_architektur_bakery_importiert_graphify_nicht_engine">Die Architektur: Bakery importiert Graphify, nicht Engine</h3>
+<div class="paragraph">
+<p>Das ist der wichtigste architektonische Punkt. Die Versuchung wäre die Zusammenarbeit verkabeln in`engine/build.gradle.kts`: engine angewendet graphify für den Scan, bakery für den Bake, und engine macht die Brücke zwischen beide.</p>
+</div>
+<div class="paragraph">
+<p>Das ist ein Anti-Muster. Engine ist ein <strong>Verbraucher‑Terminal</strong> — es wendet an von Plugins implementiert es keine Geschäftslogik. Die Regel ist: <strong>Die Beweislast liegt beim proprietären Plugin.</strong></p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/bakery-import-graphify.svg" alt="bakery import graphify" width="1806" height="5700">
+</div>
+<div class="title">Figure 1. Korrekte Architektur — Bakery importiert Graphify</div>
+</div>
+<div class="paragraph">
+<p>Der DAG-Vertrag wird eingehalten: bakery (N2) importiert graphify (N0), N2 &gt; N0, keine Verstöße. Engine (N3) importiert Bakery (N2), N3 &gt; N2, OK.</p>
+</div>
+<div class="paragraph">
+<p>Engine hat <strong>keine</strong> Codezeile, die referenziert`graph.json`, <code>relatedPosts</code>, oder jede andere Vorstellung von Ähnlichkeit. Er wendet bakery an, Punkt. Die Die Zusammenarbeit ist intern bei bakery.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_die_pipeline_scan_graph_vorlage">Die Pipeline : Scan → Graph → Vorlage</h3>
+<div class="paragraph">
+<p>Hier ist der komplette Pipeline in drei Schritten:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Scan</strong> (graphify) :`graphify-plugin`scanne den Workspace. In seiner</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>In seiner aktuellen Form, erkennt es bereits die`xref:`zwischen`.adoc`und die stellt aus in`graph.json`wie der edges des Typs`reference`.<br>
+Wir bereichern es für den redaktionellen Inhalt: * Analysiere die JBake-Metadaten`:jbake-tags:`, <code>:jbake-description:</code>) von jedem`.adoc`Des Blogs * Berechnet die Co-Occurrences von Tags → Kanten`tag_cooccurrence`mit Gewicht * Extrahiert die benannten Entitäten aus den Beschreibungen mit TF-IDF → edges`entity_overlap` * Fügt einen Abschnitt ein`blog_articles`im`graph.json`existierend (empty)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// Extrait de l'enrichissement graphify pour le blog
+fun enrichBlogSection(graphJson: File, blogDir: File): GraphJson {
+    val articles = blogDir.listFiles { f -&gt; f.extension == "adoc" }
+        .map { parseJbakeMetadata(it) }
+
+    val nodes = articles.map { ArticleNode(it.slug, it.title, it.tags) }
+    val edges = mutableListOf&lt;GraphEdge&gt;()
+
+    // Couche 1 : xref (déjà fait par scanWorkspace)
+
+    // Couche 2 : co-occurrences de tags
+    for (a in articles) {
+        for (b in articles) {
+            if (a.slug == b.slug) continue
+            val common = a.tags.intersect(b.tags)
+            if (common.isNotEmpty()) {
+                edges.add(GraphEdge(
+                    source = a.slug,
+                    target = b.slug,
+                    type = "tag_cooccurrence",
+                    weight = common.size.toDouble() / (a.tags.size + b.tags.size)
+                ))
+            }
+        }
+    }
+
+    return graphJson.copy(
+        blogArticles = BlogSection(nodes, edges)
+    )
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Bake</strong> (bakery) : im Moment des`./gradlew bake`, `BakeryPlugin`Bett</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>`graph.json`und löst die zugehörigen Artikel für jeden Beitrag.<br></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// BakeryPlugin — résolution des articles connexes
+fun resolveRelatedPosts(
+    currentSlug: String,
+    graph: GraphJson,
+    maxResults: Int = 4
+): List&lt;RelatedPost&gt; {
+    val edges = graph.blogArticles.edges
+        .filter { it.source == currentSlug || it.target == currentSlug }
+
+    return edges
+        .sortedByDescending { it.weight }
+        .take(maxResults)
+        .map { edge -&gt;
+            val relatedSlug = if (edge.source == currentSlug) edge.target else edge.source
+            graph.blogArticles.nodes.first { it.slug == relatedSlug }
+        }
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Template`post.thyme`) : Das JBake-Modell erhält jetzt eine Map</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>strukturiert anstatt einer flachen chronologischen Liste.<br></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xhtml hljs" data-lang="xhtml">&lt;!-- Articles connexes basés sur le Knowledge Graph --&gt;
+&lt;th:block th:if="${relatedPosts != null and !relatedPosts.empty}"&gt;
+    &lt;section class="mt-5 pt-4 border-top"&gt;
+        &lt;h2 class="h4 mb-3"&gt;Articles connexes&lt;/h2&gt;
+        &lt;th:block th:each="related : ${relatedPosts}"&gt;
+            &lt;div class="mb-2"&gt;
+                &lt;a th:href="${content.rootpath} + ${related.uri}"
+                   th:text="${related.title}" class="fw-semibold"&gt;&lt;/a&gt;
+                &lt;br/&gt;
+                &lt;small class="text-muted"&gt;
+                    &lt;th:block th:each="reason,iterStat : ${related.reasons}"&gt;
+                        &lt;span class="badge bg-light text-dark"
+                              th:text="${reason}"&gt;&lt;/span&gt;
+                    &lt;/th:block&gt;
+                &lt;/small&gt;
+            &lt;/div&gt;
+        &lt;/th:block&gt;
+    &lt;/section&gt;
+&lt;/th:block&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Die Vorlage ist die gleiche — sie weiß nicht <strong>woher</strong> die Daten kommen. Nur der Vertrag zwischen bakery und JBake hat sich geändert:`published_posts`(Liste chronologisch) wird`relatedPosts`(gewichtete Karte nach dem Graphen).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ℹ️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Das Abzeichen « Grund » (Beispiel:`xref 0122`, <code>tag:gradle</code>, <code>cluster:pgvector-rag</code>) Erkläre dem Leser <strong>warum</strong> dieser Artikel relevant ist. Es ist nicht Es handelt sich lediglich um Transparenz — es ist Pädagogik zur Topologie von Ihr eigener Inhalt.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_chronologisches_fallback">Chronologisches Fallback</h3>
+<div class="paragraph">
+<p>Si `graph.json`ist nicht vorhanden (build lokal ohne vorherigen Scan, erst Bereitstellung, CI, die den Graphify-Scan noch nicht integriert hat), das Template muss sich geschmeidig abbauen :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">fun resolveRelatedPosts(currentSlug: String, graph: GraphJson?): List&lt;RelatedPost&gt; {
+    if (graph != null &amp;&amp; graph.blogArticles != null) {
+        return resolveFromGraph(currentSlug, graph)
+    }
+    // Fallback chronologique — même comportement qu'aujourd'hui
+    logger.warn("[bakery] graph.json absent — fallback chronologique")
+    return resolveFromChronology(currentSlug)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Das Standardverhalten entspricht dem aktuellen Verhalten. Der Empfehlungsmotor ist eine <strong>schrittweise Verbesserung</strong> — kein incompatible Änderung.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_die_emergente_ontologie_wenn_die_artikel_sich_zusammen_schließen_ohne_sich_zu_kennen">Die emergente Ontologie: Wenn die Artikel sich zusammen schließen, ohne sich zu kennen</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die interessanteste Schicht ist die dritte: die emergente Ontologie. Artikel, die nicht zitiert werden, die nicht die gleichen Tags haben, aber die <strong>von derselben Sache sprechen</strong> ohne es zu wissen.</p>
+</div>
+<div class="paragraph">
+<p>Nehmen wir ein konkretes Beispiel. Drei Artikel aus meinem Korpus:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>0119 — Benchmark DGX Spark vs Cloud Abonnement LLM</p>
+</li>
+<li>
+<p>0121 — Gradle-Plugin zur Steuerung von zwei Ollama Pro-Instanzen</p>
+</li>
+<li>
+<p>0122 — Ratio Effizienz 27x 45x Flotte Experten KI</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Diese drei Artikel haben <strong>keinen</strong> xref untereinander. Ihre tags ne se sie decken sich nur zu 20 % (« ollama », « llm » gemeinsam). Aber ein leichtes NLP auf den Beschreibungen offenbart sich ein offensichtlicher Cluster: „Kosten“, „Abonnement“,  Cloud », « GPU », « API-Schlüssel », « Ollama Pro », « Effizienz », « Verhältnis</p>
+</div>
+<div class="paragraph">
+<p>Sie bilden ein ontologisches Cluster: <strong>l&#8217;économie du LLM self-hosted vs cloud</strong>. Dieser Cluster wird nirgendwo erklärt. Er entsteht aus dem Corpus.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/cluster-ontologique-exemple.svg" alt="cluster ontologique exemple" width="698" height="405">
+</div>
+</div>
+<div class="paragraph">
+<p>Dieser ontologische Cluster wird zu einem Edge Composite in`graph.json`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "source": "0119-benchmark-dgx-spark",
+  "target": "cluster:economie-llm",
+  "type": "entity_cluster",
+  "weight": 0.73,
+  "metadata": {
+    "clusterLabel": "Économie LLM Self-Hosted vs Cloud",
+    "commonEntities": ["coût", "GPU", "abonnement", "Ollama Pro", "ratio"],
+    "articlesInCluster": [
+      "0119-benchmark-dgx-spark",
+      "0121-ollama-pro-deux-instances",
+      "0122-ratio-efficacite-flotte-experts"
+    ]
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>NLP ist absichtlich leicht — TF-IDF + Cosine Similarity auf den Beschreibungen. Kein Bedarf an BERT, kein Bedarf an einem Sprachmodell. Der Korpus umfasst 23 Artikel, die Ähnlichkeitsmatrix passt in ein JSON-Datei von 50 KB.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="💡"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Die Stärke des NLP kommt nicht von der Raffinesse des Algorithmus. aber der <strong>Größe des Korpus</strong> und der <strong>Qualität der Beschreibungen</strong>. Eine `:jbake-description:`gut geschriebene von 150 Zeichen enthält mehr von Signal für TF‑IDF, dass es sich um einen vollständigen Artikel von 3000 Wörtern handelt.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_der_dag_vertrag_wer_wen_wichtig_findet">Der DAG-Vertrag : Wer wen wichtig findet</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Das ist der Punkt, an dem die architektonische Disziplin sich auszahlt. Der DAG N0→N3 definiert in`engine/build.gradle.kts`gibt eine einfache Regel: Kein Projekt ist wichtig ein Projekt höherer Ebene.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 27.2728%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Consumer-Plugin</th>
+<th class="tableblock halign-left valign-top">Importiertes Plugin</th>
+<th class="tableblock halign-left valign-top">Konsumentenniveau</th>
+<th class="tableblock halign-left valign-top">Importiertes Niveau</th>
+<th class="tableblock halign-left valign-top">Gültig ?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bakery-gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">graphify-gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ N2 &gt; N0 — OK</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Motor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bakery-gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ N3 &gt; N2 — OK</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Motor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">graphify-gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ Technik OK, aber <strong>konzeptionell falsch</strong> — die Zusammenarbeit ist intern bei bakery</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Motor appliziert Bäckerei. Bäckerei appliziert graphify. Das ist alles. Wenn eines Tages Ich möchte den Vector-Store-Codebase (N1) hinzufügen, um zu recherchieren cross-corpus Semantik, bakery importiert sie auch. Engine ändert sich nicht.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Das Muster ist: <strong>das Plugin N2 ist der Hub seiner eigenen Abhängigkeiten</strong>. Die Engine N3 ist kein Hub – sie ist ein Terminal, das Hubs anwendet.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_was_wir_gewinnen_und_was_wir_nicht_gewinnen">Was Wir Gewinnen (Und Was Wir Nicht Gewinnen)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Der Hauptvorteil ist redaktionell, nicht technisch:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Vorher</th>
+<th class="tableblock halign-left valign-top">Nach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Verwandte Artikel = 4 letzte Beiträge</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Verwandte Artikel = top 4 nach Gewicht im Knowledge Graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Leser liest aus RAG → Empfehlung Kitty Terminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Leser liest RAG → Empfehlung pgvector, Chunking, Vektorspeicher</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keine Transparenz über das Warum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Abzeichen`xref 0122`, <code>tag:gradle</code>, `cluster:rag`sichtbar</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JBake-Standard, kein Aufwand, kein Wert</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">deterministische, reproduzierbare, testbare Gradle-Pipeline</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keine Lernkurve für den Leser</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Der Leser entdeckt die <strong>Topologie</strong> meines Inhalts</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Was wir <strong>nicht</strong> gewinnen :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Es ist kein « echt » Empfehlungsmotor (keine kollaborative</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Filtern, kein A/B-Testing, kein Feedback-Loop)</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Die Qualität hängt vom Reichtum der JBake-Metadaten ab — wenn Ihre</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Beschreibungen sind leer, TF-IDF sieht nichts</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Der NLP ist offline — die neuen Artikel werden nur bis</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>nächster Scan (das ist gut: das Build bleibt deterministisch)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_perspektiven_der_blog_als_öffentliches_wissensgraph">Perspektiven: Der Blog als öffentliches Wissensgraph</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Diese Funktion eröffnet eine breitere Perspektive: und wenn?<code>cheroliv.com</code> Wurde er selbst zu einem <strong>navigierbaren Wissensgraphen</strong>?</p>
+</div>
+<div class="paragraph">
+<p>Artikel sind Knoten. Tags sind Gemeinschaften. xref sind die Kanten. Der Leser liest keinen einzelnen Artikel mehr — er navigiert durch ein <strong>Wissensgraph</strong> dessen aktueller Artikel der Einstiegspunkt ist</p>
+</div>
+<div class="paragraph">
+<p>Stellen Sie sich eine Startseite vor, die nicht die chronologische Liste anzeigt , der letzten Posts, aber eine <strong>Karte des Korpus</strong> : ontologische Cluster, Pivotartikel (die mit den meisten Kanten), Lesepfade empfohlen „Wenn Sie den Artikel über Graphify gemocht haben, lesen Sie als Nächstes der auf dem Knowledge Graph als Werkzeug des Verständnisses )</p>
+</div>
+<div class="paragraph">
+<p>Das ist kein Blog mehr. Es ist ein <strong>semantisches Atlas</strong>.</p>
+</div>
+<div class="paragraph">
+<p>Und das ist keine Science-Fiction. Le`graph.json`existiert bereits. Ihm fehlt nur die Navigationsschnittstelle.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fazit_das_dateisystem_weiß_was_die_vorlage_ignoriert">Fazit : Das Dateisystem weiß, was die Vorlage ignoriert.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Was ich am Dienstagabend entworfen habe, ist der Ersatz einer Heuristik. faul (die chronologische Reihenfolge) durch eine getreue Darstellung des Struktur meines Korpus (Knowledge Graph).</p>
+</div>
+<div class="paragraph">
+<p>Die Vorlage`post.thyme`geändert sich nicht. Was sich ändert, ist, was wir gibt ihm zu essen. Zuvor: eine Java-Liste, sortiert nach`date`. Nach : ein gewichteter Graph aus drei Analyseschichten — Kreuzverweise, Mitvorkommen Tags, und emergente Ontologie mittels NLP</p>
+</div>
+<div class="paragraph">
+<p>Die Schleife ist geschlossen. graphify scannt den Arbeitsbereich. Bakery liest das Das Diagramm nährt das Template. Der Leser sieht Empfehlungen. relevant. Und engine — der Dirigent — weiß nicht einmal dass All das existiert.</p>
+</div>
+<div class="paragraph">
+<p>Das ist es, die richtige Architektur. Jedes Plugin macht eine Sache. Und der Verbraucherterminal muss nicht wissen, wie.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_referenzen">Referenzen</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="0105_integrer_graphify_workflow_gradle_post.html">Artikel 0105 — Graphify in einen Gradle-Workflow integrieren</a></p>
+</li>
+<li>
+<p><a href="0106_knowledge_graph_outil_comprehension_codebase_post.html">Artikel 0106 — Der Knowledge Graph als Werkzeug des Verstehens</a></p>
+</li>
+<li>
+<p><a href="0117_granularisation_oss_css_repositorie_workspace_post.html">Artikel 0117 — Die Granularisierung OSS/CSS</a></p>
+</li>
+<li>
+<p><a href="0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html">Artikel 0121 — Plugin Gradle Steuern Zwei Instanzen Ollama Pro</a></p>
+</li>
+<li>
+<p>Artikel 0122 — 27× bis 45× wirksamer: Flotte von KI-Experten</p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Verwandte Artikel</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc in MP4-Video umwandeln</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit meines LLM-Verbrauchs: SQLite, OpenCode, Ollama Cloud und warum mein Pro-Abonnement den globalen Markt sprengt</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Die Architektur « Unabhängiges Plugin + Konsumenten‑Wurzel » : Warum duplizieren sich meine Gradle-Builds?</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Bitte aktivieren Sie JavaScript, um die
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Kommentare, von Disqus angetrieben</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Ausbilder mit Spezialisierung auf pädagogische Ingenieurwissenschaft.
+Konzeption innovativer E-Learning-Lösungen zur Transformation des Lernens.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS-Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigation</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Startseite</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ressourcen</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archiv</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> Folien</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> Schulungen</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> bootfähiger Schlüssel</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Standort</h6>
+                    <p class="mb-3">Ansässig in der Paris-Region, mögliche Interventionen in Frankreich und remote</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Frankreich</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Telearbeit verfügbar</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Reisen in Frankreich</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

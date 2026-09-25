@@ -1,0 +1,1508 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>�预加载的艺术：使用 JavaScript 和 CSS 消除主题闪烁（“Flash”） — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0098_preloading_css_variable_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="�预加载的艺术：使用 JavaScript 和 CSS 消除主题闪烁（“Flash”） — Cheroliv"/>
+        <meta property="og:description" content="深入技术指南：实现无闪烁主题切换器 - 浏览器渲染周期完整分析"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0098_preloading_css_variable_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0098_preloading_css_variable_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="�预加载的艺术：使用 JavaScript 和 CSS 消除主题闪烁（“Flash”） — Cheroliv"/>
+        <meta name="twitter:description" content="深入技术指南：实现无闪烁主题切换器 - 浏览器渲染周期完整分析"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0098_preloading_css_variable_post.png"/>
+        <meta name="description" content="深入技术指南：实现无闪烁主题切换器 - 浏览器渲染周期完整分析"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0098_preloading_css_variable_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0098_preloading_css_variable_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0098_preloading_css_variable_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0098_preloading_css_variable_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0098_preloading_css_variable_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0098_preloading_css_variable_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0098_preloading_css_variable_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0098_preloading_css_variable_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0098_preloading_css_variable_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0098_preloading_css_variable_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0098_preloading_css_variable_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0098_preloading_css_variable_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0098_preloading_css_variable_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0098_preloading_css_variable_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0098_preloading_css_variable_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0098_preloading_css_variable_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0098_preloading_css_variable_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0098_preloading_css_variable_post.html"},
+                      "headline": "\uFFFD\u9884\u52A0\u8F7D\u7684\u827A\u672F\uFF1A\u4F7F\u7528 JavaScript \u548C CSS \u6D88\u9664\u4E3B\u9898\u95EA\u70C1\uFF08\u201CFlash\u201D\uFF09",
+                      "description": "\u6DF1\u5165\u6280\u672F\u6307\u5357\uFF1A\u5B9E\u73B0\u65E0\u95EA\u70C1\u4E3B\u9898\u5207\u6362\u5668 - \u6D4F\u89C8\u5668\u6E32\u67D3\u5468\u671F\u5B8C\u6574\u5206\u6790",
+                      "datePublished": "2025-11-15",
+                      "dateModified": "2025-11-15",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0098_preloading_css_variable_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\uFFFD\u9884\u52A0\u8F7D\u7684\u827A\u672F\uFF1A\u4F7F\u7528 JavaScript \u548C CSS \u6D88\u9664\u4E3B\u9898\u95EA\u70C1\uFF08\u201CFlash\u201D\uFF09", "item": "https:\/\/cheroliv.com\/blog\/2025\/0098_preloading_css_variable_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">�预加载的艺术：使用 JavaScript 和 CSS 消除主题闪烁（“Flash”）</h1>
+                <p class="lead">
+                    <em>Publié le 15 November 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_摘要">摘要</a></li>
+<li><a href="#_问题这个该死的主题闪烁">问题：这个该死的主题闪烁</a>
+<ul class="sectlevel2">
+<li><a href="#_用户体验的噩梦">用户体验的噩梦</a></li>
+<li><a href="#_fouc一个老旧的网页问题">FOUC：一个老旧的网页问题</a></li>
+<li><a href="#_对质量感知的影响">对质量感知的影响</a></li>
+<li><a href="#_问题的技术分析">问题的技术分析</a></li>
+</ul>
+</li>
+<li><a href="#_为什么经典脚本不够">为什么经典脚本不够？</a>
+<ul class="sectlevel2">
+<li><a href="#_直观但无效的方法">直观但无效的方法</a></li>
+<li><a href="#_理解domcontentloaded事件">理解DOMContentLoaded事件</a></li>
+<li><a href="#_渲染阻塞问题">渲染阻塞问题</a></li>
+<li><a href="#_问题可视化">问题可视化</a></li>
+<li><a href="#_无效的解决方案尝试">无效的解决方案尝试</a></li>
+<li><a href="#_真正的解决方案更早行动">真正的解决方案：更早行动</a></li>
+</ul>
+</li>
+<li><a href="#_解决方案预加载early_loading">解决方案：预加载（Early Loading）</a>
+<ul class="sectlevel2">
+<li><a href="#_基本原则">基本原则</a></li>
+<li><a href="#_为什么_head_是理想的位置">为什么 <code>&lt;head&gt;</code> 是理想的位置？</a></li>
+<li><a href="#_三层解决方案架构">三层解决方案架构</a></li>
+</ul>
+</li>
+<li><a href="#_步骤_1保存用户的选择">步骤 1：保存用户的选择</a>
+<ul class="sectlevel2">
+<li><a href="#_localstorage您的持久性内存">localStorage：您的持久性内存</a></li>
+<li><a href="#_主题备份的实现">主题备份的实现</a></li>
+<li><a href="#_错误案例管理">错误案例管理</a></li>
+<li><a href="#_高级持久化策略">高级持久化策略</a></li>
+</ul>
+</li>
+<li><a href="#_步骤_2预加载脚本位于_head">步骤 2：预加载脚本位于 `&lt;head&gt;</a>
+<ul class="sectlevel2">
+<li><a href="#_解决方案的核心">解决方案的核心</a></li>
+<li><a href="#_脚本解剖每一行都很重要">脚本解剖：每一行都很重要</a></li>
+<li><a href="#_系统偏好检测奖励">系统偏好检测（奖励）</a></li>
+<li><a href="#_性能为什么这个脚本很快">性能：为什么这个脚本很快</a></li>
+<li><a href="#_在head中的最佳放置">在`&lt;head&gt;`中的最佳放置</a></li>
+</ul>
+</li>
+<li><a href="#_步骤_3css属性选择器的强大功能">步骤 3：CSS属性选择器的强大功能</a>
+<ul class="sectlevel2">
+<li><a href="#_bootstrap_5_主题系统">Bootstrap 5 主题系统</a></li>
+<li><a href="#_主题系统的css结构">主题系统的CSS结构</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_摘要">摘要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>在这篇深入的技术文章中，我们探讨如何实现主题选择器（light/dark），而不会出现页面加载时令人讨厌的闪烁效果。我们详细分析浏览器渲染周期、FOUC（未样式内容闪现）的根本原因，并提出一种基于同步预加载的稳健解决方案，位于该`&lt;head&gt;`. 此技术保证了流畅且专业的用户体验。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_问题这个该死的主题闪烁">问题：这个该死的主题闪烁</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_用户体验的噩梦">用户体验的噩梦</h3>
+<div class="paragraph">
+<p>想象一下这个场景：您已经花了几个小时为您的网络应用设计一个令人惊艳的暗色主题。颜色完美平衡，对比度最佳，您的用户也喜欢这个选项。但有一个尴尬的问题：每次页面重新加载时，默认的亮色主题会在暗色主题生效之前闪现出一小段时间。</p>
+</div>
+<div class="paragraph">
+<p>这个视觉闪光虽然短暂（有时少于100毫秒），但对人眼来说立刻可感知，并产生不愉快的体验。对于选择深色主题以获得视觉舒适或无障碍需求的用户而言，这种闪烁甚至可能令人感到疼痛，特别是在光线较暗的环境中。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_fouc一个老旧的网页问题">FOUC：一个老旧的网页问题</h3>
+<div class="paragraph">
+<p>此现象是所谓的“无样式内容闪烁”(Flash of Unstyled Content, FOUC)的一种变体，这是一种经典的 Web 开发问题，可追溯到 CSS 的早期时代。当浏览器在未应用 CSS 样式的情况下临时显示 HTML 内容时，就会发生 FOUC，从而出现未样式化内容的闪现。</p>
+</div>
+<div class="paragraph">
+<p>在我们特定的情况下，我们并不是在说一个完全没有样式的内容，而是一个<strong>错误主题的闪光</strong>(FOWT) - 内容被设样，但使用了错误的主题。这尤其令人沮丧，因为这表明我们的应用程序 "oublie" 用户的偏好在每次页面加载时。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_对质量感知的影响">对质量感知的影响</h3>
+<div class="paragraph">
+<p>虽然这是一个技术问题，但它对您的应用程序质量的感知有重要影响：</p>
+</div>
+<div class="paragraph">
+<p><strong>�缺乏润色</strong>: 闪烁让人感觉像是一个未完成或未优化好的应用程序。用户常常将这些小的视觉缺陷与整体缺乏专业性联系起来。</p>
+</div>
+<div class="paragraph">
+<p><strong>连贯性断裂</strong>该应用程序似乎"oublier"用户的偏好，产生了界面与期望之间不同步的感觉。</p>
+</div>
+<div class="paragraph">
+<p><strong>视觉疲劳</strong>对于对光敏感或患有偏头痛的用户来说，这种闪光灯可能不仅仅是一种美观上的不适。</p>
+</div>
+<div class="paragraph">
+<p><strong>感知性能</strong>: 有趣的是，即使你的网站加载速度很快，这种闪烁也可能给人一种应用程序缓慢或不响应的印象。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_问题的技术分析">问题的技术分析</h3>
+<div class="paragraph">
+<p>要了解如何解决这个问题，首先要了解它为什么会发生。闪烁是由于网页生命周期中三个关键事件之间的时间偏差导致的：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>初始的HTML解析</strong>: 浏览器读取并分析您的网页结构</p>
+</li>
+<li>
+<p><strong>应用CSS样式</strong>: 浏览器应用 CSS 规则并计算视觉渲染</p>
+</li>
+<li>
+<p><strong>JavaScript 的执行</strong>您的更改主题的代码正在执行</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>当事件 n°3（执行 JavaScript）在浏览器已经开始或完成事件 n°2（应用样式）之后到达时，问题就会出现。此时，浏览器已经决定显示哪个主题，而您的代码来得太晚，无法在首次渲染之前影响它。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_为什么经典脚本不够">为什么经典脚本不够？</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_直观但无效的方法">直观但无效的方法</h3>
+<div class="paragraph">
+<p>对开发者来说，最自然的方式是把脚本放在我们……的末尾`&lt;body&gt;`它检查用户首选的主题并应用。这种做法遵循传统的网页最佳实践，建议在页面底部加载脚本以避免阻塞渲染。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">// À la fin de &lt;body&gt; - L'APPROCHE INSUFFISANTE
+document.addEventListener('DOMContentLoaded', () =&gt; {
+  const theme = localStorage.getItem('preferred-theme');
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+  }
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这种方法看起来一开始很合乎逻辑。我们等待 DOM 准备就绪，然后应用主题。很简单，不是吗？不幸的是，这种简洁掩盖了与浏览器渲染周期时机相关的根本缺陷。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_理解domcontentloaded事件">理解DOMContentLoaded事件</h3>
+<div class="paragraph">
+<p>事件`DOMContentLoaded`当初始的 HTML 文档被浏览器完全加载并解析时触发，<strong>不等待</strong>样式表、图片和子框架加载完成。这是一个重要的理解点。</p>
+</div>
+<div class="paragraph">
+<p>以下是事件的典型序列：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>浏览器开始下载HTML</p>
+</li>
+<li>
+<p>它在接收HTML的过程中进行分析。</p>
+</li>
+<li>
+<p>他发现了这些标签`&lt;link&gt;`为 CSS 并开始下载它们</p>
+</li>
+<li>
+<p>他发现了标签`&lt;script&gt;`并根据其类型和属性执行它们</p>
+</li>
+<li>
+<p>它构建了DOM（文档对象模型）</p>
+</li>
+<li>
+<p><strong>事件 <code>DOMContentLoaded</code> 被触发</strong></p>
+</li>
+<li>
+<p>它继续应用样式并进行布局</p>
+</li>
+<li>
+<p>第一次 绘制 （显示） 发生</p>
+</li>
+<li>
+<p>事件`load`触发当所有资源都已加载</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>问题在于：在第 6 步（DOMContentLoaded）和第 8 步（首次绘制）之间，浏览器已经决定了如何显示页面。如果你的主题切换脚本在第 6 步执行，那么为避免首次使用默认样式的显示已经太晚了。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_渲染阻塞问题">渲染阻塞问题</h3>
+<div class="paragraph">
+<p>实际上，时间安排更加复杂。现代浏览器使用复杂的优化技术来提升感知性能。他们试图让首次内容绘制（First Contentful Paint）尽可能快速，以便用户能在屏幕上看到一些内容。</p>
+</div>
+<div class="paragraph">
+<p>CSS 默认是 "render-blocking" 的，这意味着浏览器会等待下载并解析样式表后才进行首次绘制。这是合乎逻辑的：我们不想展示未经样式化的内容。</p>
+</div>
+<div class="paragraph">
+<p>但这里有个陷阱：当浏览器首次应用这些CSS样式时，它是基于当前DOM的状态来完成的。如果属性`data-bs-theme`尚未在标签上定义`&lt;html&gt;`, 浏览器将应用默认样式（通常是亮色主题。）</p>
+</div>
+<div class="paragraph">
+<p>接下来，当您的脚本执行并更改此属性时，浏览器必须：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>重新计算所有受此更改影响的样式</p>
+</li>
+<li>
+<p>如有必要，重新布局</p>
+</li>
+<li>
+<p>重新油漆受影响的元素</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>这个重新计算和重新绘制的过程是导致可见闪烁的原因。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_问题可视化">问题可视化</h3>
+<div class="paragraph">
+<p>为了更好地理解这个有问题的序列，让我们检查一个详细的序列图 :</p>
+</div>
+<div id="diag-flux-incorrect" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-a0e5760627bb0e088e4b6b3b1fd3de7c.svg" alt="Diagramme de séquence du chargement incorrect" width="1418" height="666">
+</div>
+</div>
+<div class="paragraph">
+<p>这个图表清楚地说明了问题：首次绘制发生在我们的脚本有机会设置正确主题之前。随后的重绘导致了可见的闪烁。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_无效的解决方案尝试">无效的解决方案尝试</h3>
+<div class="paragraph">
+<p>已经尝试了多种方法来解决这个问题，但大多数都有各自的缺点：</p>
+</div>
+<div class="paragraph">
+<p><strong>方法 1 : 在加载前隐藏内容</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-css" data-lang="css">body {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+body.loaded {
+  opacity: 1;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这种方法会在JavaScript设置正确主题之前隐藏所有内容。问题是什么？这会人为地延迟内容的显示，使网站感觉更慢。此外，如果JavaScript被禁用，用户完全看不到任何内容！</p>
+</div>
+<div class="paragraph">
+<p><strong>方法 2：使用加载器/旋转器</strong></p>
+</div>
+<div class="paragraph">
+<p>类似于方法1，但带有加载指示器。这掩盖了问题，但未提升实际性能，并增加了不必要的感知延迟。</p>
+</div>
+<div class="paragraph">
+<p><strong>方法 3 : 默认使用深色主题</strong></p>
+</div>
+<div class="paragraph">
+<p>一些开发者在 CSS 中将深色主题设置为默认。这可以避免深色主题用户出现闪烁，但会为浅色主题用户产生相反的问题！</p>
+</div>
+<div class="paragraph">
+<p>这些方法都不令人满意，因为它们治疗的是症状而不是问题的根本原因。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_真正的解决方案更早行动">真正的解决方案：更早行动</h3>
+<div class="paragraph">
+<p>解决此问题的关键是要意识到我们必须设置该属性。<code>data-bs-theme</code> <strong>之前</strong>在浏览器开始应用 CSS 样式之前。这意味着我们的脚本必须在页面生命周期中更早地执行，而这正是我们将在下一节中探讨的内容。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_解决方案预加载early_loading">解决方案：预加载（Early Loading）</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_基本原则">基本原则</h3>
+<div class="paragraph">
+<p>解决我们闪烁问题的优雅方案基于一个简单却强大的原则:<strong>同步应用程序的状态与浏览器渲染进程</strong>与其等待页面加载后再设置主题，我们应该立即设置它。<strong>期间</strong>加载时，甚至在 CSS 样式被应用之前。</p>
+</div>
+<div class="paragraph">
+<p>此方法在网页开发术语中被称为“Early Loading”或“Synchronous Preloading”。其想法是在页面生命周期中尽可能早地执行我们的主题检测逻辑，最好是在标签中`&lt;head&gt;`, 甚至在浏览器开始下载 CSS 文件之前。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_为什么_head_是理想的位置">为什么 <code>&lt;head&gt;</code> 是理想的位置？</h3>
+<div class="paragraph">
+<p>Le `&lt;head&gt;`HTML 文档由浏览器从上到下依次处理。每个元素按照其出现的顺序进行处理。此特性对我们的解决方案至关重要。</p>
+</div>
+<div class="paragraph">
+<p>当浏览器遇到一个标签时`&lt;script&gt;`在`&lt;head&gt;`无属性`async` ou <code>defer</code>, il :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>中断 HTML 解析</strong></p>
+</li>
+<li>
+<p><strong>下载脚本</strong>（如果外部）或 床（如果内联）</p>
+</li>
+<li>
+<p><strong>立即执行脚本</strong></p>
+</li>
+<li>
+<p><strong>继续解析HTML</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>此行为通常被视为性能问题（因此通常建议将脚本放在页面底部），在此特定情况下成为我们的盟友。通过将我们的主题检测脚本放在开头的`&lt;head&gt;`, 我们保证它在浏览器遇到标签之前执行`&lt;link&gt;`我们的样式表。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_三层解决方案架构">三层解决方案架构</h3>
+<div class="paragraph">
+<p>我们的完整解决方案由三个相互依赖的层组成，每一层都发挥着特定的作用：</p>
+</div>
+<div class="paragraph">
+<p><strong>�层 1 : 持久化 (localStorage)</strong> 此层负责在会话之间保存和恢复用户的选择。</p>
+</div>
+<div class="paragraph">
+<p><strong>第二�层：早期同步 (内联脚本在 <code>&lt;head&gt;</code> 中)</strong> 此层在初始渲染前将应用程序的状态与 DOM 同步。</p>
+</div>
+<div class="paragraph">
+<p><strong>�层3：响应式样式（带属性选择器的CSS）</strong> 此层根据第 2 层定义的状态来设置视觉样式。</p>
+</div>
+<div class="paragraph">
+<p>现在让我们详细探索每一层。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_步骤_1保存用户的选择">步骤 1：保存用户的选择</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_localstorage您的持久性内存">localStorage：您的持久性内存</h3>
+<div class="paragraph">
+<p>Le <code>localStorage`这是一个 Web Storage API，允许以持久化方式在浏览器中存储键值对。与 cookie 不同，存储的数据`localStorage</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>永远不会自动发送到服务器</p>
+</li>
+<li>
+<p>它们具有更大的存储容量（通常为5-10MB）</p>
+</li>
+<li>
+<p>没有到期日期（持续至显式删除）</p>
+</li>
+<li>
+<p>仅限于协议和域（同源策略）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>对于我们的用例，`localStorage`完美，因为：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>我们不需要与服务器共享此信息</p>
+</li>
+<li>
+<p>我们希望偏好能够永远持续</p>
+</li>
+<li>
+<p>所需的存储空间非常小（几个字节）</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_主题备份的实现">主题备份的实现</h3>
+<div class="paragraph">
+<p>以下是我们在用户更改主题时保存其选择的方法：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">// Fonction complète pour changer le thème
+function setTheme(newTheme) {
+  // Validation de l'entrée
+  if (!['light', 'dark', 'auto'].includes(newTheme)) {
+    console.error('Thème invalide:', newTheme);
+    return;
+  }
+
+  try {
+    // Sauvegarde dans localStorage
+    localStorage.setItem('preferred-theme', newTheme);
+
+    // Application immédiate dans le DOM
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+    // Dispatch d'un événement personnalisé pour notifier d'autres composants
+    window.dispatchEvent(new CustomEvent('theme-changed', {
+      detail: { theme: newTheme }
+    }));
+
+    console.log('Thème changé:', newTheme);
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du thème:', error);
+    // Fallback : on applique quand même le thème visuellement
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+  }
+}
+
+// Exemple d'utilisation avec un bouton
+document.getElementById('theme-toggle').addEventListener('click', () =&gt; {
+  const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  setTheme(newTheme);
+});</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_错误案例管理">错误案例管理</h3>
+<div class="paragraph">
+<p>至关重要的是处理以下情况：<code>localStorage`不可用或无法访问。 几种情况可能会阻止访问`localStorage</code>:</p>
+</div>
+<div class="paragraph">
+<p><strong>严格的私密导航</strong>Safari 在无痕浏览模式下抛出异常`QuotaExceededError`在写入尝试期间`localStorage`.</p>
+</div>
+<div class="paragraph">
+<p><strong>隐私设置</strong>: 一些浏览器或隐私扩展可以阻止访问至`localStorage`。</p>
+</div>
+<div class="paragraph">
+<p><strong>域限制</strong> : Le `localStorage`不可通过协议访问`file://`在某些浏览器中。</p>
+</div>
+<div class="paragraph">
+<p><strong>存储空间已满</strong>虽然�罕见，但存储空间可能会被完全填满。</p>
+</div>
+<div class="paragraph">
+<p>这就是为什么我们的代码使用一个块`try&#8230;&#8203;catch`为优雅地处理这些情况，即使持久性不可用，也继续提供主题切换功能。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_高级持久化策略">高级持久化策略</h3>
+<div class="paragraph">
+<p>对于更复杂的应用，您可以考虑采用额外的策略：</p>
+</div>
+<div class="paragraph">
+<p><strong>服务器同步(可选)</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">async function setTheme(newTheme) {
+  // Sauvegarde locale immédiate
+  localStorage.setItem('preferred-theme', newTheme);
+  document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+  // Synchronisation serveur en arrière-plan (si l'utilisateur est connecté)
+  if (userIsAuthenticated()) {
+    try {
+      await fetch('/api/user/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme })
+      });
+    } catch (error) {
+      console.warn('Échec de la synchronisation serveur:', error);
+      // L'échec n'est pas critique car la préférence est déjà sauvegardée localement
+    }
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此方法可在已登录用户的设备之间同步偏好设置，同时保持本地响应的即时性。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_步骤_2预加载脚本位于_head">步骤 2：预加载脚本位于 `&lt;head&gt;</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_解决方案的核心">解决方案的核心</h3>
+<div class="paragraph">
+<p>这里正是魔法真正发挥作用的地方。我们将放置一个小脚本。<strong>内联</strong>直接在我们的`&lt;head&gt;`, 在我们所有的标签之前`&lt;link&gt;`样式表的。此脚本故意极简、自包含，并且设计为尽可能快速执行。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Mon Site Incroyable&lt;/title&gt;
+
+    &lt;!-- ==========================================
+         NOTRE SCRIPT MAGIQUE DE PRÉ-CHARGEMENT
+         Ce script DOIT être le premier élément
+         dans le &lt;head&gt; après les meta tags
+         ========================================== --&gt;
+    &lt;script&gt;
+      // IIFE pour ne pas polluer le scope global
+      (function() {
+        'use strict';
+
+        try {
+          // Lecture de la préférence sauvegardée
+          const savedTheme = localStorage.getItem('preferred-theme');
+
+          // Si une préférence existe, on l'applique immédiatement
+          if (savedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+          }
+          // Optionnel : Détecter la préférence système si aucune sauvegarde
+          else if (window.matchMedia &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+          }
+          // Sinon, le thème par défaut du CSS sera utilisé (généralement 'light')
+
+        } catch (error) {
+          // En cas d'erreur (localStorage bloqué, etc.), on log discrètement
+          // et on laisse le thème par défaut s'appliquer
+          console.warn('Impossible de charger la préférence de thème:', error);
+        }
+      })();
+    &lt;/script&gt;
+    &lt;!-- FIN DU SCRIPT MAGIQUE --&gt;
+
+    &lt;!-- Les feuilles de style sont chargées APRÈS le script --&gt;
+    &lt;link rel="stylesheet" href="css/bootstrap.min.css"&gt;
+    &lt;link rel="stylesheet" href="css/styles.css"&gt;
+
+    &lt;!-- Autres ressources du head --&gt;
+    &lt;link rel="icon" href="favicon.ico"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Contenu de la page --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_脚本解剖每一行都很重要">脚本解剖：每一行都很重要</h3>
+<div class="paragraph">
+<p>让我们逐行分析这个脚本，以理解每一个设计决策：</p>
+</div>
+<div class="paragraph">
+<p><strong>IIFE（立即调用函数表达式）</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">(function() {
+  // ...
+})();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此结构创建了一个立即执行的函数。为什么？为了将我们的变量隔离在局部作用域中，以免污染全局作用域。即使我们只使用了`const`(它具有块级作用域)，IIFE 是一种良好实践，能够使我们的意图更清晰并防止潜在的命名冲突。</p>
+</div>
+<div class="paragraph">
+<p><strong>严格模式</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">'use strict';</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此指令启用 JavaScript 严格模式，其： - 禁止使用未声明的变量 - 为危险操作生成错误 - 改善某些 JavaScript 引擎的性能</p>
+</div>
+<div class="paragraph">
+<p>对于像这样的关键脚本，我们想要最大的安全性。</p>
+</div>
+<div class="paragraph">
+<p><strong>try&#8230;&#8203;catch 块</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">try {
+  // Code principal
+} catch (error) {
+  console.warn('Impossible de charger la préférence de thème:', error);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此块绝对至关重要。它保证如果出现问题（如 localStorage 被阻塞、语法错误等），我们的脚本将不会阻止整个页面的加载。使用`console.warn`而不是`console.error`表明这是一个非关键问题。</p>
+</div>
+<div class="paragraph">
+<p><strong>读取 localStorage</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">const savedTheme = localStorage.getItem('preferred-theme');</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此行在某些上下文（Safari 的严格私人浏览）下可能会引发异常。因此它位于一个 <code>try&#8230;&#8203;catch</code> 块中。</p>
+</div>
+<div class="paragraph">
+<p><strong>条件应用</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">if (savedTheme) {
+  document.documentElement.setAttribute('data-bs-theme', savedTheme);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>我们仅在找到已保存的主题时才应用该主题。否则，我们让 CSS 使用其默认主题。这种方法比在 JavaScript 中硬编码的默认值更稳健。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_系统偏好检测奖励">系统偏好检测（奖励）</h3>
+<div class="paragraph">
+<p>一种可选但优雅的改进是，在用户尚未在你的应用中做出明确选择时，检测其操作系统的主题偏好：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">else if (window.matchMedia &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-bs-theme', 'dark');
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此功能使用媒体查询`prefers-color-scheme`� 查询系统。在 macOS、Windows 10+、iOS 和现代 Android 上，此查询会返回用户的系统偏好设置。</p>
+</div>
+<div class="paragraph">
+<p><strong>优势：</strong> - 个性化体验，从首次访问开始 - 与用户系统环境一致 - 首次访问不需要存储</p>
+</div>
+<div class="paragraph">
+<p><strong>考虑：</strong> - 并非所有浏览器都支持此功能（但自2020年以来支持情况非常好） - 验证`window.matchMedia`确保兼容性 - 用户始终可以覆盖此选择</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_性能为什么这个脚本很快">性能：为什么这个脚本很快</h3>
+<div class="paragraph">
+<p>我们的预加载脚本设计为极速：</p>
+</div>
+<div class="paragraph">
+<p><strong>最小尺寸</strong>大约 300 字节未压缩，200 字节压缩。与任何图片或 JavaScript 库相比，这可以忽略不计。</p>
+</div>
+<div class="paragraph">
+<p><strong>内联</strong>: 不需要额外的 HTTP 请求。脚本在 HTML 中，因此它立即可用。</p>
+</div>
+<div class="paragraph">
+<p><strong>简单的同步操作</strong>从 localStorage 中读取键（超快操作）并修改 DOM 属性（浏览器原生操作）。</p>
+</div>
+<div class="paragraph">
+<p><strong>无依赖</strong>没有框架，没有库，只有原生 JavaScript。没有启动时间，没有依赖解析。</p>
+</div>
+<div class="paragraph">
+<p><strong>单次执行</strong>此脚本在加载时仅执行一次。没有事件监听器，没有循环，没有复杂的计算。</p>
+</div>
+<div class="paragraph">
+<p>实际上，在现代硬件上，该脚本的执行时间不到1毫秒，这是一个无法感知的时间，对页面加载性能没有任何影响。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_在head中的最佳放置">在`&lt;head&gt;`中的最佳放置</h3>
+<div class="paragraph">
+<p>元素在&#8230;&#8203;中的顺序`&lt;head&gt;`是 重要的。 这是 顺序 推荐 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;head&gt;
+    &lt;!-- 1. Métadonnées critiques --&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+
+    &lt;!-- 2. Notre script de pré-chargement (IMMÉDIATEMENT après les meta) --&gt;
+    &lt;script&gt;
+      (function() { /* notre code */ })();
+    &lt;/script&gt;
+
+    &lt;!-- 3. Titre de la page --&gt;
+    &lt;title&gt;Mon Site&lt;/title&gt;
+
+    &lt;!-- 4. Feuilles de style --&gt;
+    &lt;link rel="stylesheet" href="styles.css"&gt;
+
+    &lt;!-- 5. Autres ressources (fonts, favicons, etc.) --&gt;
+    &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+    &lt;link rel="icon" href="favicon.ico"&gt;
+
+    &lt;!-- 6. Autres scripts avec defer ou async --&gt;
+    &lt;script src="app.js" defer&gt;&lt;/script&gt;
+&lt;/head&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这个命令保证：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>字符集在任何文本处理之前被定义</p>
+</li>
+<li>
+<p>我们的脚本在加载CSS之前执行</p>
+</li>
+<li>
+<p>CSS 会随后被加载，并直接应用正确的主题</p>
+</li>
+<li>
+<p>其他非关键资源最后加载</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_步骤_3css属性选择器的强大功能">步骤 3：CSS属性选择器的强大功能</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_bootstrap_5_主题系统">Bootstrap 5 主题系统</h3>
+<div class="paragraph">
+<p>Bootstrap 5 引入了一种基于 CSS 自定义属性（CSS 变量）和属性选择器的优雅主题管理系统。此系统使用属性。<code>data-bs-theme`在元素上</code>&lt;html&gt;`为了确定应用哪一组颜色变量。</p>
+</div>
+<div class="paragraph">
+<p>这个系统的美在于其简单性：与其加载不同的样式表或在成千上万的元素上切换类，不如我们只需在单个元素上更改一个属性，然后CSS通过级联处理其余部分。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_主题系统的css结构">主题系统的CSS结构</h3>
+<div class="paragraph">
+<p>以下是实现强健主题系统的完整 CSS 结构：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-css" data-lang="css">/**
+ * SYSTÈME DE THÈME COMPLET
+ * Utilise les Custom Properties CSS pour une maintenance facile
+ */
+
+/* ============================================
+   THÈME PAR DÉFAUT (LIGHT)
+   Défini sur :root pour être le fallback
+   ============================================ */
+:root {
+  /* Couleurs de base */
+  --color-primary: #0d6efd;
+  --color-secondary: #6c757d;
+  --color-success: #198754;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #0dcaf0;
+
+  /* Couleurs de fond */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+
+  /* Couleurs de texte */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+
+  /* Couleurs de bordure */
+  --border-color: #dee2e6;
+  --border-color-subtle: #e9ecef;
+
+  /* Couleurs d'ombre */
+  --shadow-sm: rgba(0, 0, 0, 0.075);
+  --shadow-md: rgba(0, 0, 0, 0.15);
+  --shadow-lg: rgba(0, 0, 0, 0.25</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformer l&#39;AsciiDoc en Vidéo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit de ma Consommation LLM : SQLite, OpenCode, Ollama Cloud, et Pourquoi Mon Abonnement Pro Éclate le Marché Mondial</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;Architecture « Plugin Indépendant + Racine Consommateur » : Pourquoi mes Builds Gradle Se Dédoublent</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Le Knowledge Graph comme moteur de recommandation : comment j&#39;ai tué les « articles connexes » chronologiques</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0098_preloading_css_variable_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

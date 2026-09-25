@@ -1,0 +1,1480 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="it">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Plugin Gradle Casa per Pilotare Due Istanze Ollama Pro in Parallelo — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"/>
+
+        <!-- Hreflang alternates FR <-> EN -->
+        <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"/>
+        <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"/>
+        <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"/>
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Plugin Gradle Casa per Pilotare Due Istanze Ollama Pro in Parallelo — Cheroliv"/>
+        <meta property="og:description" content="Un build.gradle.kts fatto in casa per controllare due istanze Ollama Pro dalle attività Gradle — avvio, arresto, accesso, pull dei modelli e health check. Dall&#39;infrastruttura guidata allo strumento di build."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Plugin Gradle Casa per Pilotare Due Istanze Ollama Pro in Parallelo — Cheroliv"/>
+        <meta name="twitter:description" content="Un build.gradle.kts fatto in casa per controllare due istanze Ollama Pro dalle attività Gradle — avvio, arresto, accesso, pull dei modelli e health check. Dall&#39;infrastruttura guidata allo strumento di build."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.png"/>
+        <meta name="description" content="Un build.gradle.kts fatto in casa per controllare due istanze Ollama Pro dalle attività Gradle — avvio, arresto, accesso, pull dei modelli e health check. Dall&#39;infrastruttura guidata allo strumento di build."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — Feed RSS" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Attiva/disattiva navigazione">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Home</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Competenze</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contatti</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Seleziona il tema dell'interfaccia">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Light</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Chiaro
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Scuro
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Contrasto elevato
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Seleziona la lingua">
+                        <span class="me-1">🇮🇹</span>
+                        <span class="ms-1">IT</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"},
+                      "headline": "Plugin Gradle Casa per Pilotare Due Istanze Ollama Pro in Parallelo",
+                      "description": "Creazione di un build.gradle.kts con attivit\u00E0 utili per gestire l'intero ciclo di vita di due istanze Ollama Pro sulla stessa macchina: avvio, arresto, identit\u00E0, accesso, pull, test. Il tutto senza lasciare la riga di comando Gradle.",
+                      "datePublished": "2026-05-08",
+                      "dateModified": "2026-05-08",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Plugin Gradle Casa per Pilotare Due Istanze Ollama Pro in Parallelo", "item": "https:\/\/cheroliv.com\/blog\/2026\/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Plugin Gradle Casa per Pilotare Due Istanze Ollama Pro in Parallelo</h1>
+                <p class="lead">
+                    <em>Publié le 08 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_introduzione">Introduzione</a></li>
+<li><a href="#_perché_gradle_per_linfra">Perché Gradle per l&#8217;Infra ?</a></li>
+<li><a href="#_il_build_gradle_kts_completo">Il build.gradle.kts completo</a></li>
+<li><a href="#_anatomia_delle_attività_chiave">Anatomia delle attività chiave</a>
+<ul class="sectlevel2">
+<li><a href="#_startollamab_il_lanciatore">startOllamaB` — Il Lanciatore</a></li>
+<li><a href="#_signinb_linterattivo">signInB` — L&#8217;Interattivo</a></li>
+<li><a href="#_pullmodelb_il_configurabile">pullModelB` — Il configurabile</a></li>
+<li><a href="#_statusollamaall_il_diagnostico">statusOllamaAll` — Il Diagnostico</a></li>
+<li><a href="#_cleanollamab_la_pulizia_che_preserva_lidentità">cleanOllamaB` — la pulizia che preserva l&#8217;identità</a></li>
+</ul>
+</li>
+<li><a href="#_bake_generate_the_site_jbake_b">Bake (generate) the site jbake -b</a></li>
+<li><a href="#_bake_and_serve_locally_jbake_b_s">Bake and serve locally jbake -b -s</a></li>
+<li><a href="#_bake_and_watch_for_changes_jbake_b_reset">Bake and watch for changes jbake -b --reset</a></li>
+<li><a href="#_specify_source_and_destination_jbake_source_folder_output_folder">Specify source and destination jbake source_folder output_folder</a></li>
+<li><a href="#_clear_the_output_directory_before_baking_jbake_b_output_resetconservato_lidentità_ssh_sopravvive_alla_pulizia_al_prossimostartollamab_le_stesse_chiavi_verranno_riutilizzate_non_cè_bisogno_di_rifare_il_sign_in_né_di_re_registrare_la_device_key">Clear the output directory before baking jbake -b . output --reset<strong>conservato</strong>. L&#8217;identità SSH sopravvive alla pulizia. Al prossimo`startOllamaB`, le stesse chiavi verranno riutilizzate — non c&#8217;è bisogno di rifare il sign-in né di re-registrare la Device Key.</a>
+<ul class="sectlevel1">
+<li><a href="#_workflow_completo_da_zero_a_due_sessioni">Workflow Completo — Da Zero a Due Sessioni</a></li>
+<li><a href="#_perché_non_farne_un_vero_plugin_gradle">Perché non farne un vero plugin Gradle?</a></li>
+<li><a href="#_lezioni_apprese">Lezioni apprese</a></li>
+<li><a href="#_conclusione">Conclusione</a></li>
+<li><a href="#_risorse">Risorse</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">tempo di lettura: 18 minutes</div>
+<p>Perché digitare i comandi docker a mano quando si può incapsulare tutto in task Gradle? Ecco come ho industrializzato la mia configurazione dual-Ollama Pro senza script shell esterni. Avvio, arresto, identità, sign-in, pull — tutto passa per`./gradlew`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduzione">Introduzione</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Nell&#8217;articolo precedente, ho mostrato come far coesistere due account Ollama Pro sulla stessa macchina isolando la seconda istanza in un contenitore Docker. Il montaggio funziona, ma la gestione quotidiana diventa rapidamente fastidiosa: ricordarsi il nome del contenitore, riavviare i comandi corretti`docker exec`, controlla quale porta è attiva&#8230;&#8203;</p>
+</div>
+<div class="paragraph">
+<p>Conosci quel momento in cui hai 14 terminali aperti, che stai digitando`docker exec ollama-instance-b ollama list`per la quarta volta, e ti dici « deve esserci un modo più pulito »?</p>
+</div>
+<div class="paragraph">
+<p>Questo mezzo è Gradle.</p>
+</div>
+<div class="paragraph">
+<p>Non solo per costruire il codice. Gradle come un direttore d&#8217;orchestra dell&#8217;infrastruttura locale. Compiti che provisionano, verificano, testano e puliscono. Tutto versionato in un`build.gradle.kts`che vive accanto al`docker-compose.yml`.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/architecture-gradle-ollama.svg" alt="architecture gradle ollama" width="716" height="513">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_perché_gradle_per_linfra">Perché Gradle per l&#8217;Infra ?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>La domanda è legittima. Gradle, è uno strumento di build. Normalmente, compila, testa, impacchetta. Non lancia container Docker.</p>
+</div>
+<div class="paragraph">
+<p>Eccetto che Gradle è anche un motore di grafo di dipendenze — ed è lì che diventa interessante per il nostro caso.</p>
+</div>
+<div class="paragraph">
+<p>Vogliamo:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Che il contenitore venga avviato prima di un sign-in</p>
+</li>
+<li>
+<p>Che l&#8217;identità sia verificata prima di un pull di modello</p>
+</li>
+<li>
+<p>Un test API fallisce silenziosamente se il contenitore è inattivo</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Dal puro grafo delle dipendenze. Gradle è su misura per questo. Il DSL Kotlin rende la scrittura delle attività fluida, e il`doLast`consente di eseguire comandi di sistema come se fossero codice applicativo.</p>
+</div>
+<div class="paragraph">
+<p>E soprattutto: nessun bashrc da mantenere, nessun script che giace in`~/bin`, nessun Makefile accanto a docker-compose. Tutto è contenuto in un unico file, nello stesso posto del codice del progetto.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_il_build_gradle_kts_completo">Il build.gradle.kts completo</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ecco il file che ho finito per scrivere. Fa tutto, dal provisioning del volume al curl di verifica, passando per il sign-in interattivo.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">import java.io.ByteArrayOutputStream
+
+plugins {
+    base
+}
+
+// -------------------------------------------------------------------------
+// Configuration
+// -------------------------------------------------------------------------
+val instanceName   = "ollama-instance-b"
+val instancePort   = 11435
+val instanceImage  = "ollama/ollama:0.20.2"
+val dataDir        = file("${System.getProperty("user.home")}/ollama-b-data")
+val nativePort     = 11434
+
+// Modèles à gérer — cloud Pro + un modèle local gratuit pour les tests
+val proModels      = listOf("deepseek-v4-pro:cloud", "gemma4:31b-cloud")
+val freeModels     = listOf("qwen3:0.6b")
+
+// -------------------------------------------------------------------------
+// Tâche préparatoire — création du volume si absent
+// -------------------------------------------------------------------------
+val prepareVolume by tasks.registering {
+    group       = "ollama"
+    description = "Crée le répertoire de volume pour l'instance B si absent"
+    doLast {
+        if (!dataDir.exists()) {
+            dataDir.mkdirs()
+            println("Volume créé : ${dataDir.absolutePath}")
+        } else {
+            println("Volume existant : ${dataDir.absolutePath}")
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Démarrage du conteneur Docker
+// -------------------------------------------------------------------------
+val startOllamaB by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Lance le conteneur Docker pour l'instance Ollama B"
+    dependsOn(prepareVolume)
+
+    commandLine(
+        "docker", "run", "-d",
+        "--name", instanceName,
+        "-p", "$instancePort:11434",
+        "-v", "${dataDir.absolutePath}:/root/.ollama",
+        "-e", "OLLAMA_HOST=0.0.0.0",
+        "--restart", "always",
+        instanceImage
+    )
+    isIgnoreExitValue = true
+
+    doLast {
+        val alreadyRunning = executionResult.get().exitValue != 0
+        if (alreadyRunning) {
+            logger.lifecycle("Le conteneur '$instanceName' existe déjà — tentative de démarrage")
+        } else {
+            logger.lifecycle("Conteneur '$instanceName' lancé")
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Arrêt du conteneur
+// -------------------------------------------------------------------------
+val stopOllamaB by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Arrête le conteneur Docker de l'instance B"
+
+    commandLine("docker", "stop", instanceName)
+    isIgnoreExitValue = true
+
+    doLast {
+        logger.lifecycle("Conteneur '$instanceName' arrêté")
+    }
+}
+
+// -------------------------------------------------------------------------
+// Affichage de la clé publique (Device Key)
+// -------------------------------------------------------------------------
+val checkIdentity by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Affiche la clé publique SSH de l'instance B"
+    dependsOn(startOllamaB)
+
+    commandLine("docker", "exec", instanceName, "cat", "/root/.ollama/id_ed25519.pub")
+    standardOutput = ByteArrayOutputStream()
+
+    doLast {
+        val pubKey = standardOutput.toString().trim()
+        println("=".repeat(60))
+        println("Device Key (Instance B)")
+        println("=".repeat(60))
+        println(pubKey)
+        println("=".repeat(60))
+        println("→ Enregistre cette clé sur https://ollama.com/settings/keys")
+        println("→ Puis exécute : ./gradlew signInB")
+        println("=".repeat(60))
+    }
+}
+
+// -------------------------------------------------------------------------
+// Sign-in interactif (Ouvrira le navigateur)
+// -------------------------------------------------------------------------
+val signInB by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Lance l'authentification interactive Ollama pour le compte B"
+    dependsOn(startOllamaB)
+
+    standardInput  = System.`in`
+    standardOutput = System.out
+    errorOutput    = System.err
+
+    commandLine("docker", "exec", "-it", instanceName, "ollama", "signin")
+
+    doFirst {
+        logger.lifecycle("Authentification pour le Compte Pro B...")
+        logger.lifecycle("Ouvre ton navigateur et connecte-toi avec l'email du compte B")
+    }
+}
+
+// -------------------------------------------------------------------------
+// Pull d'un modèle (paramétrable via propriété Gradle)
+// -------------------------------------------------------------------------
+val pullModelB by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Pull un modèle sur l'instance B. Usage : ./gradlew pullModelB -Pmodel=nom:tag"
+    dependsOn(startOllamaB)
+
+    val modelName = project.findProperty("model") as? String ?: "qwen3:0.6b"
+
+    commandLine("docker", "exec", instanceName, "ollama", "pull", modelName)
+
+    doFirst {
+        logger.lifecycle("Pull du modèle '$modelName' sur l'instance B...")
+    }
+
+    doLast {
+        logger.lifecycle("Modèle '$modelName' pullé avec succès")
+    }
+}
+
+// -------------------------------------------------------------------------
+// Pull de tous les modèles Pro (batch)
+// -------------------------------------------------------------------------
+val pullAllProModels by tasks.registering {
+    group       = "ollama"
+    description = "Pull tous les modèles cloud Pro sur l'instance B"
+    dependsOn(startOllamaB)
+
+    doLast {
+        proModels.forEach { model -&gt;
+            logger.lifecycle("→ Pull $model...")
+            val process = ProcessBuilder("docker", "exec", instanceName, "ollama", "pull", model)
+                .inheritIO()
+                .start()
+            process.waitFor()
+        }
+        logger.lifecycle("Tous les modèles Pro pullés")
+    }
+}
+
+// -------------------------------------------------------------------------
+// Pull de tous les modèles gratuits (batch / première install)
+// -------------------------------------------------------------------------
+val pullAllFreeModels by tasks.registering {
+    group       = "ollama"
+    description = "Pull tous les modèles locaux gratuits sur l'instance B"
+    dependsOn(startOllamaB)
+
+    doLast {
+        freeModels.forEach { model -&gt;
+            logger.lifecycle("→ Pull $model...")
+            val process = ProcessBuilder("docker", "exec", instanceName, "ollama", "pull", model)
+                .inheritIO()
+                .start()
+            process.waitFor()
+        }
+        logger.lifecycle("Tous les modèles gratuits pullés")
+    }
+}
+
+// -------------------------------------------------------------------------
+// Liste des modèles disponibles sur l'instance B
+// -------------------------------------------------------------------------
+val listModelsB by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Liste les modèles disponibles sur l'instance B"
+    dependsOn(startOllamaB)
+
+    commandLine("docker", "exec", instanceName, "ollama", "list")
+}
+
+// -------------------------------------------------------------------------
+// Health check — test API sur les deux instances
+// -------------------------------------------------------------------------
+val testOllamaB by tasks.registering {
+    group       = "ollama"
+    description = "Teste la connectivité API de l'instance B avec un simple chat"
+    dependsOn(startOllamaB)
+
+    doLast {
+        val model = project.findProperty("model") as? String ?: "qwen3:0.6b"
+        logger.lifecycle("Test de l'instance B avec le modèle '$model'...")
+
+        val payload = """
+            {
+              "model": "$model",
+              "messages": [{"role": "user", "content": "Réponds uniquement par OK"}],
+              "max_tokens": 5
+            }
+        """.trimIndent()
+
+        val process = ProcessBuilder(
+            "curl", "-s", "http://localhost:$instancePort/v1/chat/completions",
+            "-H", "Content-Type: application/json",
+            "-d", payload
+        ).start()
+
+        val response = process.inputStream.bufferedReader().readText()
+        process.waitFor()
+
+        if (response.contains("\"id\":\"chatcmpl") || response.contains("\"choices\"")) {
+            println("✓ Instance B OK — port $instancePort répond")
+            println("  Response: ${response.take(120)}...")
+        } else {
+            println("✗ Instance B INACTIVE — vérifie le conteneur avec './gradlew statusOllamaAll'")
+            println("  Raw: $response")
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Health check sur les deux instances simultanément
+// -------------------------------------------------------------------------
+val statusOllamaAll by tasks.registering {
+    group       = "ollama"
+    description = "Vérifie le statut des deux instances Ollama (native + Docker)"
+
+    doLast {
+        // Instance native
+        runCatching {
+            val process = ProcessBuilder(
+                "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                "http://localhost:$nativePort/api/tags"
+            ).start()
+            val code = process.inputStream.bufferedReader().readText().trim()
+            process.waitFor()
+            println(if (code == "200") "✓ Instance Native   — port $nativePort OK (HTTP $code)"
+                    else "✗ Instance Native — port $nativePort (HTTP $code)")
+        }.getOrElse {
+            println("✗ Instance Native — injoignable sur le port $nativePort")
+        }
+
+        // Instance Docker
+        runCatching {
+            val process = ProcessBuilder(
+                "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                "http://localhost:$instancePort/api/tags"
+            ).start()
+            val code = process.inputStream.bufferedReader().readText().trim()
+            process.waitFor()
+            println(if (code == "200") "✓ Instance Docker B — port $instancePort OK (HTTP $code)"
+                    else "✗ Instance Docker B — port $instancePort (HTTP $code)")
+        }.getOrElse {
+            println("✗ Instance Docker B — injoignable sur le port $instancePort")
+        }
+
+        // Info conteneur
+        runCatching {
+            val process = ProcessBuilder("docker", "ps", "--filter", "name=$instanceName",
+                "--format", "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}").start()
+            val status = process.inputStream.bufferedReader().readText()
+            process.waitFor()
+            println()
+            println("Conteneur Docker :")
+            println(status)
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Nettoyage complet
+// -------------------------------------------------------------------------
+val cleanOllamaB by tasks.registering(Exec::class) {
+    group       = "ollama"
+    description = "Arrête et supprime le conteneur Docker de l'instance B"
+    dependsOn(stopOllamaB)
+
+    commandLine("docker", "rm", instanceName)
+    isIgnoreExitValue = true
+
+    doLast {
+        logger.lifecycle("Conteneur '$instanceName' supprimé")
+        logger.lifecycle("Le volume ${dataDir.absolutePath} est conservé (identité persistante)")
+    }
+}
+
+// -------------------------------------------------------------------------
+// Affichage des instructions
+// -------------------------------------------------------------------------
+val helpOllama by tasks.registering {
+    group       = "ollama"
+    description = "Affiche l'aide des tâches Ollama disponibles"
+
+    doLast {
+        println("""
+        ╔══════════════════════════════════════════════════════════════╗
+        ║         Tâches Gradle — Pilotage Dual Ollama Pro            ║
+        ╠══════════════════════════════════════════════════════════════╣
+        ║  ./gradlew startOllamaB      Démarrer l'instance Docker B   ║
+        ║  ./gradlew stopOllamaB       Arrêter l'instance Docker B    ║
+        ║  ./gradlew checkIdentity     Afficher la clé SSH publique   ║
+        ║  ./gradlew signInB           Sign-in interactif compte B    ║
+        ║  ./gradlew pullModelB        Pull un modèle (-Pmodel=...)   ║
+        ║  ./gradlew pullAllProModels  Pull tous les modèles Pro      ║
+        ║  ./gradlew pullAllFreeModels Pull tous les modèles gratuits ║
+        ║  ./gradlew listModelsB       Lister les modèles instance B  ║
+        ║  ./gradlew testOllamaB       Test API avec un chat simple   ║
+        ║  ./gradlew statusOllamaAll   Santé des 2 instances          ║
+        ║  ./gradlew cleanOllamaB      Supprimer le conteneur         ║
+        ║  ./gradlew helpOllama        Cette aide                     ║
+        ╚══════════════════════════════════════════════════════════════╝
+        """.trimIndent())
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ecco. Dodici compiti, un unico punto di ingresso e zero attrito.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_anatomia_delle_attività_chiave">Anatomia delle attività chiave</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_startollamab_il_lanciatore">startOllamaB` — Il Lanciatore</h3>
+<div class="paragraph">
+<p>Niente di difficile: un`docker run -d`con i parametri giusti. Il trucco è nel`isIgnoreExitValue = true`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">isIgnoreExitValue = true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Se il contenitore esiste già, il comando`docker run`non riesce (exit code ≠ 0). Senza questa proprietà, Gradle interromperebbe l&#8217;intero build in errore. Qui, l&#8217;errore è silenzioso — e il`doLast`rileva se era un "già esistente" o un vero errore.</p>
+</div>
+<div class="paragraph">
+<p>Le `doLast`è fondamentale : si esegue <strong>dopo</strong> l&#8217;esecuzione del comando, ciò permette di ispezionare`executionResult.get().exitValue`e di registrare un messaggio appropriato.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_signinb_linterattivo">signInB` — L&#8217;Interattivo</h3>
+<div class="paragraph">
+<p>È l&#8217;unica task che richiede interazione umana. Gradle trasmette`System.in`al processo affinché il prompt`ollama signin`possa essere visualizzato normalmente :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">standardInput  = System.`in`
+standardOutput = System.out
+errorOutput    = System.err</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Senza ciò, l&#8217;accesso si bloccherebbe perché stdin sarebbe chiuso e non vedresti mai il prompt.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pullmodelb_il_configurabile">pullModelB` — Il configurabile</h3>
+<div class="paragraph">
+<p>Un&#8217;attività generica che accetta un parametro via`-P`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./gradlew pullModelB -Pmodel=deepseek-v4-pro:cloud
+./gradlew pullModelB                           # fallback : qwen3:0.6b</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Il fallback è importante :`project.findProperty("model") as? String ?: "qwen3:0.6b"`garantisce che l&#8217;operazione non scoppi se si dimentica il parametro.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_statusollamaall_il_diagnostico">statusOllamaAll` — Il Diagnostico</h3>
+<div class="paragraph">
+<p>Due`curl`in salute sui porti`11434` et <code>11435</code>, con un fallback in`runCatching`per non bloccarsi se una delle istanze è down. L&#8217;output è strutturato :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">✓ Instance Native   — port 11434 OK (HTTP 200)
+✓ Instance Docker B — port 11435 OK (HTTP 200)
+
+Conteneur Docker :
+NAMES               STATUS         PORTS
+ollama-instance-b   Up 3 hours     0.0.0.0:11435-&gt;11434/tcp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Un colpo d&#8217;occhio, e sai esattamente cosa funziona e cosa non va.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cleanollamab_la_pulizia_che_preserva_lidentità">cleanOllamaB` — la pulizia che preserva l&#8217;identità</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">commandLine("docker", "rm", instanceName)
+isIgnoreExitValue = true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Il contenitore è eliminato, ma il volume`~/ollama-b-data`<mark>#</mark> JBake CLI Commands <code>`</code> # Initialize a new JBake project jbake -i</p>
+</div>
+</div>
+</div>
+</div>
+<h1 id="_bake_generate_the_site_jbake_b" class="sect0">Bake (generate) the site jbake -b</h1>
+
+<h1 id="_bake_and_serve_locally_jbake_b_s" class="sect0">Bake and serve locally jbake -b -s</h1>
+
+<h1 id="_bake_and_watch_for_changes_jbake_b_reset" class="sect0">Bake and watch for changes jbake -b --reset</h1>
+
+<h1 id="_specify_source_and_destination_jbake_source_folder_output_folder" class="sect0">Specify source and destination jbake source_folder output_folder</h1>
+
+<h1 id="_clear_the_output_directory_before_baking_jbake_b_output_resetconservato_lidentità_ssh_sopravvive_alla_pulizia_al_prossimostartollamab_le_stesse_chiavi_verranno_riutilizzate_non_cè_bisogno_di_rifare_il_sign_in_né_di_re_registrare_la_device_key" class="sect0">Clear the output directory before baking jbake -b . output --reset<strong>conservato</strong>. L&#8217;identità SSH sopravvive alla pulizia. Al prossimo`startOllamaB`, le stesse chiavi verranno riutilizzate — non c&#8217;è bisogno di rifare il sign-in né di re-registrare la Device Key.</h1>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="🔒"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><code>cleanOllamaB`non toccare il volume. Se vuoi cancellare l&#8217;identità B (e ricominciare da zero), è necessario eliminare</code>~/ollama-b-data`manualmente. È volontario — un`clean`non dovrebbe distruggere le credenziali.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect1">
+<h2 id="_workflow_completo_da_zero_a_due_sessioni">Workflow Completo — Da Zero a Due Sessioni</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ecco la sequenza ideale per qualcuno che arriva sul progetto e vuole impostare tutto senza aprire la documentazione:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text"># 1. Premier contact — que faire ?
+$ ./gradlew helpOllama
+
+# 2. On démarre l'instance B
+$ ./gradlew startOllamaB
+
+# 3. On récupère la Device Key et on l'enregistre sur ollama.com
+$ ./gradlew checkIdentity
+# → copier-coller de la clé sur https://ollama.com/settings/keys
+
+# 4. Authentification interactive
+$ ./gradlew signInB
+
+# 5. Pull d'un petit modèle gratuit pour tester la plomberie
+$ ./gradlew pullModelB
+
+# 6. Test API
+$ ./gradlew testOllamaB
+
+# 7. Si tout est vert, pull des modèles Pro
+$ ./gradlew pullAllProModels
+
+# 8. Vérification finale des deux instances
+$ ./gradlew statusOllamaAll</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Meno di due minuti, tutto è provisionato. Nessun README da leggere, nessuna variabile d&#8217;ambiente da impostare. Il compito`helpOllama`fa da documentazione integrata.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Failed to generate image: PlantUML preprocessing failed: [From &lt;input&gt; (line 8) ]
+
+@startuml
+
+
+
+
+...
+... ( skipping 128 lines )
+...
+  BorderColor black
+}
+skinparam StereotypeI {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeN {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam UseCaseStereoType {
+  FontColor black
+  FontName Verdana
+}
+skinparam DefaultFontSize 11
+
+actor Développeur as Dev
+participant "Gradle\n(build.gradle.kts)" as Gradle
+participant "Docker\nDaemon" as Docker
+participant "Ollama
+^^^^^
+ Syntax Error? (Assumed diagram type: sequence)
+
+@startuml
+!theme plain
+skinparam DefaultFontSize 11
+
+actor Développeur as Dev
+participant "Gradle\n(build.gradle.kts)" as Gradle
+participant "Docker\nDaemon" as Docker
+participant "Ollama
+Istanza B" as OllamaB
+participant "Ollama\nCloud" as Cloud
+
+== Provisionnement ==
+Dev -&gt; Gradle : helpOllama
+Gradle --&gt; Dev : Aide et instructions
+
+Dev -&gt; Gradle : startOllamaB
+Gradle -&gt; Docker : docker run -d ollama/ollama:0.20.2
+Docker -&gt; OllamaB : Génération clés SSH (id_ed25519)
+Docker --&gt; Gradle : conteneur lancé
+Gradle --&gt; Dev : OK
+
+Dev -&gt; Gradle : checkIdentity
+Gradle -&gt; Docker : cat id_ed25519.pub
+Gradle --&gt; Dev : Clé publique SSH
+
+Dev -&gt; Cloud : Enregistrement clé SSH\n(sur ollama.com/settings/keys)
+
+== Authentification ==
+Dev -&gt; Gradle : signInB
+Gradle -&gt; Docker : ollama signin (interactif)
+Dev &lt;-&gt; Cloud : Login navigateur (compte B)
+Docker -&gt; Cloud : Échange token ⇔ Device Key
+Gradle --&gt; Dev : Authentifié
+
+== Vérification ==
+Dev -&gt; Gradle : pullModelB
+Gradle -&gt; Docker : ollama pull qwen3:0.6b
+Gradle --&gt; Dev : Modèle pullé
+
+Dev -&gt; Gradle : testOllamaB
+Gradle -&gt; Docker : curl /v1/chat/completions
+Gradle --&gt; Dev : ✓ Instance B OK
+
+== Production ==
+Dev -&gt; Gradle : pullAllProModels
+Gradle -&gt; Docker : ollama pull deepseek-v4-pro:cloud
+Gradle -&gt; Docker : ollama pull gemma4:31b-cloud
+Gradle --&gt; Dev : Modèles Pro pullés
+
+Dev -&gt; Gradle : statusOllamaAll
+Gradle --&gt; Dev : ✓ Native ✓ Docker B
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_perché_non_farne_un_vero_plugin_gradle">Perché non farne un vero plugin Gradle?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Domanda legittima. Estrarre questo`build.gradle.kts`in un plugin Gradle autonomo avrebbe dei vantaggi: riutilizzo tra progetti, configurazione dichiarativa, estensione DSL.</p>
+</div>
+<div class="paragraph">
+<p>Ma per ora, non ha senso. Questo build non ha una logica di business complessa — è un wrapper attorno a comandi Docker e curl. Lo strato aggiuntivo di un plugin Gradle completo (con estensione, test unitari, pubblicazione) sarebbe sproporzionato per 12 attività utili.</p>
+</div>
+<div class="paragraph">
+<p>Le `build.gradle.kts`inline vive nel progetto che ne ha bisogno. È banale da copiare altrove. Se un giorno avrò tre progetti che ne dipendono, lo trasformerò in un plugin. Per ora, KISS.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ℹ️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Il giorno in cui hai tre`build.gradle.kts`JBake CLI Commands <code>` # Initialize a new JBake project jbake -i # Bake (generate) the site jbake -b # Bake and serve locally jbake -b -s # Bake and watch for changes jbake -b --reset # Specify source and destination jbake source_folder output_folder # Clear the output directory before baking jbake -b . output --reset </code>` identici in tre progetti, è il segnale che è necessario estrarre un plugin. Prima di allora, la duplicazione è meno costosa dell&#8217;astrazione. Saggezza di dev.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lezioni_apprese">Lezioni apprese</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Gradle non è solo uno strumento di build</strong>— Il motore del grafo delle dipendenze ne fa un orchestratore di infrastrutture temibile.<code>doLast</code>, <code>isIgnoreExitValue</code>, <code>dependsOn</code>: questi tre primitivi sono sufficienti per pilotare un container Docker con la stessa affidabilità di una pipeline CI.</p>
+</li>
+<li>
+<p><strong>isIgnoreExitValue` è tuo amico</strong>— In un mondo ideale,<code>docker run`su un contenitore già esistente restituirebbe un avviso invece di un codice di uscita di errore. Nel mondo reale, tu metti`isIgnoreExitValue = true`e tu gestisci la diagnosi in`doLast</code>.</p>
+</li>
+<li>
+<p><strong>Le attività configurabili uccidono l&#8217;ambiguità</strong> — Un <code>pullModelB`generico con</code>-Pmodel=&#8230;&#8203;`sostituisce N attività specializzate. Un solo compito, una sola documentazione, un solo comportamento.</p>
+</li>
+<li>
+<p><strong>runCatching` per i controlli di stato</strong>Quando testi N endpoint, il crash del primo non deve impedire di testare gli altri.<code>runCatching</code>+`getOrElse`per endpoint, e la diagnosi rimane completa anche in caso di guasto parziale.</p>
+</li>
+<li>
+<p><strong>Il compito <code>helpOllama</code> come documentazione eseguibile</strong> — Un `println()`ben formattato sostituisce un README di tre paragrafi. È auto-documentato, sempre aggiornato e accessibile senza uscire dal terminale.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusione">Conclusione</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Siamo passati da comandi docker da digitare manualmente a un workflow Gradle completo, versionato, riutilizzabile. Dodici attività coprono l&#8217;intero ciclo di vita: provisioning, identità, sign-in, pull, test, diagnostico, pulizia.</p>
+</div>
+<div class="paragraph">
+<p>Il combo docker-compose + build.gradle.kts + opencode.json forma una trinità pulita: Docker per l&#8217;isolamento, Gradle per l&#8217;orchestrazione, OpenCode per il consumo. Ogni livello ha la propria responsabilità, e nessuno sconfinisce sull&#8217;altro.</p>
+</div>
+<div class="paragraph">
+<p>Prossimo passo? Automatizzare il ciclo di vita nella CI affinché le istanze Ollama siano disponibili negli ambienti di sviluppo effimeri. Ma questo è un altro articolo.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_risorse">Risorse</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.gradle.org/current/userguide/tutorial_using_tasks.html">Manuale Utente Gradle — Attività</a></p>
+</li>
+<li>
+<p><a href="https://docs.gradle.org/current/userguide/custom_tasks.html">Manuale Utente Gradle — Attività Personalizzate</a></p>
+</li>
+<li>
+<p><a href="https://hub.docker.com/r/ollama/ollama">Immagine Docker Ollama su Docker Hub</a></p>
+</li>
+<li>
+<p><a href="https://kotlinlang.org/docs/gradle.html">Gradle DSL Kotlin — Documentation</a></p>
+</li>
+</ul>
+</div>
+<hr>
+<div class="paragraph">
+<p><em>Articolo pubblicato il 2026-05-08</em></p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Articoli correlati</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: Converti l&#39;AsciiDoc in video MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">L&#39;architettura « Plugin Indipendente + Radice Consumatore » : Perché i miei build Gradle si duplicano</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Il Knowledge Graph come motore di raccomandazione: come ho ucciso gli « articoli correlati » cronologici</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0120_cumuler_deux_abonnements_ollama_pro_docker_post.html" class="fw-semibold">Cumulare Due Abbonamenti Ollama Pro sulla Stessa Macchina con Docker</a>
+                                    <br/><small class="text-muted">08 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0121_plugin_gradle_piloter_deux_instances_ollama_pro_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Si prega di attivare JavaScript per vedere le
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Commenti alimentati da Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Sviluppatore formatore specializzato in ingegneria pedagogica.
+Progettazione di soluzioni e-learning innovative per trasformare l'apprendimento.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="Feed RSS">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contatto">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigazione</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Home</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Risorse</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Archivi</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> diapositive</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> formazioni</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> chiavetta avviabile</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Posizione</h6>
+                    <p class="mb-3">Situato nella regione parigina, interventi possibili in Francia e a distanza.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Francia</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Smart working disponibile</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Spostamenti in Francia</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>
