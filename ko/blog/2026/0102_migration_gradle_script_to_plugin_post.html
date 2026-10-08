@@ -1,0 +1,1526 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Asciidoctor RevealJS 플러그인을 buildSrc Kotlin으로 마이그레이션: Groovy API 역 엔지니어링 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Asciidoctor RevealJS 플러그인을 buildSrc Kotlin으로 마이그레이션: Groovy API 역 엔지니어링 — Cheroliv"/>
+        <meta property="og:description" content="루트 buildscript의 AsciidoctorJRevealJSTask 구성을 독립된 buildSrc Kotlin 플러그인으로 마이그레이션하고 Groovy DSL ruby { gems() }를 바이트코드 내면을 분석하여 찾은 해당 기본 메커니즘으로 대체하는 방법"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0102_migration_gradle_script_to_plugin_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Asciidoctor RevealJS 플러그인을 buildSrc Kotlin으로 마이그레이션: Groovy API 역 엔지니어링 — Cheroliv"/>
+        <meta name="twitter:description" content="루트 buildscript의 AsciidoctorJRevealJSTask 구성을 독립된 buildSrc Kotlin 플러그인으로 마이그레이션하고 Groovy DSL ruby { gems() }를 바이트코드 내면을 분석하여 찾은 해당 기본 메커니즘으로 대체하는 방법"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0102_migration_gradle_script_to_plugin_post.png"/>
+        <meta name="description" content="루트 buildscript의 AsciidoctorJRevealJSTask 구성을 독립된 buildSrc Kotlin 플러그인으로 마이그레이션하고 Groovy DSL ruby { gems() }를 바이트코드 내면을 분석하여 찾은 해당 기본 메커니즘으로 대체하는 방법"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS 피드" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                쉐롤리브
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="탐색 전환">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">홈</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">전문 분야</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">블로그</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">연락처</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="인터페이스 테마 선택">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">명료한</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>밝게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>어둡게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>고대비
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="언어 선택">
+                        <span class="me-1">🇰🇷</span>
+                        <span class="ms-1">KO</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0102_migration_gradle_script_to_plugin_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html"},
+                      "headline": "Asciidoctor RevealJS \uD50C\uB7EC\uADF8\uC778\uC744 buildSrc Kotlin\uC73C\uB85C \uB9C8\uC774\uADF8\uB808\uC774\uC158: Groovy API \uC5ED \uC5D4\uC9C0\uB2C8\uC5B4\uB9C1",
+                      "description": "AsciidoctorJRevealJSTask\uB97C \uB3C5\uB9BD\uD615 Kotlin buildSrc \uD50C\uB7EC\uADF8\uC778\uC73C\uB85C \uC644\uC804\uD788 \uB9C8\uC774\uADF8\uB808\uC774\uC158 : ruby { gems() } \uB300\uCCB4, javap introspection, Ivy rubygems \uC800\uC7A5\uC18C, serviceOf\uB97C \uD1B5\uD55C JavaToolchainService, grolifant forkOptions, \uADF8\uB9AC\uACE0 \uC790\uB3D9 Docker \uAC10\uC9C0.",
+                      "datePublished": "2026-04-16",
+                      "dateModified": "2026-04-16",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Asciidoctor RevealJS \uD50C\uB7EC\uADF8\uC778\uC744 buildSrc Kotlin\uC73C\uB85C \uB9C8\uC774\uADF8\uB808\uC774\uC158: Groovy API \uC5ED \uC5D4\uC9C0\uB2C8\uC5B4\uB9C1", "item": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Asciidoctor RevealJS 플러그인을 buildSrc Kotlin으로 마이그레이션: Groovy API 역 엔지니어링</h1>
+                <p class="lead">
+                    <em>게시: 16 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_배경_및_목적">배경 및 목적</a>
+<ul class="sectlevel2">
+<li><a href="#_시작점">시작점</a></li>
+<li><a href="#_목표">목표</a></li>
+</ul>
+</li>
+<li><a href="#_첫_번째_장애물_ruby_gems">첫 번째 장애물 : `ruby { gems() }</a>
+<ul class="sectlevel2">
+<li><a href="#_그루비_구문_설탕이_숨기는_것">그루비 구문 설탕이 숨기는 것</a></li>
+<li><a href="#_메커니즘의_분해">메커니즘의 분해</a></li>
+</ul>
+</li>
+<li><a href="#_세_부분으로_구성된_해결책">세 부분으로 구성된 해결책</a>
+<ul class="sectlevel2">
+<li><a href="#_1부_rubygems를_위한_ivy_리포지터리">1부: rubygems를 위한 Ivy 리포지터리</a></li>
+<li><a href="#_제2부_asciidoctorgems_종속성">제2부: asciidoctorGems 종속성</a></li>
+<li><a href="#_3부_settings_gradle_kts">3부 : settings.gradle.kts</a></li>
+</ul>
+</li>
+<li><a href="#_api의_바이트코드를_통한_내부_검사">API의 바이트코드를 통한 내부 검사</a>
+<ul class="sectlevel2">
+<li><a href="#_왜_javap">왜 <code>javap</code> ?</a></li>
+<li><a href="#_작업의_계층">작업의 계층</a></li>
+<li><a href="#_발견_의_forkoptions">발견 의 `forkOptions</a></li>
+<li><a href="#_javaforkoptions의_api_grolifant">JavaForkOptions의 API (grolifant)</a></li>
+<li><a href="#_revealjsextension">RevealJSExtension</a></li>
+</ul>
+</li>
+<li><a href="#_자바_툴체인_구성">자바 툴체인 구성</a>
+<ul class="sectlevel2">
+<li><a href="#_javatoolchainservice의_문제">JavaToolchainService의 문제</a></li>
+</ul>
+</li>
+<li><a href="#_자동_docker_감지">자동 Docker 감지</a>
+<ul class="sectlevel2">
+<li><a href="#_컨텍스트">컨텍스트</a></li>
+<li><a href="#_전략">전략</a></li>
+</ul>
+</li>
+<li><a href="#_최종_결과">최종 결과</a>
+<ul class="sectlevel2">
+<li><a href="#_소비자용_buildscript">소비자용 buildscript</a></li>
+<li><a href="#_settings_gradle_kts">settings.gradle.kts</a></li>
+</ul>
+</li>
+<li><a href="#_함정과_해결책_요약">함정과 해결책 요약</a></li>
+<li><a href="#_조사_방법_javap을_사용해_알_수_없는_api_읽기">조사 방법: javap을 사용해 알 수 없는 API 읽기</a>
+<ul class="sectlevel2">
+<li><a href="#_원칙">원칙</a></li>
+<li><a href="#_1단계_gradle_캐시에서_jar_파일_찾기">1단계: Gradle 캐시에서 JAR 파일 찾기</a></li>
+<li><a href="#_2단계_jar의_클래스_나열">2단계: jar의 클래스 나열</a></li>
+<li><a href="#_단계_3_클래스_검사">단계 3: 클래스 검사</a></li>
+<li><a href="#_단계_4_계층_구조_위로_이동">단계 4: 계층 구조 위로 이동</a></li>
+<li><a href="#_단계_5_알_수_없는_유형_추적">단계 5 : 알 수 없는 유형 추적</a></li>
+<li><a href="#_단계_6_프로젝트_확장자_확인">단계 6 : 프로젝트 확장자 확인</a></li>
+<li><a href="#_방법_요약">방법 요약</a></li>
+</ul>
+</li>
+<li><a href="#_다음_단계">다음 단계</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_배경_및_목적">배경 및 목적</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_시작점">시작점</h3>
+<div class="paragraph">
+<p>프로젝트`slider-gradle`AsciiDoc 파일로부터 Gradle 플러그인을 통해 Reveal.js 발표를 생성합니다`org.asciidoctor.jvm.revealjs`. 주요 작업 설정`asciidoctorRevealJs`루트 빌드스크립트에 직접 있었다`build.gradle.kts`[No output]</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins { id("org.asciidoctor.jvm.revealjs") }
+
+apply&lt;slides.SlidesPlugin&gt;()
+
+project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+    repositories { ruby { gems() } }
+    revealjs {
+        version = "3.1.0"
+        templateGitHub {
+            setOrganisation("hakimel")
+            setRepository("reveal.js")
+            setTag("3.9.1")
+        }
+    }
+    revealjsOptions {
+        // ... configuration complète
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_목표">목표</h3>
+<div class="paragraph">
+<p>이 전체 구성을`buildSrc/src/main/kotlin/slides/SlidesPlugin.kt`소비자 buildscript가 다음과 같이 축소되도록 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">apply&lt;slides.SlidesPlugin&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>플러그인은 완전히 자율적이어야 함: 자체적으로 플러그인 종속성을 적용하고, 레포지토리를 구성하며, 루비 젬을 관리해야 합니다.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_첫_번째_장애물_ruby_gems">첫 번째 장애물 : `ruby { gems() }</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_그루비_구문_설탕이_숨기는_것">그루비 구문 설탕이 숨기는 것</h3>
+<div class="paragraph">
+<p>라인`repositories { ruby { gems() } }`이는 빌드스크립트 실행 컨텍스트에서만 사용할 수 있는 Groovy DSL 확장입니다. 이는 buildSrc에서 접근 가능한 정적 Kotlin API가 아닙니다.</p>
+</div>
+<div class="paragraph">
+<p>그에게 전화를 걸려고 시도하면서`SlidesPlugin.kt`, 컴파일이 즉시 실패합니다.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_메커니즘의_분해">메커니즘의 분해</h3>
+<div class="paragraph">
+<p>그레이들 캐시 분석 후 (<code>~/.gradle/caches/modules-2/files-2.1/rubygems/</code>), 파일에서 발견합니다`ivy-3.1.0.xml`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;artifact type='gem' url='https://rubygems.org/gems/asciidoctor-revealjs-3.1.0.gem' /&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`ruby { gems() }`실제로 수행하고 있었다<strong>세 개의 별도 작업</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ivy 레포를 가리키는 저장`https://rubygems.org/gems/`</p>
+</li>
+<li>
+<p>그룹 제외`rubygems`충돌을 피하기 위한 Maven 저장소</p>
+</li>
+<li>
+<p>구성에 gem을 저장`asciidoctorGems`JRuby가 런타임에 이를 로드하도록</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>이 세 가지 책임은 Kotlin에서 별도로 재현해야 합니다</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_세_부분으로_구성된_해결책">세 부분으로 구성된 해결책</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1부_rubygems를_위한_ivy_리포지터리">1부: rubygems를 위한 Ivy 리포지터리</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.repositories.mavenCentral() {
+    content { excludeGroup("rubygems") }
+}
+project.repositories.ivy {
+    url = project.uri("https://rubygems.org/gems/")
+    patternLayout { artifact("[module]-[revision].gem") } <i class="conum" data-value="1"></i><b>(1)</b>
+    metadataSources { artifact() }
+    content { includeGroup("rubygems") }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>확장`.gem`하드코딩되어야 합니다.<code>[ext]`기본적으로 해결하는</code>.jar`, 이는 오류를 일으킵니다`Resource missing`.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Ivy 레포는 바로 위에 선언됩니다.`project.repositories`그리고 블록 안에 있지 않음`repositories { }`왜냐하면 이 블록의 수신기가 아니기 때문에`RepositoryHandler`Gradle 표준이지만 확장과 호환되지 않는 grolifant API`ivy`Kotlin DSL.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_제2부_asciidoctorgems_종속성">제2부: asciidoctorGems 종속성</h3>
+<div class="paragraph">
+<p>플러그인`org.asciidoctor.jvm.gems`먼저 적용해야 합니다 — 구성을 만듭니다.<code>asciidoctorGems`그리고 작업`asciidoctorGemsPrepare</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.plugins.apply("org.asciidoctor.jvm.gems")
+project.plugins.apply("org.asciidoctor.jvm.revealjs") <i class="conum" data-value="1"></i><b>(1)</b>
+
+project.dependencies {
+    add("asciidoctorGems", "rubygems:asciidoctor-revealjs:3.1.0@gem") <i class="conum" data-value="2"></i><b>(2)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>적용 순서는 중요합니다 :`gems`이전`revealjs`. &lt;2&gt; 수식어`@gem`의존성에 올바른 확장을 강제합니다.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3부_settings_gradle_kts">3부 : settings.gradle.kts</h3>
+<div class="paragraph">
+<p>`dependencyResolutionManagement`안에`settings.gradle.kts`프로젝트가 자체 저장소를 선언하도록 허용해야 합니다 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>이 라인이 없으면 Gradle은 플러그인에 선언된 저장소를 무시하고, gem 의존성 해결이 실패합니다.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_api의_바이트코드를_통한_내부_검사">API의 바이트코드를 통한 내부 검사</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_왜_javap">왜 <code>javap</code> ?</h3>
+<div class="paragraph">
+<p>플러그인`asciidoctor-gradle-jvm-slides`버전에 있습니다`4.0.0-alpha.1`. 문서는 존재하지 않거나 불완전합니다. 신뢰할 수 있는 유일한 소스는 컴파일된 클래스를 직접 검사하는 것이다.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_작업의_계층">작업의 계층</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.slides.AsciidoctorJRevealJSTask</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>결과 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class AsciidoctorJRevealJSTask
+  extends org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask
+  implements org.asciidoctor.gradle.base.slides.SlidesToExportAware</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_발견_의_forkoptions">발견 의 `forkOptions</h3>
+<div class="paragraph">
+<p>검사하면서`AbstractAsciidoctorTask`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask | grep -i "fork\|exec\|jvm"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>다음과 같습니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">final org.ysb33r.grolifant.api.v4.JavaForkOptions javaForkOptions;
+public void forkOptions(org.gradle.api.Action&lt;org.ysb33r.grolifant.api.v4.JavaForkOptions&gt;);
+public static final org.asciidoctor.gradle.base.process.ProcessMode JAVA_EXEC;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_javaforkoptions의_api_grolifant">JavaForkOptions의 API (grolifant)</h3>
+<div class="paragraph">
+<p>`javaLauncher`이 작업에는 존재하지 않습니다. 실제 API의`org.ysb33r.grolifant.api.v4.JavaForkOptions`노출 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public void executable(java.lang.Object);  <i class="conum" data-value="1"></i><b>(1)</b>
+public void setExecutable(java.lang.Object);</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>방법`executable(Object)`할당을 대체한다`executable = &#8230;&#8203;`컴파일되지 않는다 (`val`재할당할 수 없습니다).</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_revealjsextension">RevealJSExtension</h3>
+<div class="paragraph">
+<p>`revealjs { }`작업의 방법이 아닌<strong>프로젝트 연장</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.slides.RevealJSExtension</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>접근 방법 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.extensions.getByType&lt;RevealJSExtension&gt;().apply {
+    version = "3.1.0"
+    templateGitHub {
+        setOrganisation("hakimel")
+        setRepository("reveal.js")
+        setTag("3.9.1")
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_자바_툴체인_구성">자바 툴체인 구성</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_javatoolchainservice의_문제">JavaToolchainService의 문제</h3>
+<div class="paragraph">
+<p>`JavaToolchainService`프로젝트 확장이 아닙니다. 다음 호출이 실패합니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ERREUR : Extension of type 'JavaToolchainService' does not exist
+project.extensions.getByType&lt;JavaToolchainService&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>올바른 API는`serviceOf`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">import org.gradle.kotlin.dsl.support.serviceOf
+
+project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+    setInProcess("JAVA_EXEC")
+    forkOptions {
+        executable(
+            project.serviceOf&lt;JavaToolchainService&gt;()
+                .launcherFor {
+                    languageVersion.set(JavaLanguageVersion.of(17))
+                    vendor.set(JvmVendorSpec.ADOPTIUM)
+                }
+                .get()
+                .executablePath
+                .asFile
+                .absolutePath
+        )
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_자동_docker_감지">자동 Docker 감지</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_컨텍스트">컨텍스트</h3>
+<div class="paragraph">
+<p>Asciidoctor/JRuby 플러그인은 Java 17이 필요합니다. buildSrc의 Kotlin 2.0.x는 Java 25를 지원하지 않습니다(버전 파서가에서 크래시됩니다`"25.0.2"`). Gradle 데몬은 따라서 Java 17에서 실행되거나 Docker를 사용해야 합니다.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_전략">전략</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Docker 사용 가능 → 컨테이너를 통한 실행`eclipse-temurin:17`(기본 동작)</p>
+</li>
+<li>
+<p>Docker이 없음 + Java 17 → 로컬 실행</p>
+</li>
+<li>
+<p>Docker 없음 + Java &gt; 17 → 명시적 오류</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val isDockerAvailable = try {
+    Runtime.getRuntime().exec(arrayOf("docker", "info")).waitFor() == 0
+} catch (e: Exception) {
+    false
+}
+
+val javaVersion = JavaVersion.current().majorVersion.toInt()
+
+when {
+    isDockerAvailable -&gt; project.tasks.register&lt;Exec&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+        group = GROUP_TASK_SLIDER
+        description = "Slider settings and generation (via Docker)"
+        dependsOn(TASK_CLEAN_SLIDES_BUILD)
+        finalizedBy(TASK_DASHBOARD_SLIDES_BUILD)
+        commandLine(
+            "docker", "run", "--rm",
+            "-v", "${project.rootDir.absolutePath}:/workspace",
+            "-v", "${System.getProperty("user.home")}/.gradle:/root/.gradle",
+            "-w", "/workspace",
+            "eclipse-temurin:17",
+            "./gradlew", TASK_ASCIIDOCTOR_REVEALJS
+        )
+        workingDir = project.rootDir
+    }
+    javaVersion == 17 -&gt; {
+        project.repositories.mavenCentral() {
+            content { excludeGroup("rubygems") }
+        }
+        project.repositories.ivy {
+            url = project.uri("https://rubygems.org/gems/")
+            patternLayout { artifact("[module]-[revision].gem") }
+            metadataSources { artifact() }
+            content { includeGroup("rubygems") }
+        }
+        project.extensions.getByType&lt;RevealJSExtension&gt;().apply {
+            version = "3.1.0"
+            templateGitHub {
+                setOrganisation("hakimel")
+                setRepository("reveal.js")
+                setTag("3.9.1")
+            }
+        }
+        project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+            setInProcess("JAVA_EXEC")
+            forkOptions {
+                executable(
+                    project.serviceOf&lt;JavaToolchainService&gt;()
+                        .launcherFor {
+                            languageVersion.set(JavaLanguageVersion.of(17))
+                            vendor.set(JvmVendorSpec.ADOPTIUM)
+                        }
+                        .get()
+                        .executablePath
+                        .asFile
+                        .absolutePath
+                )
+            }
+            // ... reste de la configuration
+        }
+    }
+    else -&gt; error(
+        "Docker est requis pour exécuter $TASK_ASCIIDOCTOR_REVEALJS " +
+        "avec Java $javaVersion. Installez Docker ou utilisez Java 17."
+    )
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_최종_결과">최종 결과</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_소비자용_buildscript">소비자용 buildscript</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">apply&lt;slides.SlidesPlugin&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>그게 전부예요. 플러그인이 모든 책임을 집니다.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_settings_gradle_kts">settings.gradle.kts</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+}
+
+@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}
+
+rootProject.name = "slider-gradle"</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_함정과_해결책_요약">함정과 해결책 요약</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">문제</th>
+<th class="tableblock halign-left valign-top">원인</th>
+<th class="tableblock halign-left valign-top">해결책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`ruby { gems() }`Kotlin에서 사용할 수 없음</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Groovy DSL 확장만</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">세 가지 별도의 메커니즘 : Ivy 저장소 + Maven 제외 +<code>asciidoctorGems</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle가 찾는`.jar`대신에`.gem`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`[ext]`해결하는`jar`기본적으로</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">하드코더`.gem`Ivy 패턴 + 한정자 안에`@gem`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ivy { }`컴파일이 되지 않음`repositories { }</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">수신자 grolifant는 Kotlin DSL과 호환되지 않습니다.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직접 통화`project.repositories.ivy { }`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`javaLauncher`해결되지 않은</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 속성`AsciidoctorJRevealJSTask`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>setInProcess("JAVA_EXEC")</code>+<code>forkOptions { executable(&#8230;&#8203;) }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`executable = &#8230;&#8203;`컴파일되지 않습니다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">속성`val`안에`JavaForkOptions`그롤리팡</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">방법`executable(Object)`대신에</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>JavaToolchainService`를 통해 찾을 수 없음`extensions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이것은 Gradle 서비스이지, 확장이 아닙니다.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.serviceOf&lt;JavaToolchainService&gt;()</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`revealjs { }`작업에서 해결되지 않음</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">프로젝트 확장, 작업 방법이 아님</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.extensions.getByType&lt;RevealJSExtension&gt;()</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Java 25에서 빌드가 충돌합니다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kotlin 2.0.x는 두 자리 숫자 버전의 Java를 파싱하지 않습니다.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자동 Docker 감지 + Java 17 폴백</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_조사_방법_javap을_사용해_알_수_없는_api_읽기">조사 방법: javap을 사용해 알 수 없는 API 읽기</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_원칙">원칙</h3>
+<div class="paragraph">
+<p>문서가 없거나 불완전할 때, 바이트코드가 진실의 원천입니다. <code>javap`는 JDK의 표준 도구로 파일을 디컴파일하는 도구입니다.</code>.class`읽을 수 있는 Java 서명, 소스 코드가 필요 없이.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_1단계_gradle_캐시에서_jar_파일_찾기">1단계: Gradle 캐시에서 JAR 파일 찾기</h3>
+<div class="paragraph">
+<p>Gradle은 모든 의존성을 다운로드합니다`~/.gradle/caches/modules-2/files-2.1/`. 첫 번째 단계는 검사할 클래스를 포함하는 jar을 찾는 것입니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "asciidoctor-gradle-jvm-slides*.jar" 2&gt;/dev/null</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">결과 :</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">/home/user/.gradle/caches/modules-2/files-2.1/org.asciidoctor/
+asciidoctor-gradle-jvm-slides/4.0.0-alpha.1/.../
+asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2단계_jar의_클래스_나열">2단계: jar의 클래스 나열</h3>
+<div class="paragraph">
+<p>클래스를 검사하기 전에, JAR에 실제로 존재하는지 확인합니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">jar tf asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar | grep -i "RevealJS\|revealjs"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_단계_3_클래스_검사">단계 3: 클래스 검사</h3>
+<div class="listingblock">
+<div class="title">이것은 사용 가능한 모든 클래스를 보여줍니다 : <code>AsciidoctorJRevealJSTask</code>, <code>RevealJSExtension</code>, <code>RevealJSOptions</code>, 등</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.slides.AsciidoctorJRevealJSTask</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>옵션`-p`비공개 멤버를 포함하여 모든 멤버를 표시합니다. 결과는 즉시 핵심 라인을 보여줍니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class AsciidoctorJRevealJSTask
+extends org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_단계_4_계층_구조_위로_이동">단계 4: 계층 구조 위로 이동</h3>
+<div class="paragraph">
+<p>작업이 확장된다.<code>AbstractAsciidoctorTask</code>. 그 차례에 검사한다 먼저 그의 jar를 찾은 뒤:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "asciidoctor-gradle-jvm-[0-9]*.jar" 2&gt;/dev/null
+
+javap -p -classpath asciidoctor-gradle-jvm-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask | grep -i "fork\|exec\|jvm\|java"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>거기서 우리가 발견한다`forkOptions`, <code>JAVA_EXEC</code>, et <code>javaForkOptions</code> 유형`org.ysb33r.grolifant.api.v4.JavaForkOptions`.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_단계_5_알_수_없는_유형_추적">단계 5 : 알 수 없는 유형 추적</h3>
+<div class="paragraph">
+<p>`JavaForkOptions`는 알려지지 않은 grolifant 클래스입니다. 우리는 그 jar를 찾습니다 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "grolifant*.jar" 2&gt;/dev/null</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>그 후에 그것을 검사합니다 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath grolifant40-legacy-api-2.0.0-alpha.6.jar \
+org.ysb33r.grolifant.api.v4.JavaForkOptions</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>거기에서 찾을 수 있습니다`executable(java.lang.Object)<code>— 호출되어야 할 올바른 메서드, 대조적으로`executable = &#8230;&#8203;`속성이라서 컴파일이 되지 않습니다`val</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_단계_6_프로젝트_확장자_확인">단계 6 : 프로젝트 확장자 확인</h3>
+<div class="paragraph">
+<p>를 위해`revealjs { }`, 질문은 이것이 작업의 방법이었는가? 또는 프로젝트 확장 ? 검사`AsciidoctorJRevealJSTask` 어떤 방법도 보여주지 않는다.<code>revealjs</code>. 그때 점검합니다`RevealJSExtension`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.slides.RevealJSExtension | head -5</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class RevealJSExtension implements groovy.lang.GroovyObject {
+public static final java.lang.String NAME;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>존재하는`NAME`확인합니다. 이는 프로젝트에 등록된 확장 기능입니다, 접근 가능한`project.extensions.getByType&lt;RevealJSExtension&gt;()`.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_방법_요약">방법 요약</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">단계</th>
+<th class="tableblock halign-left valign-top">행동</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>find ~/.gradle/caches -name "*.jar"</code>— jar 찾기</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jar tf jar.jar | grep NomClasse</code>— 클래스가 존재하는지 확인</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>javap -p -classpath jar.jar NomCompletClasse</code>— 클래스를 점검하다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">식별자`extends`그리고 계층을 올라가다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자신들의 jars에서 알려지지 않은 유형을 추적하다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">검색하다`NAME`프로젝트 확장을 식별하기 위해</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>이 방법은 문서화되지 않은 API를 가진 모든 Gradle 플러그인에 적용됩니다. 또는 알파 버전이 기존 문서와 더 이상 일치하지 않는.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_다음_단계">다음 단계</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>이 buildSrc 플러그인은 Gradle Plugin Portal 또는 Maven Local에 게시된 독립된 프로젝트로 추출됩니다. 소비자 buildscript는 다음과 같이 될 것입니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins { id("slides") version "1.0.0" }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Et <code>settings.gradle.kts`최소한으로 축소될 것이며 참조를 갖지 않을`foojay-resolver-convention</code>, 플러그인 자체에서 관리되거나 사전 요구 사항으로 문서화된 JDK 프로비저닝.</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">관련 기사</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDoc을 MP4 비디오로 변환</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">나의 LLM 소비 감사 : SQLite, OpenCode, Ollama Cloud, 그리고 왜 나의 프로 구독이 세계 시장을 폭발시키는가?</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">아키텍처 « 독립 플러그인 + 소비자 루트 » : 왜 내 Gradle 빌드가 중복되는가</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">추천 엔진으로서의 Knowledge Graph: 시간 순서의 « 관련 기사 »를 죽인 방법</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0102_migration_gradle_script_to_plugin_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    자바스크립트를 활성화하여 보세요
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqus로 구동되는 댓글</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        교육공학 전문 트레이너 겸 개발자
+학습을 변화시키기 위한 혁신적인 e-러닝 솔루션 설계
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="깃허브">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 피드">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="연락처">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">내비게이션</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>홈</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>블로그</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">리소스</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>아카이브</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 슬라이드</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 교육</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 부팅 가능한 키</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">위치</h6>
+                    <p class="mb-3">파리 지역에 기반을 두고, 프랑스 내 및 원격으로 가능한 개입.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>일드프랑스, 프랑스</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>재택근무 가능</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>프랑스 내 이동</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. 모든 권리 보유.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>우리 첫 채용자: 데이터셋 익명화 도구 — MVP0 시범 기간 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="우리 첫 채용자: 데이터셋 익명화 도구 — MVP0 시범 기간 — Cheroliv"/>
+        <meta property="og:description" content="RAG, 파인튜닝, SaaS를 진행하기 전에 깨끗한 데이터가 필요합니다. 시험 기간 동안 첫 직원으로 고용된 — 익명화 도구 — 은 SQL, pgvector, ONNX, Graphify, JSON, YAML, AsciiDoc 같은 멀티 기술 소스에서 PII를 감지하고 정리합니다. 이것이 MVP0입니다. 그 없이는 나머지는 불법이거나 기술적으로 저하됩니다. 이렇게 이 구성 요소가 보편적인 문제를 시장 가능한 제품으로 변환하는 방법을 보여줍니다."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="우리 첫 채용자: 데이터셋 익명화 도구 — MVP0 시범 기간 — Cheroliv"/>
+        <meta name="twitter:description" content="RAG, 파인튜닝, SaaS를 진행하기 전에 깨끗한 데이터가 필요합니다. 시험 기간 동안 첫 직원으로 고용된 — 익명화 도구 — 은 SQL, pgvector, ONNX, Graphify, JSON, YAML, AsciiDoc 같은 멀티 기술 소스에서 PII를 감지하고 정리합니다. 이것이 MVP0입니다. 그 없이는 나머지는 불법이거나 기술적으로 저하됩니다. 이렇게 이 구성 요소가 보편적인 문제를 시장 가능한 제품으로 변환하는 방법을 보여줍니다."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.png"/>
+        <meta name="description" content="RAG, 파인튜닝, SaaS를 진행하기 전에 깨끗한 데이터가 필요합니다. 시험 기간 동안 첫 직원으로 고용된 — 익명화 도구 — 은 SQL, pgvector, ONNX, Graphify, JSON, YAML, AsciiDoc 같은 멀티 기술 소스에서 PII를 감지하고 정리합니다. 이것이 MVP0입니다. 그 없이는 나머지는 불법이거나 기술적으로 저하됩니다. 이렇게 이 구성 요소가 보편적인 문제를 시장 가능한 제품으로 변환하는 방법을 보여줍니다."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS 피드" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    <meta name="robots" content="noindex, follow"/>
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                쉐롤리브
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="탐색 전환">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">홈</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">전문 분야</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">블로그</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">연락처</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="인터페이스 테마 선택">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">명료한</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>밝게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>어둡게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>고대비
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="언어 선택">
+                        <span class="me-1">🇰🇷</span>
+                        <span class="ms-1">KO</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"},
+                      "headline": "\uC6B0\uB9AC \uCCAB \uCC44\uC6A9\uC790: \uB370\uC774\uD130\uC14B \uC775\uBA85\uD654 \uB3C4\uAD6C \u2014 MVP0 \uC2DC\uBC94 \uAE30\uAC04",
+                      "description": "\uB098\uC758 \uC5D0\uC774\uC804\uD2B8 \uC0DD\uD0DC\uACC4\uC758 \uCCAB \uBC88\uC9F8 \uC9C1\uC6D0\uC740 LLM\uC774 \uC544\uB2C8\uBA70, \uBA40\uD2F0\uC18C\uC2A4 \uB370\uC774\uD130 \uC775\uBA85\uD654 \uC804\uBB38\uAC00\uB2E4. RAG \uC774\uC804, \uD30C\uC778\uD29C\uB2DD \uC774\uC804, SaaS \uC774\uC804, \uADF8\uAC83\uC740 \uC815\uB9AC\uD55C\uB2E4. \uC774\uAC83\uC774 MVP0\uC778 \uC774\uC720, \uC815\uD655\uD788 \uBB34\uC5C7\uC744 \uD558\uB294\uC9C0, \uADF8\uB9AC\uACE0 \uD504\uB86C\uD504\uD2B8\uC5D0\uC11C \uC99D\uAC15 \uD604\uC2E4\uC758 \uBB38\uC744 \uC5EC\uB294 \uBC29\uBC95\uC744 \uC54C\uB824\uC900\uB2E4.",
+                      "datePublished": "2026-05-01",
+                      "dateModified": "2026-05-01",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\uC6B0\uB9AC \uCCAB \uCC44\uC6A9\uC790: \uB370\uC774\uD130\uC14B \uC775\uBA85\uD654 \uB3C4\uAD6C \u2014 MVP0 \uC2DC\uBC94 \uAE30\uAC04", "item": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">우리 첫 채용자: 데이터셋 익명화 도구 — MVP0 시범 기간</h1>
+                <p class="lead">
+                    <em>게시: 01 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_모두를_도망치게_하는_문제">모두를 도망치게 하는 문제</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">읽는 시간 : 12 minutes</div>
+<p>나는 LLM을 채용하지 않는다. 나는 익명화자를 채용한다. pgvector RAG를 수행하기 전에, CDA/FPA 전문가를 파인튜닝하기 전에, 클라이언트 워크스페이스를 프로비저닝하기 전에 — 누군가는 데이터의 화장실을 청소해야 한다. 이 직원은 익명화 전문가다 (MVP0, codebase-gradle의 EPIC 2). 그리고 그는 제품이 시장에서 판매 가능하도록 만든다.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">똑</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_모두를_도망치게_하는_문제">모두를 도망치게 하는 문제</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>훈련 데이터를 다루는 모든 AI 스타트업은 동일한 벽에 부딪힙니다:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">----
+----
+Données brutes client (SPG, cours, évaluations)
+  ├→ Noms de stagiaires en clair dans les PDF
+  ├→ Emails dans les métadonnées JSON
+  ├→ IP de connexion dans les logs pgvector
+  ├→ Identifiants dans les nœuds Graphify
+  └→ Références OF pilote dans les schémas SQL
+----
+
+결과: RAG를 오염된 데이터에 사용할 경우(개인정보 환각, GDPR 위반, 법적 리스크)가 발생하거나, 아무것도 하지 않을 경우(제품 없음)이 됩니다. 세 번째 방법 — 수동으로 정리하는 것 — 은 확장 가능하지 않다.
+
+내 답변 : 문제를 피하지 마라. L'**자동화하다**.
+
+== MVP0 : 익명화 도구, 시험 기간 중 첫 번째로 고용된
+
+MVP0는 기능이 아닙니다. 그것은**편의 전문가**— 더러운, 멍청하고 사악한 일을 하는 직원, 그리고 누구도 피치 덱에서 말하고 싶어 하지 않는.
+
+그가 하는 일:
+
+[source]
+----
+ENTRÉE : Données brutes multi-sources
+  ├→ AsciiDoc (SPG_A2SP.adoc) → noms, dates, OF pilote
+  ├→ JSON (catalogue formations) → emails, téléphones
+  ├→ YAML (config workspace) → tokens OAuth2
+  ├→ SQL (schémas DDL) → IP, adresses
+  ├→ pgvector (métadonnées embeddings) → identifiants
+  ├→ ONNX (outputs classification) → noms propres
+  └→ Graphify (graph.json) → nœuds avec PII
+
+SORTIE : Datasets propres, format standardisé
+  ├→ [ANONYMIZED] remplace les PII détectées
+  ├→ Classification RGPD (niveau 0→4)
+  ├→ Rapport d'audit (quoi a été nettoyé)
+  └→ Dataset prêt pour RAG ET fine-tuning
+----
+
+먼저 가장 명백한 패턴을 감지합니다 (emails`.*@.*`, 토큰`sk-*`, `ghp_*`, IPs), 그 후 그것이 배운다. 수습 기간은 이것이죠 : 우리는 위음성이 통과되지 않는지 확인한 후 그것을 정직원으로 채용합니다.
+
+== 이 MVP가 잠금 해제하는 것(그리고 이것이 단순히 규제 준수가 아니다)
+
+익명화는 MVP0가 아니라 GDPR 고속도로 앞의 통행료가 아닙니다. 그것은 고속도로 자체입니다. 다음은 그것이 열어주는 것 :
+
+=== 현재: 프롬프트의 증강 현실
+
+[source]
+----
+DONNÉES BRUTES CLIENT
+    ↓
+Anonymiseur MVP0 → datasets propres
+    ↓
+RAG pgvector (MVP1) → top-K documents similaires (filtrés, anonymisés)
+    ↓
+LLM (deepseek-v4-pro) → réponse augmentée, zéro PII
+----
+
+RAG는 오염된 데이터에서 검색하지 않는다 — 그것은 공간에서 검색한다**구성으로 깨끗한**. 이것은 답변의 품질에 모든 것을 바꾼다 : LLM은 인식한 PII를 우회하려 시간을 낭비하지 않지만 언급해서는 안 된다.
+
+=== 미래 : 건강한 데이터에 대한 파인 튜닝
+
+[source]
+----
+MVP0 → datasets propres accumulés (session après session)
+    ↓
+Fine-tuning expert métier (CDA, FPA) sur données zéro PII
+    ↓
+Modèle fine-tuné exposé via Ollama (sans fuite de données)
+----
+
+원시 데이터에서의 파인튜닝은 잠재적인 법적 재앙입니다. 깨끗한 데이터에서는 그것은**재현 가능한 방법**. 각 클라이언트는 정제된 데이터셋을 축적하고, 자신의 데이터를 기반하여 비즈니스 전문가를 파인 튜닝할 수 있으며, 개인 데이터를 절대 노출하지 않습니다.
+
+== 왜 이것이 시장성이 있나요?
+
+이것은 GDPR 준수 도구가 아닙니다. 이것은**보편적인 문제를 자산으로 바꾸는 재현 가능한 방법**:
+
+1. *모든 교육 기업은 더러운 데이터를 가지고 있습니다* — 이것이 문제입니다
+2. *자동화된 다중 소스 정제 파이프라인이 있는 것은 하나도 없습니다* — 이것이 시장입니다
+3. *루프: 익명화 → RAG → 파인튜닝은 독점적이다* — 이것이 장벽이다
+
+Edster SaaS (MVP3)는 « Gradle 워크스페이스 »를 판매하지 않을 것입니다. 이 폐쇄 루프를 판매할 것입니다. 그리고 MVP0는 입구입니다.
+
+== SQL 형식은 세 번째 컨텍스트 경로
+
+구조화된 데이터 가져오기는 단순히 교환 형식이 아닙니다. SQL 스키마(DDL)는**도메인 엔티티-관계 모델**:
+
+[source]
+----
+CREATE TABLE formation (
+  id UUID PRIMARY KEY,
+  titre VARCHAR NOT NULL,
+  referentiel RNCP REFERENCES rncp(id),
+  organisme OF REFERENCES of_pilote(id)  -- ← va être anonymisé
+);
+----
+
+이 DDL은 익명 처리된 후(4줄) LLM의 컨텍스트 소스가 된다. 텍스트가 아니라 — du**비즈니스 모델**. RAG은 내용(벡터 유사도)을 제공하고, Graphify는 관계(정확한 구조)를 제공하며, SQL 스키마는 제공한다**암시적 도메인 주도 설계**: bounded contexts, aggregates, value objects. LLM은 자신의 스키마를 읽음으로써 업계를 이해한다.
+
+== 로드맵: MVP0부터 SaaS까지
+
+[source]
+----
+MVP0 — Anonymiseur (ce que cet article décrit)
+  Sortie : datasets propres, reproductible
+
+MVP1 — RAG pgvector (dépend de MVP0)
+  Realité augmentée en prompt sur données nettoyées
+
+MVP2 — Graphify + ONNX + SQL DDD (dépend de MVP1)
+  Vecteur composite de contexte (règles + similarité + relations exactes)
+
+MVP3 — SaaS Edster (dépend de MVP0-2)
+  Provisionnement workspace client complet
+----
+
+각 MVP는 이전 MVP에 의존합니다. MVP0 없이는 어떤 MVP도 제공할 수 없습니다. 이것이 바로 백로그에서 'P0'가 아닌 이유가 익명화 도구가 아닌 이유이며 — 그것은**MVP0**. 이것은 첫 번째 상업적 산출물이며, 나머지는 그 성공에 달려 있다.
+
+== Conclusion : 모든 것을 가능하게 하는 보이지 않는 일
+
+일반적인 스타트업에서는 데이터 정리가 외주화되거나 수작업으로 이루어지거나 간과됩니다. 이 아키텍처에서는 이것이**제품의 핵심**. 익명화하는 사람은 첫 번째 직원이기 때문에, 그에 없이는 아무것도 작동하지 않는다 :
+
+* MVP0 없이는 → 법적 RAG이 없습니다 (MVP1)
+* MVP0 없이는 → 데이터 유출이 없으면 미세 조정도 없습니다 (EPIC 5)
+* MVP0 없이는 → 신뢰할 수 있는 SaaS 없음 (MVP3)
+* MVP0 없음 → 프롬프트에서 증강 현실 없음
+* MVP0 없음 → 컨텍스트의 세 번째 경로 없음 (SQL DDD)
+
+그는 더러운 일을 한다. 그는 피치에서 결코 언급되지 않을 것이다. 하지만 그가 공장을 움직인다.
+
+그게 바로 우리가 그들을 먼저 고용하는 이유다.
+
+== 참고문헌
+
+* 공간적 온톨로지와 신뢰의 원에 관한 기사 :link:../2026/0114_gouvernance_cercles_confiance_ontologie_spatiale_alignement_llm_post.html[공간 온톨로지로서의 정렬 메커니즘]
+* Eager/Lazy 에이전트 거버넌스에 관한 기사 :link:../2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[AsciiDoc을 사용한 AI 에이전트 관리]
+* Hot/Warm/Cold 메커니즘에 대한 기사 :link:../2026/0110_mecanisme_backup_contexte_agent_post.html[슬라이딩 윈도우와 한파]
+* 세 개의 LLM 비교에 관한 기사:link:../2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html[DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1]
+----</code></pre>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">관련 기사</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDoc을 MP4 비디오로 변환</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">나의 LLM 소비 감사 : SQLite, OpenCode, Ollama Cloud, 그리고 왜 나의 프로 구독이 세계 시장을 폭발시키는가?</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">아키텍처 « 독립 플러그인 + 소비자 루트 » : 왜 내 Gradle 빌드가 중복되는가</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">추천 엔진으로서의 Knowledge Graph: 시간 순서의 « 관련 기사 »를 죽인 방법</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    자바스크립트를 활성화하여 보세요
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqus로 구동되는 댓글</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        교육공학 전문 트레이너 겸 개발자
+학습을 변화시키기 위한 혁신적인 e-러닝 솔루션 설계
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="깃허브">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 피드">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="연락처">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">내비게이션</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>홈</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>블로그</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">리소스</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>아카이브</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 슬라이드</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 교육</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 부팅 가능한 키</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">위치</h6>
+                    <p class="mb-3">파리 지역에 기반을 두고, 프랑스 내 및 원격으로 가능한 개입.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>일드프랑스, 프랑스</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>재택근무 가능</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>프랑스 내 이동</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. 모든 권리 보유.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,1515 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="sr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Migracija plugina Asciidoctor RevealJS u buildSrc Kotlin : reverzni inženjerstvo Groovskog API-a — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Migracija plugina Asciidoctor RevealJS u buildSrc Kotlin : reverzni inženjerstvo Groovskog API-a — Cheroliv"/>
+        <meta property="og:description" content="Kako migrirati konfiguraciju zadatka AsciidoctorJRevealJSTask iz korenskog buildscripta u samostalni Kotlin buildSrc plugin, zamenujući Groovy DSL ruby { gems() } njegovim podlozim mehanizmima otkrivenim introspekcijom bajtkoda."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0102_migration_gradle_script_to_plugin_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Migracija plugina Asciidoctor RevealJS u buildSrc Kotlin : reverzni inženjerstvo Groovskog API-a — Cheroliv"/>
+        <meta name="twitter:description" content="Kako migrirati konfiguraciju zadatka AsciidoctorJRevealJSTask iz korenskog buildscripta u samostalni Kotlin buildSrc plugin, zamenujući Groovy DSL ruby { gems() } njegovim podlozim mehanizmima otkrivenim introspekcijom bajtkoda."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0102_migration_gradle_script_to_plugin_post.png"/>
+        <meta name="description" content="Kako migrirati konfiguraciju zadatka AsciidoctorJRevealJSTask iz korenskog buildscripta u samostalni Kotlin buildSrc plugin, zamenujući Groovy DSL ruby { gems() } njegovim podlozim mehanizmima otkrivenim introspekcijom bajtkoda."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS tok" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Укључи навигацију">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Почетна</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Експертиза</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Блог</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Контакт</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Изабери тему интерфејса">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">jasan</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Светла
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Тамна
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Високи контраст
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Izaberi jezik">
+                        <span class="me-1">🇷🇸</span>
+                        <span class="ms-1">SR</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0102_migration_gradle_script_to_plugin_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html"},
+                      "headline": "Migracija plugina Asciidoctor RevealJS u buildSrc Kotlin : reverzni in\u017Eenjerstvo Groovskog API-a",
+                      "description": "Puna migracija AsciidoctorJRevealJSTask na samostalni Kotlin plugin buildSrc: zamena ruby { gems() }, introspekcija javap, repozitorijum Ivy rubygems, JavaToolchainService preko serviceOf, forkOptions grolifant, i automatska detekcija Docker.",
+                      "datePublished": "2026-04-16",
+                      "dateModified": "2026-04-16",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Migracija plugina Asciidoctor RevealJS u buildSrc Kotlin : reverzni in\u017Eenjerstvo Groovskog API-a", "item": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Migracija plugina Asciidoctor RevealJS u buildSrc Kotlin : reverzni inženjerstvo Groovskog API-a</h1>
+                <p class="lead">
+                    <em>Објављено 16 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_контекст_и_циљ">Контекст и циљ</a>
+<ul class="sectlevel2">
+<li><a href="#_početna_tačka">početna tačka</a></li>
+<li><a href="#_циљ">Циљ</a></li>
+</ul>
+</li>
+<li><a href="#_prva_prepreka_ruby_gems">Prva prepreka : `ruby { gems() }</a>
+<ul class="sectlevel2">
+<li><a href="#_šta_sakriva_groovin_sintaksički_šećer">Šta sakriva Groovin sintaksički šećer</a></li>
+<li><a href="#_raspadađ_mehanizma">Raspadađ mehanizma</a></li>
+</ul>
+</li>
+<li><a href="#_trojedelno_rešenje">Trojedelno rešenje</a>
+<ul class="sectlevel2">
+<li><a href="#_deo_1_repozitorijum_ivy_za_rubygems">Deo 1: repozitorijum Ivy za rubygems</a></li>
+<li><a href="#_deo_2_zavisnost_asciidoctorgems">Deo 2: zavisnost asciidoctorGems</a></li>
+<li><a href="#_део_3_settings_gradle_kts">Део 3 : settings.gradle.kts</a></li>
+</ul>
+</li>
+<li><a href="#_introspekcija_api_ja_kroz_bajtkodove">Introspekcija API-ja kroz bajtkodove</a>
+<ul class="sectlevel2">
+<li><a href="#_zašto_javap">Zašto <code>javap</code>?</a></li>
+<li><a href="#_hierarhija_zadatka">Hierarhija zadatka</a></li>
+<li><a href="#_otkrivanje_forkoptions">Otkrivanje `forkOptions</a></li>
+<li><a href="#_api_javaforkoptions_grolifant">API JavaForkOptions (grolifant)</a></li>
+<li><a href="#_revealjsextension">RevealJSExtension</a></li>
+</ul>
+</li>
+<li><a href="#_konfiguracija_java_toolchain">Konfiguracija Java toolchain</a>
+<ul class="sectlevel2">
+<li><a href="#_problem_javatoolchainservice">Problem JavaToolchainService</a></li>
+</ul>
+</li>
+<li><a href="#_automatska_detekcija_docker">Automatska detekcija Docker</a>
+<ul class="sectlevel2">
+<li><a href="#_kontekst">Kontekst</a></li>
+<li><a href="#_стратегија">Стратегија</a></li>
+</ul>
+</li>
+<li><a href="#_konačni_rezultat">Konačni rezultat</a>
+<ul class="sectlevel2">
+<li><a href="#_potrošački_buildscript">potrošački buildscript</a></li>
+<li><a href="#_settings_gradle_kts">settings.gradle.kts</a></li>
+</ul>
+</li>
+<li><a href="#_свод_о_пажња_и_решения">Свод о пажња и решения</a></li>
+<li><a href="#_metod_istraživanja_čitanje_nepoznate_api_koristeći_javap">Metod istraživanja : čitanje nepoznate API koristeći javap</a>
+<ul class="sectlevel2">
+<li><a href="#_принцип">Принцип</a></li>
+<li><a href="#_korak_1_pronaći_jar_u_gradle_kešu">Korak 1: pronaći JAR u Gradle kešu</a></li>
+<li><a href="#_корак_2_исписати_класе_из_jar_а">Корак 2: исписати класе из jar-а</a></li>
+<li><a href="#_корак_3_проверити_класу">Корак 3: проверити класу</a></li>
+<li><a href="#_korak_4_povratak_na_hijerarhiju">Korak 4: povratak na hijerarhiju</a></li>
+<li><a href="#_етап_5_следите_непознате_типове">Етап 5: Следите непознате типове</a></li>
+<li><a href="#_корак_6_проверити_проширења_пројекта">Корак 6 : проверити проширења пројекта</a></li>
+<li><a href="#_резюме_метода">Резюме метода</a></li>
+</ul>
+</li>
+<li><a href="#_sledeći_korak">Sledeći korak</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_контекст_и_циљ">Контекст и циљ</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_početna_tačka">početna tačka</h3>
+<div class="paragraph">
+<p>Пројекат`slider-gradle`генерише Reveal.js презентације из AsciiDoc фајлова преко Gradle додатка`org.asciidoctor.jvm.revealjs`. Конфигурација главног задатка`asciidoctorRevealJs`živao je direktno u root buildscriptu`build.gradle.kts`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins { id("org.asciidoctor.jvm.revealjs") }
+
+apply&lt;slides.SlidesPlugin&gt;()
+
+project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+    repositories { ruby { gems() } }
+    revealjs {
+        version = "3.1.0"
+        templateGitHub {
+            setOrganisation("hakimel")
+            setRepository("reveal.js")
+            setTag("3.9.1")
+        }
+    }
+    revealjsOptions {
+        // ... configuration complète
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_циљ">Циљ</h3>
+<div class="paragraph">
+<p>Premesti celu ovu konfiguraciju u`buildSrc/src/main/kotlin/slides/SlidesPlugin.kt`da bi buildscript potrošač se smanji na :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">apply&lt;slides.SlidesPlugin&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Додатак мора да буде потпуно самостал: сам примени swoje plugin-зависности, конфигурише своје репозиторијуме и управи својим Ruby gem-овима.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prva_prepreka_ruby_gems">Prva prepreka : `ruby { gems() }</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_šta_sakriva_groovin_sintaksički_šećer">Šta sakriva Groovin sintaksički šećer</h3>
+<div class="paragraph">
+<p>Linija`repositories { ruby { gems() } }`je Groovy DSL ekstenzija dostupna samo u kontekstu izvršavanja buildscript. Ne postoji kao statična Kotlin API dostupna iz buildSrc.</p>
+</div>
+<div class="paragraph">
+<p>Pokusavajući da ga pozovem od`SlidesPlugin.kt`, kompajliranje ne uspe odmah</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_raspadađ_mehanizma">Raspadađ mehanizma</h3>
+<div class="paragraph">
+<p>После анализе кеша Gradle (<code>~/.gradle/caches/modules-2/files-2.1/rubygems/</code>), откривамо у датотеци`ivy-3.1.0.xml`(empty)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;artifact type='gem' url='https://rubygems.org/gems/asciidoctor-revealjs-3.1.0.gem' /&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`ruby { gems() }`De facto se obavljalo<strong>три одвојене операције</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Sačuvati Ivy repo koji ukazuje na`https://rubygems.org/gems/`</p>
+</li>
+<li>
+<p>Izuzeti grupu`rubygems`Maven repozitorijumi da se sprečavaju konflikti</p>
+</li>
+<li>
+<p>Sačuvati gem u konfiguraciji`asciidoctorGems`da JRuby ga učitava tokom izvođenja</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Ova tri odgovornosti moraju biti ponovo napravljene posebno u Kotlinu.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_trojedelno_rešenje">Trojedelno rešenje</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_deo_1_repozitorijum_ivy_za_rubygems">Deo 1: repozitorijum Ivy za rubygems</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.repositories.mavenCentral() {
+    content { excludeGroup("rubygems") }
+}
+project.repositories.ivy {
+    url = project.uri("https://rubygems.org/gems/")
+    patternLayout { artifact("[module]-[revision].gem") } <i class="conum" data-value="1"></i><b>(1)</b>
+    metadataSources { artifact() }
+    content { includeGroup("rubygems") }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Ekstenzija`.gem`Треба да буде хардкодована.<code>[ext]`решава по умолчанию у</code>.jar`, što uzrokuje grešku`Resource missing`.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>OBAVEŠTENJE: Repo Ivy je deklarisano direktno na`project.repositories`i ne u bloku`repositories { }`jer пријемник овог блока није`RepositoryHandler`standard Gradle ali API grolifant nekompatibilan sa ekstenzijom`ivy`Kotlin DSL.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deo_2_zavisnost_asciidoctorgems">Deo 2: zavisnost asciidoctorGems</h3>
+<div class="paragraph">
+<p>Додатак`org.asciidoctor.jvm.gems`треба да се примени прво — то прави конфигурацију`asciidoctorGems`и задатак`asciidoctorGemsPrepare`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.plugins.apply("org.asciidoctor.jvm.gems")
+project.plugins.apply("org.asciidoctor.jvm.revealjs") <i class="conum" data-value="1"></i><b>(1)</b>
+
+project.dependencies {
+    add("asciidoctorGems", "rubygems:asciidoctor-revealjs:3.1.0@gem") <i class="conum" data-value="2"></i><b>(2)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Redosled primene je važan:`gems`пре`revealjs`. &lt;2&gt; Kvalifikator`@gem`prinuši ispravno proširenje na zavisnost.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_део_3_settings_gradle_kts">Део 3 : settings.gradle.kts</h3>
+<div class="paragraph">
+<p>`dependencyResolutionManagement`у`settings.gradle.kts`mora dozvoliti projektima da prijave sopstvena repozitorijuma:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Bez ove linije, Gradle ignoriše repozitorijume deklarisane u plugin-u i rešavanje gemova ne uspe.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introspekcija_api_ja_kroz_bajtkodove">Introspekcija API-ja kroz bajtkodove</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_zašto_javap">Zašto <code>javap</code>?</h3>
+<div class="paragraph">
+<p>Плагин`asciidoctor-gradle-jvm-slides`je u verziji`4.0.0-alpha.1`. Njegova dokumentacija ne postoji ili je nepotpuna. Jedini pouzdani izvor je direktna inspekcija kompajliranih klasa.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hierarhija_zadatka">Hierarhija zadatka</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.slides.AsciidoctorJRevealJSTask</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Rezultat :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class AsciidoctorJRevealJSTask
+  extends org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask
+  implements org.asciidoctor.gradle.base.slides.SlidesToExportAware</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_otkrivanje_forkoptions">Otkrivanje `forkOptions</h3>
+<div class="paragraph">
+<p>Inspektujući`AbstractAsciidoctorTask` :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask | grep -i "fork\|exec\|jvm"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pronađemo:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">final org.ysb33r.grolifant.api.v4.JavaForkOptions javaForkOptions;
+public void forkOptions(org.gradle.api.Action&lt;org.ysb33r.grolifant.api.v4.JavaForkOptions&gt;);
+public static final org.asciidoctor.gradle.base.process.ProcessMode JAVA_EXEC;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_api_javaforkoptions_grolifant">API JavaForkOptions (grolifant)</h3>
+<div class="paragraph">
+<p>`javaLauncher`ne postoji na ovom zadatku. Stvarni API od`org.ysb33r.grolifant.api.v4.JavaForkOptions`изложи :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public void executable(java.lang.Object);  <i class="conum" data-value="1"></i><b>(1)</b>
+public void setExecutable(java.lang.Object);</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Metoda`executable(Object)`Zamjenjuje zadatak`executable = &#8230;&#8203;`koje ne kompajlira (`val`не може да буде додело).</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_revealjsextension">RevealJSExtension</h3>
+<div class="paragraph">
+<p>`revealjs { }`nije jedna metoda zadatka ali jedna<strong>проширење пројекта</strong>[space]</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.slides.RevealJSExtension</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pristupa se putem:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.extensions.getByType&lt;RevealJSExtension&gt;().apply {
+    version = "3.1.0"
+    templateGitHub {
+        setOrganisation("hakimel")
+        setRepository("reveal.js")
+        setTag("3.9.1")
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_konfiguracija_java_toolchain">Konfiguracija Java toolchain</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_problem_javatoolchainservice">Problem JavaToolchainService</h3>
+<div class="paragraph">
+<p>`JavaToolchainService`Није проширење пројекта. Следећи позив није успео :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ERREUR : Extension of type 'JavaToolchainService' does not exist
+project.extensions.getByType&lt;JavaToolchainService&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Dobra API je`serviceOf`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">import org.gradle.kotlin.dsl.support.serviceOf
+
+project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+    setInProcess("JAVA_EXEC")
+    forkOptions {
+        executable(
+            project.serviceOf&lt;JavaToolchainService&gt;()
+                .launcherFor {
+                    languageVersion.set(JavaLanguageVersion.of(17))
+                    vendor.set(JvmVendorSpec.ADOPTIUM)
+                }
+                .get()
+                .executablePath
+                .asFile
+                .absolutePath
+        )
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_automatska_detekcija_docker">Automatska detekcija Docker</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_kontekst">Kontekst</h3>
+<div class="paragraph">
+<p>Asciidoctor/JRuby plugin zahteva Java 17. Kotlin 2.0.x u buildSrc ne podržava Java 25 (parser verzije se svrće na`"25.0.2"`). Gradle daemon mora da radi na Java 17 ili Docker mora da se koristi.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_стратегија">Стратегија</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Docker dostupan → izvršenje putem kontejnera`eclipse-temurin:17`(podrazumevano ponašanje)</p>
+</li>
+<li>
+<p>Docker nedostupan + Java 17 → lokalno izvršenje</p>
+</li>
+<li>
+<p>Docker nedostupan + Java &gt; 17 → eksplicitna greška</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val isDockerAvailable = try {
+    Runtime.getRuntime().exec(arrayOf("docker", "info")).waitFor() == 0
+} catch (e: Exception) {
+    false
+}
+
+val javaVersion = JavaVersion.current().majorVersion.toInt()
+
+when {
+    isDockerAvailable -&gt; project.tasks.register&lt;Exec&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+        group = GROUP_TASK_SLIDER
+        description = "Slider settings and generation (via Docker)"
+        dependsOn(TASK_CLEAN_SLIDES_BUILD)
+        finalizedBy(TASK_DASHBOARD_SLIDES_BUILD)
+        commandLine(
+            "docker", "run", "--rm",
+            "-v", "${project.rootDir.absolutePath}:/workspace",
+            "-v", "${System.getProperty("user.home")}/.gradle:/root/.gradle",
+            "-w", "/workspace",
+            "eclipse-temurin:17",
+            "./gradlew", TASK_ASCIIDOCTOR_REVEALJS
+        )
+        workingDir = project.rootDir
+    }
+    javaVersion == 17 -&gt; {
+        project.repositories.mavenCentral() {
+            content { excludeGroup("rubygems") }
+        }
+        project.repositories.ivy {
+            url = project.uri("https://rubygems.org/gems/")
+            patternLayout { artifact("[module]-[revision].gem") }
+            metadataSources { artifact() }
+            content { includeGroup("rubygems") }
+        }
+        project.extensions.getByType&lt;RevealJSExtension&gt;().apply {
+            version = "3.1.0"
+            templateGitHub {
+                setOrganisation("hakimel")
+                setRepository("reveal.js")
+                setTag("3.9.1")
+            }
+        }
+        project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+            setInProcess("JAVA_EXEC")
+            forkOptions {
+                executable(
+                    project.serviceOf&lt;JavaToolchainService&gt;()
+                        .launcherFor {
+                            languageVersion.set(JavaLanguageVersion.of(17))
+                            vendor.set(JvmVendorSpec.ADOPTIUM)
+                        }
+                        .get()
+                        .executablePath
+                        .asFile
+                        .absolutePath
+                )
+            }
+            // ... reste de la configuration
+        }
+    }
+    else -&gt; error(
+        "Docker est requis pour exécuter $TASK_ASCIIDOCTOR_REVEALJS " +
+        "avec Java $javaVersion. Installez Docker ou utilisez Java 17."
+    )
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_konačni_rezultat">Konačni rezultat</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_potrošački_buildscript">potrošački buildscript</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">apply&lt;slides.SlidesPlugin&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To je sve. Plugin preuzima celokupnu odgovornost.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_settings_gradle_kts">settings.gradle.kts</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+}
+
+@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}
+
+rootProject.name = "slider-gradle"</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_свод_о_пажња_и_решения">Свод о пажња и решения</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Problem</th>
+<th class="tableblock halign-left valign-top">Причина</th>
+<th class="tableblock halign-left valign-top">Решение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`ruby { gems() }`nije dostupan u Kotlinu</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Samo ekstenzija Groovog DSL</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tri odvojenih mehanizma: repo Ivy + isključivanje Maven +<code>asciidoctorGems</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle traži jedan`.jar`умсте једног`.gem`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`[ext]`решава у`jar`podrazumevano</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hardcoder`.gem`у узору Ivy + kvalifikator`@gem`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ivy { }`ne kompajlira u`repositories { }</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Пријемник grolifant није совместим са Kotlin DSL</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Позови директно`project.repositories.ivy { }`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`javaLauncher`нерешено</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nepostojeca svojstvo na`AsciidoctorJRevealJSTask`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>setInProcess("JAVA_EXEC")</code>+<code>forkOptions { executable(&#8230;&#8203;) }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`executable = &#8230;&#8203;`ne kompajlira</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">svojstvo`val`у`JavaForkOptions` grolifant</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Metoda`executable(Object)`na mestu</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>JavaToolchainService`непронађен&lt;/tool_call&gt;`extensions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ovo je Gradle usluga, a ne proširenje.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.serviceOf&lt;JavaToolchainService&gt;()</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`revealjs { }`nerešeno u zadatku</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Proširenje projekta, ne metoda zadatka</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.extensions.getByType&lt;RevealJSExtension&gt;()</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Grad se ruši sa Javom 25</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kotlin 2.0.x ne parsira dvocifrne verzije Jave</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Automatsko otkrivanje Docker + fallback Java 17</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_metod_istraživanja_čitanje_nepoznate_api_koristeći_javap">Metod istraživanja : čitanje nepoznate API koristeći javap</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_принцип">Принцип</h3>
+<div class="paragraph">
+<p>Kada dokumentacija nedostaje ili je nekompletna, bajtkodovi su izvor istine. <code>javap`je standardni alat JDK koji dekompajlira datoteke</code>.class`u čitljivim Java potpisima, bez potrebe od izvornog koda</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_korak_1_pronaći_jar_u_gradle_kešu">Korak 1: pronaći JAR u Gradle kešu</h3>
+<div class="paragraph">
+<p>Gradle preuzima sve svoje zavisnosti u`~/.gradle/caches/modules-2/files-2.1/`. Први корак је да нађете jar који садржи класу коју треба испитити :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "asciidoctor-gradle-jvm-slides*.jar" 2&gt;/dev/null</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Rezultat :</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">/home/user/.gradle/caches/modules-2/files-2.1/org.asciidoctor/
+asciidoctor-gradle-jvm-slides/4.0.0-alpha.1/.../
+asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_корак_2_исписати_класе_из_jar_а">Корак 2: исписати класе из jar-а</h3>
+<div class="paragraph">
+<p>Пре него што проверавамо класу, проверавамо да ли постоји у jar :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">jar tf asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar | grep -i "RevealJS\|revealjs"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_корак_3_проверити_класу">Корак 3: проверити класу</h3>
+<div class="listingblock">
+<div class="title">Ovo otkriva sve dostupne klase : <code>AsciidoctorJRevealJSTask</code>, <code>RevealJSExtension</code>, <code>RevealJSOptions</code>, itd.</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.slides.AsciidoctorJRevealJSTask</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Opcija`-p`Prikazuje sve članove, uključujući i privatne. Rezultat odmah prikazuje ključnu liniju:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class AsciidoctorJRevealJSTask
+extends org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_korak_4_povratak_na_hijerarhiju">Korak 4: povratak na hijerarhiju</h3>
+<div class="paragraph">
+<p>Задатак простира`AbstractAsciidoctorTask`. Проверава се наред Prvo lokalizujući njegov/je jar :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "asciidoctor-gradle-jvm-[0-9]*.jar" 2&gt;/dev/null
+
+javap -p -classpath asciidoctor-gradle-jvm-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask | grep -i "fork\|exec\|jvm\|java"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ovo je gde otkrivamo`forkOptions`, <code>JAVA_EXEC</code>, et <code>javaForkOptions</code> tip`org.ysb33r.grolifant.api.v4.JavaForkOptions`.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_етап_5_следите_непознате_типове">Етап 5: Следите непознате типове</h3>
+<div class="paragraph">
+<p>`JavaForkOptions`Непозната класа гролифант. Локализујемо њену jar :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "grolifant*.jar" 2&gt;/dev/null</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Zatim ga proveravamo:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath grolifant40-legacy-api-2.0.0-alpha.6.jar \
+org.ysb33r.grolifant.api.v4.JavaForkOptions</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Nalazi se tu`executable(java.lang.Object)<code>— правилна метода за позивање, u suprotnosti sa`executable = &#8230;&#8203;`što ne kompajlira jer je svojstvo`val</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_корак_6_проверити_проширења_пројекта">Корак 6 : проверити проширења пројекта</h3>
+<div class="paragraph">
+<p>Za`revealjs { }`, pitanje je bilo : da li je to metoda zadatka ili proširjenje projekta? pregled`AsciidoctorJRevealJSTask` ne prikazuje nikakvu metodu`revealjs`. Затим се проверава`RevealJSExtension` :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.slides.RevealJSExtension | head -5</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class RevealJSExtension implements groovy.lang.GroovyObject {
+public static final java.lang.String NAME;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Присутност`NAME`potvrđuje da je to registrovana ekstenzija na projektu, доступан преко`project.extensions.getByType&lt;RevealJSExtension&gt;()`.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_резюме_метода">Резюме метода</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Korak</th>
+<th class="tableblock halign-left valign-top">akcija</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>find ~/.gradle/caches -name "*.jar"</code>— pronaći JAR</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jar tf jar.jar | grep NomClasse</code>— проверити да класа постоји</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>javap -p -classpath jar.jar NomCompletClasse</code>— прегледати класу</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identifikovati`extends`i podignuti se po hijerarhiji</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Праћење непохвативих типова у њиховим сопственим JAR-овима</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">тражити`NAME`da identificiraš proširenje projekta</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Ova metoda se primenjuje na bilo koji Gradle plugin čiji API nije dokumentiran. čiji alfa verzija više ne podudara sa postojećom dokumentacijom.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sledeći_korak">Sledeći korak</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ovaj buildSrc plugin će biti izdvojen u nevisan projekat objavljen na Gradle Plugin Portal ili Maven Lokalno. Potrošački buildscript će tada biti :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins { id("slides") version "1.0.0" }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Et <code>settings.gradle.kts`će se smanjiti na strogo minimum bez reference na`foojay-resolver-convention</code>, provisioning JDK je rukovan od strane samog plugina ili dokumentisan kao preduvjet.</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Повезани чланци</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Претвори AsciiDoc у MP4 видео</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Audit moje potrošnje LLM : SQLite, OpenCode, Ollama Cloud, i Zašto Moj Pro Abonament razbijava svetski tržište</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Архитектура « Plugin nezavisni + koren potrošač » : Зашто моје builds Gradle се дублирају</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Knowledge Graph kao motor preporuke: kako sam ubio « povezani članci » hronološki</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0102_migration_gradle_script_to_plugin_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Molimo uključić JavaScript da biste videli
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">komentari pokrenuti od strane Disqusa</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Специјализовани тренер-развијач у инжењерској педагогији.
+                        Концептовање иновативних e-learning решења за трансформацију учења.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS tok">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Kontakt">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Навигација</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Почетна</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Блог</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Ресурси</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Архива</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> слајдови</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> обуке</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> покретачки кључ</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Локација</h6>
+                    <p class="mb-3">Osnovan u pariškom regionu, moguće intervencije u Francuskoj i na daljinu.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Ил-де-Франс,Франс</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Teletal dostupan</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>путувања у Франци</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Sva prava zadržana.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,931 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>제4조: Gradle 구성 캐시의 함정 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0092_gradle_configuration_cache_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2025/0092_gradle_configuration_cache_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0092_gradle_configuration_cache_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="제4조: Gradle 구성 캐시의 함정 — Cheroliv"/>
+        <meta property="og:description" content="예상치 못한 디버깅 모험으로, 우리 Gradle 설정 캐시의 복잡함 속으로 빠져들었습니다. 우리 빌드가 이상하게 행동한 이유와 우리가 문제를 해결한 방법을 알아보세요."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0092_gradle_configuration_cache_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0092_gradle_configuration_cache_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="제4조: Gradle 구성 캐시의 함정 — Cheroliv"/>
+        <meta name="twitter:description" content="예상치 못한 디버깅 모험으로, 우리 Gradle 설정 캐시의 복잡함 속으로 빠져들었습니다. 우리 빌드가 이상하게 행동한 이유와 우리가 문제를 해결한 방법을 알아보세요."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0092_gradle_configuration_cache_post.png"/>
+        <meta name="description" content="예상치 못한 디버깅 모험으로, 우리 Gradle 설정 캐시의 복잡함 속으로 빠져들었습니다. 우리 빌드가 이상하게 행동한 이유와 우리가 문제를 해결한 방법을 알아보세요."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS 피드" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                쉐롤리브
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="탐색 전환">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">홈</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">전문 분야</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">블로그</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">연락처</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="인터페이스 테마 선택">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">명료한</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>밝게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>어둡게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>고대비
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="언어 선택">
+                        <span class="me-1">🇰🇷</span>
+                        <span class="ms-1">KO</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0092_gradle_configuration_cache_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0092_gradle_configuration_cache_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2025/0092_gradle_configuration_cache_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0092_gradle_configuration_cache_post.html"},
+                      "headline": "\uC81C4\uC870: Gradle \uAD6C\uC131 \uCE90\uC2DC\uC758 \uD568\uC815",
+                      "description": "\uC608\uC0C1\uCE58 \uBABB\uD55C \uB514\uBC84\uAE45 \uBAA8\uD5D8\uC73C\uB85C, \uC6B0\uB9AC Gradle \uC124\uC815 \uCE90\uC2DC\uC758 \uBCF5\uC7A1\uD568 \uC18D\uC73C\uB85C \uBE60\uC838\uB4E4\uC5C8\uC2B5\uB2C8\uB2E4. \uC6B0\uB9AC \uBE4C\uB4DC\uAC00 \uC774\uC0C1\uD558\uAC8C \uD589\uB3D9\uD55C \uC774\uC720\uC640 \uC6B0\uB9AC\uAC00 \uBB38\uC81C\uB97C \uD574\uACB0\uD55C \uBC29\uBC95\uC744 \uC54C\uC544\uBCF4\uC138\uC694.",
+                      "datePublished": "2025-09-26",
+                      "dateModified": "2025-09-26",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0092_gradle_configuration_cache_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\uC81C4\uC870: Gradle \uAD6C\uC131 \uCE90\uC2DC\uC758 \uD568\uC815", "item": "https:\/\/cheroliv.com\/blog\/2025\/0092_gradle_configuration_cache_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">제4조: Gradle 구성 캐시의 함정</h1>
+                <p class="lead">
+                    <em>게시: 26 September 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_서론">서론</a></li>
+<li><a href="#_증상_유령의_빌드">증상: 유령의 빌드</a></li>
+<li><a href="#_조사_구성_캐시는_무엇입니까">조사: 구성 캐시는 무엇입니까?</a></li>
+<li><a href="#_문제의_원인_비준수_플러그인">문제의 원인: 비준수 플러그인</a></li>
+<li><a href="#_임시_솔루션_캐시_비활성화">임시 솔루션: 캐시 비활성화</a></li>
+<li><a href="#_진정한_해결책_플러그인_호환성_확보">진정한 해결책: 플러그인 호환성 확보</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_서론">서론</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">대상 : Gradle 개발자 중에서 이미 '매직&#8217;하거나 예상치 못한 빌드 동작을 경험한 사람들</div>
+<p>플러그인을 만드는 우리의 모험`site-baker`, 우리는 엄격한 TDD 접근 방식을 따랐습니다. 각 기능은 테스트되고, 검증되었으며, 우리는 확신을 가지고 진행했습니다. 그리고ある日, 예기치 못한 일이 발생했습니다. 빌드가 예측할 수 없이 동작하기 시작했습니다. 플러그인 로직이나 구성 파일의 수정이 무시되는 것처럼 보였고, 이전에 신뢰할 수 있었던 기능 테스트가 명백한 이유 없이 실패하기 시작했습니다.</p>
+</div>
+<div class="paragraph">
+<p>이러한 종류의 문제는 믿을 수 없을 정도로 좌절스러울 수 있습니다. 이는 도구의 안정성과 우리의 코드의 유효성을 의심하게 만듭니다. 강도 높은 디버깅 세션 후, 범인이 밝혀졌습니다: 그<strong>Gradle 구성 캐시</strong>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_증상_유령의_빌드">증상: 유령의 빌드</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>문제가 여러 가지 방식으로 나타났습니다 :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>저는 한 작업에서 문자열을 수정하고 있었습니다.<code>println</code>, 하지만 이전 문자열이 실행 중에 계속 표시되었습니다.</p>
+</li>
+<li>
+<p>저는 내 파일에서 값을 바꾸고 있었습니다.<code>managed-jbake-context.yml</code>, 하지만 플러그인은 파일이 수정된 것처럼 행동했습니다.</p>
+</li>
+<li>
+<p>기능 테스트는 즉석에서 테스트 프로젝트를 만들지만, 플러그인이 새로 생성된 구성 파일을 감지하지 못하는 것 같아서 실패했습니다.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>모든 것이 마치 Gradle가 우리 빌드의 '유령 버전&#8217;을 실행하는 것처럼 진행되고 있었고, 우리의 가장 최근 변경 사항을 무시하고 있었다.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_조사_구성_캐시는_무엇입니까">조사: 구성 캐시는 무엇입니까?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>구성 캐시는 비교적 최신이면서 매우 강력한 Gradle의 기능이며, 최신 버전에서는 기본적으로 활성화됩니다. 그 목적은 빌드를 더 빠르게 만드는 것입니다.</p>
+</div>
+<div class="olist arabic">
+<div class="title">원칙은 간단합니다 :</div>
+<ol class="arabic">
+<li>
+<p>첫 번째 실행 시, Gradle은 단계를 실행합니다.<strong>구성</strong>(읽기의`build.gradle.kts`, 작업 생성, 의존성 해결) 그리고 작업 그래프를 구성한다</p>
+</li>
+<li>
+<p>이 단계가 끝날 때, Gradle<strong>이 작업 그래프 직렬화</strong>그리고 그것을 캐시에 저장합니다.</p>
+</li>
+<li>
+<p>이후 실행 시, 아무것도 변경되지 않은 경우 (빌드 스크립트,<code>gradle.properties</code>, etc.), Gradle<strong>설정 단계를 완전히 건너뛴다</strong>그리고 캐시된 작업 그래프를 재사용합니다.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>시간 절약이 큰 프로젝트에서 놀라울 정도입니다. 그러나 이 성능에는 대가가 따릅니다: 플러그인이 어떻게 작성되어야 하는지에 대해 엄격한 규칙을 적용합니다.</p>
+</div>
+<div class="listingblock">
+<div class="title">구성 캐시의 수명 주기</div>
+<div class="content">
+<pre>@startuml
+start
+:Première exécution;
+:Phase de Configuration;
+:Création du graphe de tâches;
+:Mise en cache du graphe;
+:Phase d'Exécution;
+end
+
+start
+:Exécution suivante;
+if (Cache valide ?) then (oui)
+  :Restauration du graphe depuis le cache;
+  note right
+    La phase de configuration
+    est sautée !
+  end note
+else (non)
+  :Phase de Configuration;
+  :Mise à jour du cache;
+endif
+:Phase d'Exécution;
+stop
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_문제의_원인_비준수_플러그인">문제의 원인: 비준수 플러그인</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>우리 플러그인`site-baker`그는 알지 못한 채 구성 캐시의 여러 규칙을 위반하고 있었다. 작업 그래프가 직렬화 가능하려면, 작업은 복합 객체와 같은 참조를 포함해서는 안 된다.`Project`또는 실행 단계에서 임의로 파일을 읽을 수 있습니다.</p>
+</div>
+<div class="paragraph">
+<p>주요 오류는 확장 프로그램에 저장된 경로 참조를 사용하여 작업 실행 로직 내에서 YAML 파일의 내용을 직접 읽는 것이었습니다. 이 방식은 Gradle이 파일 내용이 변경되었는지 알 수 없도록 이 읽기를 모델링하지 않으면 캐시와 호환되지 않습니다.<strong>작업 항목</strong>(작업 입력).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_임시_솔루션_캐시_비활성화">임시 솔루션: 캐시 비활성화</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>우리의 막힘을 풀고 예측 가능한 빌드 동작을 되찾기 위해 가장 빠른 해결 방법은 구성 캐시를 비활성화하는 것이었습니다. 파일에 다음 줄을 추가하기만 하면 됩니다.<code>gradle.properties`플러그인을 사용하는 프로젝트 (또는 우리 경우, 테스트 프로젝트)`site-baker</code>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties"># site-baker/gradle.properties
+org.gradle.configuration-cache=false</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>즉시, 빌드가 정상적인 동작을 되찾았습니다. 각 실행이 구성 단계를 다시 실행했고, 우리의 변경 사항이 반영되었습니다.</p>
+</div>
+<div class="paragraph">
+<p>그러나 이것은 임시방편이 아니라 지속 가능한 해결책이 아닙니다. 성능을 희생시키고 우리 플러그인의 근본적인 문제를 해결하지 못합니다.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_진정한_해결책_플러그인_호환성_확보">진정한 해결책: 플러그인 호환성 확보</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>플러그인이 현대 Gradle 생태계의 좋은 시민이 되려면 구성 캐시와 호환되어야 합니다. 이는 우리 작업으로 데이터가 흐르는 방식을 재고해야 함을 의미합니다.</p>
+</div>
+<div class="paragraph">
+<p>핵심은 그것을 사용하는<strong>제공자 API</strong>Gradle의. 직접적인 값을 전달하는 대신 (예를 들어`String` ou un <code>File</code>) 우리의 작업에 대해, 우리는 통과해야 합니다`Property&lt;T&gt;`또는 일부의`Provider&lt;T&gt;`.</p>
+</div>
+<div class="paragraph">
+<p>다음은 리팩터링 계획입니다 :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>작업 항목 선언 :</strong>YAML 파일을 파싱하는 작업은 이 파일을 입력으로 선언해야 합니다. 이를 위해 어노테이션을 사용합니다.<code>@InputFile</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>[source,kotlin] ---- @get:InputFile abstract val configFile: RegularFileProperty ----</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre></pre>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">관련 기사</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDoc을 MP4 비디오로 변환</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">나의 LLM 소비 감사 : SQLite, OpenCode, Ollama Cloud, 그리고 왜 나의 프로 구독이 세계 시장을 폭발시키는가?</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">아키텍처 « 독립 플러그인 + 소비자 루트 » : 왜 내 Gradle 빌드가 중복되는가</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">추천 엔진으로서의 Knowledge Graph: 시간 순서의 « 관련 기사 »를 죽인 방법</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0092_gradle_configuration_cache_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    자바스크립트를 활성화하여 보세요
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqus로 구동되는 댓글</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        교육공학 전문 트레이너 겸 개발자
+학습을 변화시키기 위한 혁신적인 e-러닝 솔루션 설계
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="깃허브">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 피드">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="연락처">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">내비게이션</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>홈</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>블로그</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">리소스</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>아카이브</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 슬라이드</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 교육</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 부팅 가능한 키</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">위치</h6>
+                    <p class="mb-3">파리 지역에 기반을 두고, 프랑스 내 및 원격으로 가능한 개입.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>일드프랑스, 프랑스</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>재택근무 가능</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>프랑스 내 이동</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. 모든 권리 보유.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

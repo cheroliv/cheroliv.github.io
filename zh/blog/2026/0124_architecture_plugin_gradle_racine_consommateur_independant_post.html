@@ -1,0 +1,1418 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>架构 « 插件独立 + 消费者根 »：为什么我的 Gradle 构建会重复 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="架构 « 插件独立 + 消费者根 »：为什么我的 Gradle 构建会重复 — Cheroliv"/>
+        <meta property="og:description" content="克隆一次，运行 `./gradlew tasks`，您的 Gradle 插件即可使用。零配置，无需阅读 README。这是我在这 6 个 foundry/public/ 插件上部署的架构：一个极简的消费者根目录 + 一个自治的 `{name}-plugin/` 文件夹。为什么这种“表面 duplication”模式是 Gradle 插件开发中最高效的——它提供了原生的 dogfooding、构建隔离以及清晰的 DAG 契约。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="架构 « 插件独立 + 消费者根 »：为什么我的 Gradle 构建会重复 — Cheroliv"/>
+        <meta name="twitter:description" content="克隆一次，运行 `./gradlew tasks`，您的 Gradle 插件即可使用。零配置，无需阅读 README。这是我在这 6 个 foundry/public/ 插件上部署的架构：一个极简的消费者根目录 + 一个自治的 `{name}-plugin/` 文件夹。为什么这种“表面 duplication”模式是 Gradle 插件开发中最高效的——它提供了原生的 dogfooding、构建隔离以及清晰的 DAG 契约。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.png"/>
+        <meta name="description" content="克隆一次，运行 `./gradlew tasks`，您的 Gradle 插件即可使用。零配置，无需阅读 README。这是我在这 6 个 foundry/public/ 插件上部署的架构：一个极简的消费者根目录 + 一个自治的 `{name}-plugin/` 文件夹。为什么这种“表面 duplication”模式是 Gradle 插件开发中最高效的——它提供了原生的 dogfooding、构建隔离以及清晰的 DAG 契约。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"},
+                      "headline": "\u67B6\u6784 \u00AB \u63D2\u4EF6\u72EC\u7ACB + \u6D88\u8D39\u8005\u6839 \u00BB\uFF1A\u4E3A\u4EC0\u4E48\u6211\u7684 Gradle \u6784\u5EFA\u4F1A\u91CD\u590D",
+                      "description": "\u6211\u6240\u6709\u7684 Gradle \u63D2\u4EF6\u5728 foundry\/public\/ \u73B0\u5728\u9075\u5FAA\u76F8\u540C\u7684\u67B6\u6784\uFF1A\u5728 `{name}-plugin\/` \u4E2D\u6709\u4E00\u4E2A\u72EC\u7ACB\u7684\u6784\u5EFA\uFF0C\u4EE5\u53CA\u4E00\u4E2A\u6D88\u8D39\u8005 dogfood \u6839\u76EE\u5F55\u3002\u8FD9\u79CD\u660E\u663E\u7684\u91CD\u590D\u5B9E\u9645\u4E0A\u662F\u6211\u91C7\u7528\u8FC7\u7684\u6700\u6709\u6548\u7387\u7684\u7F16\u5199 Gradle \u63D2\u4EF6\u7684\u6A21\u5F0F\u3002\u4E0E\u4F20\u7EDF\u7684 monorepo\u3001\u590D\u5408\u6784\u5EFA\u4EE5\u53CA\u9694\u79BB\u63D2\u4EF6\u8FDB\u884C\u6BD4\u8F83\u3002",
+                      "datePublished": "2026-05-14",
+                      "dateModified": "2026-05-14",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u67B6\u6784 \u00AB \u63D2\u4EF6\u72EC\u7ACB + \u6D88\u8D39\u8005\u6839 \u00BB\uFF1A\u4E3A\u4EC0\u4E48\u6211\u7684 Gradle \u6784\u5EFA\u4F1A\u91CD\u590D", "item": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">架构 « 插件独立 + 消费者根 »：为什么我的 Gradle 构建会重复</h1>
+                <p class="lead">
+                    <em>发布于 14 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_问题_三种让我浪费时间的架构">问题 : 三种让我浪费时间的架构</a>
+<ul class="sectlevel2">
+<li><a href="#_选项_1隔离插件不进行狗食">选项 1：隔离插件（不进行狗食）</a></li>
+<li><a href="#_选项_2经典的_monorepo_includeplugin">选项 2：经典的 Monorepo (<code>include(":plugin")</code>)</a></li>
+<li><a href="#_选项_3复合构建_includebuild">选项 3：复合构建 (<code>includeBuild()</code>)</a></li>
+</ul>
+</li>
+<li><a href="#_解决方案两个独立的构建一个消费者根">解决方案：两个独立的构建，一个消费者根</a>
+<ul class="sectlevel2">
+<li><a href="#_工作流">工作流</a></li>
+<li><a href="#_具体的工作流程">具体的工作流程</a></li>
+</ul>
+</li>
+<li><a href="#_为什么这种架构征服了我">为什么这种架构征服了我</a>
+<ul class="sectlevel2">
+<li><a href="#_1_dogfooding_原生_feedback_即时">1. Dogfooding 原生, Feedback 即时</a></li>
+<li><a href="#_2_零配置克隆">2. 零配置克隆</a></li>
+<li><a href="#_3_孤立的构建独立的_ci">3. 孤立的构建，独立的 CI</a></li>
+</ul>
+</li>
+<li><a href="#_子文件夹的结构_name_plugin">子文件夹的结构 `{name}-plugin/</a>
+<ul class="sectlevel2">
+<li><a href="#_版本目录_两个不同的文件">版本目录 ： 两个不同的文件</a></li>
+</ul>
+</li>
+<li><a href="#_我们不做的">我们不做的</a></li>
+<li><a href="#_比较三种架构面对吃狗粮">比较：三种架构面对吃狗粮</a></li>
+<li><a href="#_dag_合约根构建永不来自子目录">DAG 合约：根构建永不来自子目录</a></li>
+<li><a href="#_结论表面上复制可节省时间">结论：表面上复制可节省时间</a></li>
+<li><a href="#_参考文献">参考文献</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">阅读时间：11 minutes</div>
+<p>您克隆了一个 Gradle 插件仓库。您打开一个终端。您在输入什么？ 然后？<code>./gradlew tasks</code>, 当然。但请问是哪个目录？根目录？还是子模块？ 是否应该先阅读 README 以了解如何构建？如果你犹豫的话 仅仅一秒，项目的架构就坏了。</p>
+</div>
+<div class="paragraph">
+<p>这是我一次性解决这个问题的方法 — 以及为什么这 pattern 今天是我所有 Gradle 插件在`foundry/public/`。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_问题_三种让我浪费时间的架构">问题 : 三种让我浪费时间的架构</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>在收敛到当前模式之前，我在三种方法之间摸索。 用于组织 Gradle 插件的经典方法。每一种都有一个致命缺陷。</p>
+</div>
+<div class="sect2">
+<h3 id="_选项_1隔离插件不进行狗食">选项 1：隔离插件（不进行狗食）</h3>
+<div class="paragraph">
+<p>项目只包含该插件。没有使用示例。没有 施加它的项目。为了测试它，需要创建一个外部项目，y 通过引用插件`mavenLocal`或复合构建，仅 检查它是否在工作</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">$ git clone mon-plugin
+$ cd mon-plugin
+$ ./gradlew build          # le plugin compile
+$ # ... et maintenant ? comment je l'essaie ?</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="⚠️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>没有使用示例的 Gradle 插件，就是一个没有使用示例的库 集成测试。您永远不知道最近的修改有 破坏了用户体验。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_选项_2经典的_monorepo_includeplugin">选项 2：经典的 Monorepo (<code>include(":plugin")</code>)</h3>
+<div class="paragraph">
+<p>Gradle`init`生成`settings.gradle.kts`与`include("plugin")`。 root 和子模块共享相同的守护进程和相同的配置, 同样的目录。 实用，但已耦合。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">.
+├── settings.gradle.kts   → include("plugin")
+├── build.gradle.kts      → plugins { id("mon-plugin") }
+├── plugin/
+│   └── build.gradle.kts  → java-gradle-plugin
+└── gradle/
+    └── libs.versions.toml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>卡住的地方：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>根<strong>必须</strong>具有与子模块相同的 Gradle 版本</p>
+</li>
+<li>
+<p>`libs.versions.toml`已共享 — 通用版本目录，依赖</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>从一个模块逃到另一个模块的人。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>无法独立于根目录构建插件。</p>
+</li>
+<li>
+<p>CI 必须构建两个模块，即使只有插件更改了。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_选项_3复合构建_includebuild">选项 3：复合构建 (<code>includeBuild()</code>)</h3>
+<div class="paragraph">
+<p>我们将两者分离为不同的 Gradle 构建，并通过 <code>includeBuild("mon-plugin")`在`settings.gradle.kts</code>.</p>
+</div>
+<div class="paragraph">
+<p>已经好多了。插件的构建是隔离的。但消费者 必须显式引用外部构建 — 以及输出的 `./gradlew tasks`位于根部取决于正确的配置 复合的。克隆不是零配置：必须知道该 插件位于单独的文件夹中，根目录引用了它，等等。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">.
+├── settings.gradle.kts   → includeBuild("plugin-build/")
+├── build.gradle.kts      → plugins { id("mon-plugin") }
+└── plugin-build/
+    ├── settings.gradle.kts
+    └── build.gradle.kts</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>我一直在寻找更好。要好得多。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_解决方案两个独立的构建一个消费者根">解决方案：两个独立的构建，一个消费者根</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这就是我最终采用的模式：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">.
+├── settings.gradle.kts          ← racine consommateur
+├── build.gradle.kts              ← 3 lignes : apply plugin + dogfood
+├── gradle/
+│   └── libs.versions.toml        ← catalogue du consommateur
+├── {name}-plugin/                ← BUILD INDÉPENDANT
+│   ├── gradlew                    ← son propre wrapper
+│   ├── settings.gradle.kts        ← rootProject.name = "{name}-plugin"
+│   ├── build.gradle.kts           ← java-gradle-plugin, signing, publish
+│   ├── gradle/
+│   │   ├── libs.versions.toml     ← catalogue du plugin
+│   │   └── wrapper/
+│   ├── src/                       ← sources du plugin
+│   ├── .agents/                   ← gouvernance agent
+│   └── *.adoc                     ← AGENT, PROMPT_REPRISE, snapshot, etc.
+└── site.yml / slides-context.yml / ...   ← configs dogfood</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>钥匙：`{name}-plugin/`这是一个完整且独立的 Gradle 项目。 他有自己的包装器，自己的设置，自己的目录的 versions. 它会自行克隆、编构、测试，并在不需要 root 权限的情况下发布。 了解它的存在。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>根，它，只做*一*件事：应用插件。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins {
+    alias(libs.plugins.bakery)
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+bakery { configPath = file("site.yml").absolutePath }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>三行在&#8230;&#8203;的情况下`bakery-gradle`. 什么也没有。 零`include()<code>, 零`includeBuild()</code>, 零个子项目。 一个经典的 Gradle 构建，应用一个插件就像任意 哪个消费者会那样做。</p>
+</div>
+<div class="sect2">
+<h3 id="_工作流">工作流</h3>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+
+left to right direction
+
+package "根 (消费者)" #CCFFCC {
+    usecase "克隆仓库" as Clone
+    usecase "./gradlew 任务" as Tasks
+    usecase "./gradlew bake" as Dogfood
+    note bottom of Dogfood
+        Exerce le plugin
+        Feedback immédiat
+        Zéro config
+    end note
+}
+
+package "{name}-plugin/ (独立构建)" #CCE5FF {
+    usecase "./gradlew 构建" as BuildPlugin
+    usecase "./gradlew publishToMavenLocal" as MavenLocal
+    usecase "./gradlew 测试" as TestPlugin
+    note bottom of BuildPlugin
+        Cycle de vie isolé
+        Tests unitaires + Cucumber
+        CI dédiée possible
+    end note
+}
+
+Clone -down-&gt; Tasks
+Tasks -down-&gt; Dogfood
+Dogfood ..&gt; MavenLocal : "依赖插件
+本地发布"
+BuildPlugin -up-&gt; MavenLocal
+TestPlugin -up-&gt; BuildPlugin
+
+@enduml</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_具体的工作流程">具体的工作流程</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># 1. Builder le plugin
+$ cd codebase-plugin
+$ ./gradlew publishToMavenLocal
+
+# 2. L'exercer depuis la racine
+$ cd ..
+$ ./gradlew indexCodebase queryCodebase snapshot
+
+# La boucle est fermée. Le plugin est testé dans des conditions
+# réelles de consommation, par le projet même qui l'héberge.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_为什么这种架构征服了我">为什么这种架构征服了我</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这三个好处合在一起，值得付出“复制”的成本：</p>
+</div>
+<div class="sect2">
+<h3 id="_1_dogfooding_原生_feedback_即时">1. Dogfooding 原生, Feedback 即时</h3>
+<div class="paragraph">
+<p>测试 Gradle 插件的最佳方式就是使用它。 不是一个模拟的单元测试。不是一个`GradleRunner`带有项目 测试的。一个*真实*的构建，该构建在真实文件上应用了插件。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">$ git clone bakery-gradle
+$ cd bakery-gradle
+$ ./gradlew bake    # ← le plugin est exercé immédiatement</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>如果插件损坏了，根构建会说出来。不需要去 寻找一个外部测试项目。Dogfooding 是*第一*。 由新贡献者启动的任务。这是最终的冒烟测试。</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="💡"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>规则很简单：如果根编译并且`./gradlew tasks` 显示您的插件任务，插件已正常工作。没有意外 在生产中。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_零配置克隆">2. 零配置克隆</h3>
+<div class="paragraph">
+<p>Un `git clone &amp;&amp; ./gradlew tasks`和新来的人看到一切 无需任何配置即可行走。 该`build.gradle.kts`根是 插件的活跃使用文档。该`site.yml`旁边 显示预期的配置。</p>
+</div>
+<div class="paragraph">
+<p>与替代方案相比：一个由三段组成的README 解释如何构建插件以及如何构建项目 测试。一位新贡献者快速浏览了 README， 搞错了，打开了一个 issue — 而实际上信息可能 <strong>可执行的</strong></p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>最强大的文档不是我们阅读的那份。 这是那个我们<strong>执行</strong>. 根构建是文档 插件的可执行文件。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_孤立的构建独立的_ci">3. 孤立的构建，独立的 CI</h3>
+<div class="paragraph">
+<p>插件具有自己的 Gradle 包装器，自己的生命周期， 它自己的测试。您可以：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>在插件中升级 Gradle，而不修改根项目</p>
+</li>
+<li>
+<p>在插件中添加依赖，而不让其泄漏到根目录</p>
+</li>
+<li>
+<p>在不影响根构建的情况下破坏插件 (只要你不</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>不要发布损坏的版本)</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>拥有一个构建/测试插件的 CI，以及另一个用于执行的</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>根 — 独立地</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">.github/workflows/
+├── test-plugin.yml      → codebase-plugin/.gradlew build
+├── test-root.yml        → .gradlew tasks (vérifie que le plugin est consommable)
+└── publish.yml          → codebase-plugin/.gradlew publish</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_子文件夹的结构_name_plugin">子文件夹的结构 `{name}-plugin/</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>让我们更仔细地看看插件目录中存在的内容：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">codebase-plugin/
+├── gradlew                           ← wrapper indépendant
+├── settings.gradle.kts               ← @Suppress("UnstableApiUsage")
+│                                       + foobar-resolver-convention
+├── build.gradle.kts                  ← java-gradle-plugin + signing + publish
+├── gradle/
+│   ├── libs.versions.toml            ← catalogue complet (langchain4j, pgvector...)
+│   └── wrapper/
+├── buildSrc/                         ← classes utilitaires buildSrc
+│   ├── build.gradle.kts
+│   └── src/main/kotlin/
+│       ├── codebase/                 ← CodebaseYmlAnonymizer, CodebaseConfiguration
+│       ├── benchmark/                ← BenchmarkConfig, BenchmarkProtocol
+│       ├── readme/                   ← ReadmeYmlAnonymizer
+│       ├── site/                     ← SiteYmlAnonymizer
+│       ├── slider/                   ← SliderYmlAnonymizer
+│       └── snapshot/                 ← SnapshotManager
+├── src/
+│   ├── main/kotlin/codebase/
+│   │   ├── CodebasePlugin.kt         ← class Plugin&lt;Project&gt;
+│   │   ├── rag/                      ← pgvector, embedding, anonymization...
+│   │   ├── benchmark/                ← BenchmarkRunner, export, comparison...
+│   │   └── walker/                   ← WorkspaceWalker
+│   └── test/
+│       ├── kotlin/codebase/scenarios/ ← steps Cucumber
+│       ├── features/                  ← .feature files
+│       └── resources/datasets/        ← fixtures .adoc, .yml, .json
+├── .agents/                          ← gouvernance agent (INDEX, SESSIONS, etc.)
+├── AGENT.adoc                        ← règles agent
+├── PROMPT_REPRISE.adoc              ← mission session
+├── BACKLOG.adoc                      ← backlog produit
+├── snapshot.adoc                     ← snapshot auto-généré du projet
+└── embeds.yml                        ← config RAG embeds</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一切都在这里。根目录和子文件夹之间没有分散。 在插件上工作的开发者永远不需要 离开`codebase-plugin/`. 使用该插件的开发者 只看根部 — 和`build.gradle.kts`3行 告诉他他需要知道的一切。</p>
+</div>
+<div class="sect2">
+<h3 id="_版本目录_两个不同的文件">版本目录 ： 两个不同的文件</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradle/libs.versions.toml</code>(根)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{name}-plugin/gradle/libs.versions.toml</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依赖数量</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2-3 (plugin + readme 可选)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30+ (langchain4j, pgvector, cucumber&#8230;&#8203;)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">角色</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">使用插件</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">构建插件</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">谁在读它</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">插件用户</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">插件开发者</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>根用户有一个故意最小的目录。插件有一个目录。 完整。混淆是不可能的：每个构建都有其自己的作用域 依赖。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ℹ️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>如果您已经花了一小时来调试依赖冲突 在您的插件和测试项目之间，您理解其价值 这种分离。独立的目录消除了这个问题。 由构造。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_我们不做的">我们不做的</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这个模式并不是魔法的。它施加了一种约束，我 他/她乐意对我施加：</p>
+</div>
+<div class="paragraph">
+<p><strong>Root 不 构建 插件。</strong> 你必须`publishToMavenLocal` ou 在root能够消费之前，部署到存储库上。</p>
+</div>
+<div class="paragraph">
+<p>这是一个微不足道的成本，而且这是*好的*约束。根 以外部客户端的方式消费插件 — 通过 Maven。恰好 像第三方项目一样。如果插件不能发布， root 立刻告诉你</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># La seule "friction" du pattern
+$ cd codebase-plugin &amp;&amp; ./gradlew publishToMavenLocal &amp;&amp; cd ..
+$ ./gradlew tasks --group=codebase</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_比较三种架构面对吃狗粮">比较：三种架构面对吃狗粮</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">隔离插件</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">单体仓库`include()`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">复合`includeBuild()`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>根 + 独立插件。</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`git clone &amp;&amp; gradlew tasks`给出插件的任务</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">构建独立于根的插件</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">您是专业翻译员。请将法语翻译成中文。 保持所有反引号代码跨度（<code>&#8230;&#8203;</code>）完全不变——永远不要修改反引号内容、间距或位置。 此文本可能是较大句子的一个片段——请在不请求更多上下文的情况下翻译此片段。 仅输出翻译后的文本——不要提供解释、注释、引言、替代方案或选项。 ✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">目录版本分离</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">没有`include()` ni <code>includeBuild()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">原生 Dogfood 无需配置</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[No output - empty string]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">独立的 CI 插件</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">根是实际消耗的一个例子</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>右侧的列勾选了所有复选框。这就是我没有 我会回得更远。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dag_合约根构建永不来自子目录">DAG 合约：根构建永不来自子目录</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>此架构自然地融入到DAG N0→N3中 我的工作区。模式是：<strong>le plugin N2 是中心 它自己的依赖项，N3 根是一个终端 应用集线器</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 11
+
+title DAG 合约 — 消费者根 vs 独立插件
+package "N3 — 根 (存款)" #FFCCCC {
+    [build.gradle.kts (3 lignes)] as ROOT
+    [libs.versions.toml (minimal)] as ROOT_TOML
+    note right of ROOT
+        plugins { bakery }
+        bakery { configPath = ... }
+        Aucune logique métier
+    end note
+}
+
+package "N2 — {name}-插件/" #CCFFCC {
+    [build.gradle.kts (complet)] as PLUGIN
+    [src/main/kotlin/] as SRC
+    [gradle/libs.versions.toml] as PLUGIN_TOML
+    [buildSrc/] as BUILDSRC
+    note bottom of PLUGIN
+        java-gradle-plugin
+        signing + publish
+        Tests unitaires + Cucumber
+        CI dédiée
+    end note
+}
+
+ROOT_TOML --&gt; ROOT : "插件版本"
+ROOT -down-&gt; PLUGIN : "publishToMavenLocal"
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le <code>codebase-gradle/build.gradle.kts`有6行。没有`src/</code>, 没有`buildSrc/<code>, 没有`gradle/rag-bench.gradle.kts</code>。 恰好 <code>plugins { alias(libs.plugins.codebase) }`和存储库。 所有复杂性都存在于`codebase-plugin/</code>。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_结论表面上复制可节省时间">结论：表面上复制可节省时间</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>当我向某人展示这个结构时，第一反应 通常是说：「但是你有两`gradlew`, 二`settings.gradle.kts`, 二`libs.versions.toml`— 这是重复 !</p>
+</div>
+<div class="paragraph">
+<p>是的。和不。</p>
+</div>
+<div class="paragraph">
+<p>“复制”指的是在两个地方重复相同的信息。 这里，是两个不同的文件，用于两种不同的用途： 插件目录 (30+ 依赖项用于构建) 和目录 来自根部（2-3个用于消费的依赖项）。插件的包装器 (锁定的开发版) 以及根的包装器 (可能不同的版本，用于插件练习).</p>
+</div>
+<div class="paragraph">
+<p>这不是重复。这是<strong>分离的 责任</strong> 应用于构建系统。每次构建 它只做一件事。 根部消耗。 插件构建。</p>
+</div>
+<div class="paragraph">
+<p>成本？一份订单`publishToMavenLocal`在插件的构建之间 以及根的构建。收获？建筑清晰度 删除下游调试的数小时。</p>
+</div>
+<div class="paragraph">
+<p>自从我部署了这个模式在`bakery-gradle`, <code>plantuml-gradle</code>, <code>codebase-gradle</code>，以及其他插件的`foundry/public/<code>, 我没有 再也没有在打开我的某个仓库中的终端时犹豫。 Le 第一反应 —</code>./gradlew tasks`— 始终行走，始终给予 好的任务，并立刻告诉我一切都没问题。</p>
+</div>
+<div class="paragraph">
+<p>这就是好的架构。它不能在 README 中读到。 它可以在终端中十秒内得到验证。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参考文献">参考文献</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="0105_integrer_graphify_workflow_gradle_post.html">Article 0105 — 将 Graphify 集成到 Gradle 工作流</a></p>
+</li>
+<li>
+<p><a href="0117_granularisation_oss_css_repositorie_workspace_post.html">文章 0117 — OSS/CSS 细粒化</a></p>
+</li>
+<li>
+<p><a href="0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html">文章 0123 — Knowledge Graph 作为推荐引擎</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : 将 AsciiDoc 转换为 MP4 视频</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">我的LLM消费审计：SQLite、OpenCode、Ollama Cloud，以及为什么我的专业订阅颠覆了全球市场</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">知识图谱作为推荐引擎：我是如何杀死那些按时间顺序的‘相关文章’的</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

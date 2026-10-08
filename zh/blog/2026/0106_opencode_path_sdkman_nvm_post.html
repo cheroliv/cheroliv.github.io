@@ -1,0 +1,1691 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OpenCode 与不完整的 PATH : 为什么您的工具不在代理的 shell 中 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="OpenCode 与不完整的 PATH : 为什么您的工具不在代理的 shell 中 — Cheroliv"/>
+        <meta property="og:description" content="OpenCode 执行非交互式 shell，这些 shell 不会 source .zshrc。结果：SDKMAN、NVM、~/apps 和 pnpm 在代理的 PATH 中缺失。完整诊断问题，比较 SDKMAN 与 NVM 的行为，并通过 .zshenv + 符号链接 ~/.nvm/current 提供最终解决方案。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0106_opencode_path_sdkman_nvm_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0106_opencode_path_sdkman_nvm_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="OpenCode 与不完整的 PATH : 为什么您的工具不在代理的 shell 中 — Cheroliv"/>
+        <meta name="twitter:description" content="OpenCode 执行非交互式 shell，这些 shell 不会 source .zshrc。结果：SDKMAN、NVM、~/apps 和 pnpm 在代理的 PATH 中缺失。完整诊断问题，比较 SDKMAN 与 NVM 的行为，并通过 .zshenv + 符号链接 ~/.nvm/current 提供最终解决方案。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0106_opencode_path_sdkman_nvm_post.png"/>
+        <meta name="description" content="OpenCode 执行非交互式 shell，这些 shell 不会 source .zshrc。结果：SDKMAN、NVM、~/apps 和 pnpm 在代理的 PATH 中缺失。完整诊断问题，比较 SDKMAN 与 NVM 的行为，并通过 .zshenv + 符号链接 ~/.nvm/current 提供最终解决方案。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0106_opencode_path_sdkman_nvm_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0106_opencode_path_sdkman_nvm_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0106_opencode_path_sdkman_nvm_post.html"},
+                      "headline": "OpenCode \u4E0E\u4E0D\u5B8C\u6574\u7684 PATH : \u4E3A\u4EC0\u4E48\u60A8\u7684\u5DE5\u5177\u4E0D\u5728\u4EE3\u7406\u7684 shell \u4E2D",
+                      "description": "\u5F53 OpenCode \u542F\u52A8\u975E\u4EA4\u4E92\u5F0F shell \u65F6\uFF0CSDKMAN \u548C NVM \u4F1A\u4ECE PATH \u4E2D\u6D88\u5931\u3002\u95EE\u9898\u89E3\u91CA\u3001\u9010\u6B65\u8BCA\u65AD\u4EE5\u53CA\u4F7F\u7528 .zshenv \u548C symlink current \u7684\u5E72\u51C0\u89E3\u51B3\u65B9\u6848\u3002",
+                      "datePublished": "2026-04-21",
+                      "dateModified": "2026-04-21",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0106_opencode_path_sdkman_nvm_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "OpenCode \u4E0E\u4E0D\u5B8C\u6574\u7684 PATH : \u4E3A\u4EC0\u4E48\u60A8\u7684\u5DE5\u5177\u4E0D\u5728\u4EE3\u7406\u7684 shell \u4E2D", "item": "https:\/\/cheroliv.com\/blog\/2026\/0106_opencode_path_sdkman_nvm_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">OpenCode 与不完整的 PATH : 为什么您的工具不在代理的 shell 中</h1>
+                <p class="lead">
+                    <em>发布于 21 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_场景一位盲人智能体在工具的世界中">场景：一位盲人智能体在工具的世界中</a></li>
+<li><a href="#_错误的解剖两种shell两种世界">错误的解剖：两种shell，两种世界</a></li>
+<li><a href="#_罪魁祸首_zshrc_vs_zshenv">罪魁祸首：.zshrc vs .zshenv</a></li>
+<li><a href="#_逐步诊断">逐步诊断</a>
+<ul class="sectlevel2">
+<li><a href="#_检查代理的path">检查代理的PATH</a></li>
+<li><a href="#_2_识别_zshrc_中存在但_zshenv_中不存在的内容">2. 识别 .zshrc 中存在但 .zshenv 中不存在的内容</a></li>
+<li><a href="#_3_检查_zshenv_是否存在">3. 检查.zshenv 是否存在</a></li>
+</ul>
+</li>
+<li><a href="#_解决方案_zshenv_正确的路径">解决方案：.zshenv + 正确的路径</a>
+<ul class="sectlevel2">
+<li><a href="#_创建_zshenv包含所有必要的路径">创建.zshenv，包含所有必要的路径</a></li>
+<li><a href="#_为什么不_source_sdkman_init_sh_在_zshenv_中">为什么不 <code>source sdkman-init.sh</code> 在 .zshenv 中 ？</a></li>
+</ul>
+</li>
+<li><a href="#_nvm_案例_当版本管理器忘记留下痕迹时">NVM 案例 : 当版本管理器忘记留下痕迹时</a>
+<ul class="sectlevel2">
+<li><a href="#_问题_nvm">问题 NVM</a></li>
+<li><a href="#_解决方案为_nvm_创建符号链接_current">解决方案：为 NVM 创建符号链接 `current</a></li>
+<li><a href="#_自动更新符号链接">自动更新符号链接</a></li>
+</ul>
+</li>
+<li><a href="#_路径汇总表">路径汇总表</a></li>
+<li><a href="#_陷阱与缓解措施">陷阱与缓解措施</a></li>
+<li><a href="#_经验教训">经验教训</a></li>
+<li><a href="#_最终验证">最终验证</a></li>
+<li><a href="#_链接">链接</a>
+<ul class="sectlevel2">
+<li><a href="#_官方文档">官方文档</a></li>
+<li><a href="#_提到的工具">提到的工具</a></li>
+<li><a href="#_想要更深入">想要更深入</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">阅读时间 : 13 minutes</div>
+<p>您在终端中启动 OpenCode，一切正常。代理尝试一个`gh`— 找不到。一个`java -version`— 缺席。一个`node`— 无处可寻。然而，这些工具确实就在你的 <em>votre</em> shell 中。问题？OpenCode 启动了 shell。<strong>非交互式</strong>谁从不阅读您的`.zshrc`. 以下是诊断并正确修复它的方法。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">抽搐</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_场景一位盲人智能体在工具的世界中">场景：一位盲人智能体在工具的世界中</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>那是一个星期二的晚上。我刚刚安装了https://opencode.ai[开放代码], 这个承诺将改变我编码方式的AI代理。首次测试：让它列出我的GitHub仓库。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ opencode
+&gt; Utilise gh pour lister mes repos
+❌ bash: gh: command not found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>奇怪。`gh`在我的终端里运行得很好。我尝试其他方法：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">&gt; Vérifie la version de Java
+❌ bash: java: command not found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>然后 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">&gt; Lance le build Gradle
+❌ bash: gradle: command not found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Java, Gradle, Node,<code>gh</code>— 对特工来说一切都是看不见的。 我的终端，然而，却看到了一切。 像特工和我生活在两个平行世界。</p>
+</div>
+<div class="paragraph">
+<p>我花了几个小时才理解。几个小时的`echo $PATH`, de <code>which java</code>, 随着沮丧感日益加深。我终于意识到问题不在于工具——而在于<strong>贝壳</strong>. OpenCode, 如同启动子进程的所有代理一样，在 shell 中工作<strong>非交互的</strong>. 而 Zsh 在这些 shell 中，只是简单地忽略您的`.zshrc`。</p>
+</div>
+<div class="paragraph">
+<p>以下是此诊断、解决方案以及我所学到的教训的完整叙述。如果您使用AI代理 — OpenCode、Aider、Cursor，甚至cron脚本 — 此问题终有一天会影响到您。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_错误的解剖两种shell两种世界">错误的解剖：两种shell，两种世界</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>当您打开终端时，Zsh 会将其视为一个 shell。<strong>交互的</strong>. 他充电`.zshrc`, 初始化一切：SDKMAN、NVM、pnpm、别名、你的漂亮提示符。你的环境已完整。</p>
+</div>
+<div class="paragraph">
+<p>但是当 OpenCode 执行命令时，它不会启动交互式终端。它启动一个 shell。<strong>非交互式</strong>— 任务 shell，没有人在屏幕后面。而 Zsh，在这种情况下，跳跃。<code>.zshrc</code>. 他只读`.zshenv`。</p>
+</div>
+<div class="paragraph">
+<p>为什么会有这种区别？因为非交互式 shell 旨在执行脚本，而不是为人类用户服务。在后台运行的脚本中加载别名、提示符和补全会是一种浪费。问题在于，您的 PATH —— 查找可执行文件的最关键信息 —— 常常是在`.zshrc`, 不在`.zshenv`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+actor "您" as user
+actor "OpenCode\n(代理)" as agent
+participant "Shell\n交互式\n(.zshrc 已加载)" as ishell
+participant "Shell
+非交互
+(.zshrc 被忽略)" as nshell
+
+user -&gt; ishell : gh, java, node ✅
+agent -&gt; nshell : gh, java, node ❌
+
+note right of ishell
+  Source .zshrc :
+  - SDKMAN init
+  - NVM init
+  - ~/apps dans PATH
+  - pnpm dans PATH
+end note
+
+note right of nshell
+  .zshrc ignoré !
+  PATH = /usr/bin:/bin
+  + quelques répertoires défaut
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>问题的根源：<strong>Zsh 仅在交互式 shell 中 source <code>.zshrc</strong>. OpenCode 与所有启动子进程的 IA 代理一样，使用非交互式 shell。这些 shell 仅读取</code>.zshenv`。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_罪魁祸首_zshrc_vs_zshenv">罪魁祸首：.zshrc vs .zshenv</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Zsh 具有<strong>四个初始化文件</strong>, 每个都有明确的角色。这是一种优雅的设计 — 但这也是问题的关键 :</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">文件</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">来源时</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">角色</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">修改 PATH 吗？</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zshenv</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>总是</strong>(交互 + 非交互 + 登录)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必需的环境变量, PATH</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅是的—这是SA位置</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zprofile</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">仅限登录的shell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">慢速命令 （每会话一次）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">可能</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zshrc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>仅交互式 Shell</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">别名, 提示, 自动补全, 交互式工具</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌ 不适用于关键变量</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.zlogin</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">登录 Shell（在 .zshrc 之后）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">欢迎消息, 完成</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">很少</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>表格给出一个线索，但必须深入理解。可以把它想成房子里的各个部分：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>`.zshenv`是 该<strong>前厅</strong>— 所有人都会经过那里，无论是访客还是居民。如果你在这里放置某物，任何 shell 都能看到它。</p>
+</li>
+<li>
+<p>`.zshrc`是<strong>客厅</strong>— 只有居民（交互式 shell）才会进入那里。访客（非交互式 shell）则停留在大厅。</p>
+</li>
+<li>
+<p><code>.zprofile</code> et `.zlogin`它们是登录 shell（例如在通过 SSH 登录时）的专用组件。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>悲剧在于，我们大多数人把 PATH 放在客厅里。而 AI 代理却永远没有进入的权利。</p>
+</div>
+<div class="paragraph">
+<p>问题的一个图示：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+start
+
+if (Shell interactif ?) then (Oui)
+  :Source .zshenv;
+  :Source .zprofile;
+  :Source .zshrc;
+  :Source .zlogin;
+  note right
+    SDKMAN ✅
+    NVM ✅
+    ~/apps ✅
+    pnpm ✅
+  end note
+else (Non — shell non-interactif)
+  :Source .zshenv uniquement;
+  note right
+    SDKMAN ❌
+    NVM ❌
+    ~/apps ❌
+    pnpm ❌
+  end note
+endif
+
+stop
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>当您打开终端时，Zsh 是交互式的：它读取`.zshrc`, 一切正常。当 OpenCode 启动一个 shell 来执行命令时，Zsh 是非交互式的：它跳过`.zshrc`, 只读`.zshenv`. Et si `.zshenv`不存在或不包含 PATH — 那是荒原.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>为什么Zsh会这样做？</strong>这是从Unix继承的设计选择。非交互式 shell 必须<strong>快速</strong> et <strong>可重复的</strong>. 将别名、彩色提示和 SDKMAN 的重型初始化加载到 cron 脚本或 AI 代理中会很慢且脆弱。因此这种分离是合理的：<code>.zshenv`主要 (variables, PATH)</code>.zshrc`为了舒适（别名、提示、补全）。问题出现在我们把基本要素放在舒适里时。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_逐步诊断">逐步诊断</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>在纠正之前，必须弄清楚到底缺少了什么。以下是一种可重复的诊断方法 — 如果您在使用 AI 代理，请将其收藏。</p>
+</div>
+<div class="sect2">
+<h3 id="_检查代理的path">检查代理的PATH</h3>
+<div class="paragraph">
+<p>我们将交互式终端所看到的内容与非交互式 shell 所看到的内容进行比较——也就是说，与 OpenCode 所看到的内容进行比较。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Dans votre terminal interactif (tout fonctionne)
+echo $PATH | tr ':' '\n' | grep -v '^/usr' | sort</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>典型结果：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">/home/cheroliv/apps
+/home/cheroliv/.nvm/versions/node/v22.19.0/bin
+/home/cheroliv/.sdkman/candidates/java/current/bin
+/home/cheroliv/.sdkman/candidates/gradle/current/bin
+/home/cheroliv/.local/share/pnpm
+/home/cheroliv/.local/bin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>现在，模拟一下代理看到的内容——非交互式 Shell：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Shell non-interactif : pas de .zshrc
+zsh -c 'echo $PATH' | tr ':' '\n' | grep -v '^/usr' | sort</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>结果：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">/home/cheroliv/.local/bin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>六条路径中有五条已经消失。</strong>代理人丧失了其环境的83%。这就像让你在没有一半厨具的情况下做饭——你可能能煮水，但几乎做不了其他事情。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>命令`zsh -c 'echo $PATH'`是你的<strong>第一号诊断工具</strong>. 如果您日常使用的某个工具不在结果中，您的AI代理也无法看到它。 在每次修改的之前和之后测试它`.zshenv`。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_识别_zshrc_中存在但_zshenv_中不存在的内容">2. 识别 .zshrc 中存在但 .zshenv 中不存在的内容</h3>
+<div class="paragraph">
+<p>现在，我们正在寻找罪魁祸首所在`.zshrc`. 我们过滤提及我们工具的 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">grep -n 'apps\|SDKMAN\|NVM\|PNPM\|PATH' ~/.zshrc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>通常可以看到：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">119: PATH="/usr/bin/python3:$HOME/apps:$PATH"           # ← pas exporté !
+171: export NVM_DIR="$HOME/.nvm"
+172: [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; \. "$NVM_DIR/nvm.sh"   # ← NVM init
+176: nvm use --lts --silent                              # ← active une version
+179: export PNPM_HOME="/home/cheroliv/.local/share/pnpm"
+187: export SDKMAN_DIR="$HOME/.sdkman"
+188: [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] &amp;&amp; source "$HOME/.sdkman/bin/sdkman-init.sh"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一切都是<strong>不可见</strong>用于 OpenCode。和`PATH`第119行甚至没有`export`é — 它永不离开当前的 shell。这是一个关键的技术细节：一个没有`export`在定义它的 shell 中保持局部。如 OpenCode 启动的子 shell 从不继承它。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_检查_zshenv_是否存在">3. 检查.zshenv 是否存在</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat ~/.zshenv 2&gt;/dev/null || echo "FICHIER ABSENT"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>如果答案是 "FICHIER ABSENT"，这就是一切取决的地方。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_解决方案_zshenv_正确的路径">解决方案：.zshenv + 正确的路径</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>策略很简单，但它需要精确：放进`.zshenv` <strong>仅</strong>基本路径，不加载沉重的初始化脚本。我们不移动`.zshrc`在`.zshenv`— 我们提取了精华。</p>
+</div>
+<div class="sect2">
+<h3 id="_创建_zshenv包含所有必要的路径">创建.zshenv，包含所有必要的路径</h3>
+<div class="paragraph">
+<p>`.zshenv`是<strong>唯一文件</strong>Zsh 保证在其中加载<strong>所有</strong>这些上下文。 这就是PATH应该去的地方。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export SDKMAN_DIR="$HOME/.sdkman"
+export NVM_DIR="$HOME/.nvm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$HOME/apps:$HOME/.sdkman/candidates/java/current/bin:$HOME/.sdkman/candidates/gradle/current/bin:$HOME/.nvm/current/bin:$PNPM_HOME:$HOME/.local/bin:$HOME/.local/share/JetBrains/Toolbox/scripts:/usr/bin/python3:$PATH"</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>我们使用`$HOME/.nvm/current/bin`并且不`$HOME/.nvm/versions/node/v22.19.0/bin`. 原因：Node 版本会变化。硬编码的路径在下一次更新时会失效`nvm install`. 更多详情请见下一节。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_为什么不_source_sdkman_init_sh_在_zshenv_中">为什么不 <code>source sdkman-init.sh</code> 在 .zshenv 中 ？</h3>
+<div class="paragraph">
+<p>最诱人的方法当然就是简单地在…中复制`.zshenv`我们在…里所做的`.zshrc`— 为初始化脚本获取来源。我们<strong>可能</strong>有冲动去做：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ❌ MAUVAISE IDÉE
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] &amp;&amp; source "$HOME/.sdkman/bin/sdkman-init.sh"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>问题 :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>慢</strong>(Empty output)`sdkman-init.sh`它在每个 shell 中执行网络解析和检查。在非交互式 shell 中，这是一种不必要的开销。</p>
+</li>
+<li>
+<p><strong>脆弱</strong>: SDKMAN 期望交互式上下文。其初始化可能在管道或子 shell 中静默失败。</p>
+</li>
+<li>
+<p><strong>无用</strong>: SDKMAN 将其候选人放置在`~/.sdkman/candidates/&lt;tool&gt;/current/bin`— 指向活动版本的稳定符号链接。我们可以使用它们。<strong>直接</strong>。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>正确的方法是：跳过 SDKMAN 初始化，直接指向符号链接`current`. 这是整个解决方案的关键：<strong>使用文件结构作为合同，而不是初始化代码</strong>。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+rectangle "缓慢的方法\n(source sdkman-init.sh)" as slow {
+  card ".zshenv source sdkman-init.sh
+每个 shell 2-3 秒
+网络检查
+失败风险" as s1 #FDEDEC
+}
+
+rectangle "快速方法
+(直接符号链接)" as fast {
+  card ".zshenv export PATH=...current/bin
+0 ms
+没有网络
+没有初始化" as s2 #E8F8E8
+}
+
+slow --&gt; fast : Même résultat final\nLe PATH pointe sur current/bin\ndans les deux cas
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_nvm_案例_当版本管理器忘记留下痕迹时">NVM 案例 : 当版本管理器忘记留下痕迹时</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_问题_nvm">问题 NVM</h3>
+<div class="paragraph">
+<p>这就是调查把我带到最远的地方。SDKMAN 有一个优雅的设计：当你`sdk install java 25.0.2-tem`, 它创建了一个符号链接 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">~/.sdkman/candidates/java/current -&gt; ~/.sdkman/candidates/java/25.0.2-tem</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这个符号链接是<strong>始终保持最新</strong>. 指向其上的在`.zshenv`而且你受到保护，无论使用哪种shell。很漂亮。</p>
+</div>
+<div class="paragraph">
+<p>算了，他，不创建<strong>什么都没有</strong>电话。无符号链接`current`. 没有稳定的锚点。必须指向一个硬编码的版本化路径，看起来像这样:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">~/.nvm/versions/node/v22.19.0/bin/node</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>到下一个`nvm install 24`, 这条路已经死了。 你的`.zshenv`它将指向一个不再是活动版本的版本。这是一个定时炸弹。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>为什么 NVM 会这样做？</strong>NVM 通过动态修改 PATH 来在每次`nvm use`. 这是为经常在交互式 shell 中切换版本的开发者设计的。符号链接`current`它并不在最初的规格说明中 — 这是一个设计遗漏，我们将亲自纠正。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+package "SDKMAN ✅" {
+  [~/.sdkman/candidates/java/current] as sdk_current
+  [~/.sdkman/candidates/java/25.0.2-tem/] as java_25
+  [~/.sdkman/candidates/java/21.0.7-tem/] as java_21
+
+  sdk_current --&gt; java_25 : symlink
+}
+
+package "NVM ❌ (修正前)" as nvm_before {
+  [~/.nvm/versions/node/v22.19.0/] as node_22
+  [~/.nvm/versions/node/v20.16.0/] as node_20
+  note right of node_22
+    Pas de symlink current !
+    .zshenv doit pointer en dur
+    Cassé au prochain nvm install
+  end note
+}
+
+package "NVM ✅ (已更正)" as nvm_after {
+  [~/.nvm/current] as nvm_current
+  [~/.nvm/versions/node/v22.19.0/] as node_22b
+  [~/.nvm/versions/node/v20.16.0/] as node_20b
+
+  nvm_current --&gt; node_22b : symlink\n(mis à jour auto)
+}
+
+@enduml</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_解决方案为_nvm_创建符号链接_current">解决方案：为 NVM 创建符号链接 `current</h3>
+<div class="paragraph">
+<p>因为 NVM 没有做这件事，我们自己来做。原理与 SDKMAN 相同 —  — 一个符号链接`current`它始终指向活动版本。我们只需创建一次，然后将其自动化，使其自行更新。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Créer le symlink initial
+ln -sfn "$HOME/.nvm/versions/node/v22.19.0" "$HOME/.nvm/current"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>现在，在`.zshenv`, 我们使用 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$HOME/.nvm/current/bin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>而不是:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ❌ Chemin en dur — cassé au prochain changement de version
+$HOME/.nvm/versions/node/v22.19.0/bin</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_自动更新符号链接">自动更新符号链接</h3>
+<div class="paragraph">
+<p>如果符号链接不更新，那就毫无价值。符号链接`current`必须在进行时进行更新`nvm use` ou <code>nvm install</code>. 解决方案：一个<strong>包装</strong>— 一个封装真实命令的函数`nvm`并在每次调用后更新符号链接。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># À la fin de .zshrc, APRÈS le chargement de NVM
+nvm use --lts --silent
+ln -sfn "$(nvm_version_path "$(nvm current)")" "$NVM_DIR/current"
+
+_nvm() {
+  command nvm "$@"
+  local rc=$?
+  ln -sfn "$(nvm_version_path "$(nvm current)")" "$NVM_DIR/current"
+  return $rc
+}
+alias nvm='_nvm'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>它是如何工作的，详细说明：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+actor Développeur
+participant "nvm wrapper
+(_nvm)" as wrapper
+participant "nvm 真实
+(command nvm)" as realnvm
+participant "~/.nvm/current\n(符号链接)" as symlink
+
+Développeur -&gt; wrapper : nvm use 20
+wrapper -&gt; realnvm : command nvm use 20
+realnvm --&gt; wrapper : version activée
+wrapper -&gt; symlink : ln -sfn .../v20.16.0 ~/.nvm/current
+wrapper --&gt; Développeur : retour
+
+note right of symlink
+  Toujours à jour !
+  Utilisé par .zshenv
+  → accessible par OpenCode
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>包装器`_nvm`调用真实命令`nvm`, 然后更新符号链接。 别名`nvm='_nvm'`使得在打字时`nvm`, 我们通过 wrapper。并且在 shell 初始化时，我们也这样做之后`nvm use --lts`.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>`nvm_version_path`这是 NVM 的一个内部函数，用于解析某个版本的完整路径。这样可以避免手动重新构建路径。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_路径汇总表">路径汇总表</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>在进入陷阱之前，先看一下变换的视觉摘要。在左侧，您之前拥有的（全部在`.zshrc`, 对代理不可见)。 在右侧，您现在拥有的（基本路径在`.zshenv`, 到处可见)。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">工具</th>
+<th class="tableblock halign-left valign-top">仅限 .zshrc 之前</th>
+<th class="tableblock halign-left valign-top">之后 (.zshenv + symlink)</th>
+<th class="tableblock halign-left valign-top">由 OpenCode 可见？</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>~/apps</code>(gh, vscode)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PATH 未在 .zshrc 中导出</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/apps`在 .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SDKMAN Java</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sdkman-init.sh`在 .zshrc 中 source</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.sdkman/candidates/java/current/bin`在 .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SDKMAN Gradle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sdkman-init.sh`在 .zshrc 中被 source</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.sdkman/candidates/gradle/current/bin`在 .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NVM 节点</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`nvm use --lts`在 .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.nvm/current/bin`在 .zshenv (符号链接)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;/think&gt; ✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pnpm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$PNPM_HOME`在 .zshrc 中</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$PNPM_HOME`在 .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">保留所有反引号代码段（<code>&#8230;&#8203;</code>）完全不变——永不修改反引号内容、间距或位置。 此文本可能是较大句子的一个片段——在不请求更多上下文的情况下翻译该片段。 仅输出翻译后的文本——无解释、无评论、无引言、无替代方案、无选项。 ✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JetBrains 工具箱</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">自动添加的由 Toolbox 在 .zshrc 中</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`$HOME/.local/share/JetBrains/Toolbox/scripts`在 .zshenv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Python 3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`/usr/bin/python3`在 PATH .zshrc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">明确地在 .zshenv 中</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_陷阱与缓解措施">陷阱与缓解措施</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这种方法并不完美。以下是我遇到的问题以及如何绕过它们。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">陷阱</th>
+<th class="tableblock halign-left valign-top">描述</th>
+<th class="tableblock halign-left valign-top">缓解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">复制的 PATH</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">如果 .zshenv 和 .zshrc 添加相同的路径，该路径会出现两次</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`.zshenv`已被来源<strong>之前</strong>.zshrc. 两者都在交互式 shell 中被读取。PATH 可能会重复。这是美观的，而不是功能性的。为了避免这种情况：只在 .zshenv 中放置那些在默认 PATH 中不存在的路径。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NVM : .zshenv 中硬编码的版本</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">放置`~/.nvm/versions/node/v22.19.0/bin`硬的在下一个变假`nvm install`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">使用符号链接`$HOME/.nvm/current/bin`+ 包装器`_nvm`在 .zshrc</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SDKMAN：在 .zshenv 中 source sdkman-init.sh</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">缓慢、脆弱、在非交互式 shell 中无用</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">使用符号链接`candidates/&lt;tool&gt;/current/bin`直接</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">修改后缺少别名</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">包装器`nvm='_nvm'`在 .zshrc 中仅在重新加载后生效</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">重启 Shell 或`source ~/.zshrc`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenCode 不会看到更改</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">代理已经使用旧的 .zshenv 启动了它的子 shell。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">在修改 .zshenv 后重启 OpenCode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.zshenv 过于臃肿</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">把重量级的函数或交互式初始化放在 .zshenv 中</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.zshenv = 环境变量 + 仅 PATH。没有`source`, 没有重型函数，没有提示。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_经验教训">经验教训</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>.zshrc` 是交互式的, <code>.zshenv</code> 是通用的</strong>— 如果一个变量需要在 <em>tous</em> 的所有 shell（AI 代理、cron、脚本、IDE）中存在，它放置在`.zshenv`. 客厅很舒适，但入口大厅是唯一所有人都经过的地方。</p>
+</li>
+<li>
+<p><strong>版本管理器不相等</strong>— SDKMAN 创建符号链接`current`按设计。NVM 不。必须手动填补这一缺口。这是一个重要的教训：在配置你的 PATH 之前，检查你的管理器是否提供一个稳定的锚点。</p>
+</li>
+<li>
+<p><strong>不要在 .zshenv 中加载 init 脚本</strong>—<code>sdkman-init.sh</code> et `nvm.sh`它们是为交互式shell设计的。 它们在非交互式环境中很慢且脆弱。 符号链接`current`足够且即时。</p>
+</li>
+<li>
+<p><strong>始终在非交互式 shell 中测试</strong>—`zsh -c 'echo $PATH'`它精确地模拟了代理所看到的内容。这是验证测试。没有这个测试，你就不知道你的配置对代理是否有效。</p>
+</li>
+<li>
+<p><strong>包装器模式是可重用的</strong>— 同样的模式`_nvm`+`alias nvm='_nvm'`适用于任何动态修改 PATH 而不留下稳定痕迹的工具。这是你创意工具箱中的另一个工具。</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+rectangle "之前" as avant {
+  card "交互式 Shell : ✅
+非交互式 Shell : ❌
+OpenCode : ❌
+Cron : ❌
+脚本 : ❌" as av1 #FDEDEC
+}
+
+rectangle "之后" as apres {
+  card "交互式 Shell : ✅
+非交互式 Shell : ✅
+OpenCode : ✅
+Cron : ✅
+脚本 : ✅" as ap1 #E8F8E8
+}
+
+avant --&gt; apres : .zshenv +\nsymlink ~/.nvm/current
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最终验证">最终验证</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>创建后`.zshenv`以及 NVM 符号链接，确认一切正常 — 在两种上下文中：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Shell interactif (votre terminal)
+gh --version &amp;&amp; java -version &amp;&amp; node --version</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Shell non-interactif (simulation OpenCode)
+zsh -c 'gh --version &amp;&amp; java -version &amp;&amp; node --version'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>两者都必须成功。如果是，您的 IA 代理将看到与您相同的工具。如果不是，请返回逐步诊断——您可能遗漏了一条路径，或者 NVM 的符号链接未更新。</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>自动化此测试。</strong>在您启动的每次工具更新后的 healthcheck 脚本中添加此检查。一`zsh -c 'which java &amp;&amp; which node &amp;&amp; which gh'`在CI中，这是一种防止意外的保险。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><em>__</em> 一个非交互式shell就像一个沉默的客人：它只读取显示在入口门上的内容。如果PATH在客厅里，它永远不会看到它。 (Empty)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_链接">链接</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_官方文档">官方文档</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://zsh.sourceforge.io/Doc/Release/Files.html">Zsh 文档 : 启动文件</a>— 官方Zsh初始化文件参考。这就是所有内容被解释的地方，尽管经常被遗忘。</p>
+</li>
+<li>
+<p><a href="https://opencode.ai/docs/config/">OpenCode：配置</a>— 如何配置 OpenCode 及其运行环境。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_提到的工具">提到的工具</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/nvm-sh/nvm">NVM 在 GitHub 上</a>— Node Version Manager. Node.js 版本管理器</p>
+</li>
+<li>
+<p><a href="https://sdkman.io">SDKMAN — 官方网站</a>— SDKMAN! JVM（Java、Kotlin、Gradle&#8230;&#8203;）的版本管理器</p>
+</li>
+<li>
+<p><a href="https://sdkman.io/install">SDKMAN：安装</a>— SDKMAN 安装指南。</p>
+</li>
+<li>
+<p><a href="https://cli.github.com">gh` — GitHub 命令行界面</a>— GitHub 的命令行工具，对所有开发者来说必不可少。</p>
+</li>
+<li>
+<p><a href="https://gradle.org">Gradle — 官方网站</a>— 我们通过 SDKMAN 安装的构建系统。</p>
+</li>
+<li>
+<p><a href="https://pnpm.io">pnpm — 官方网站</a>— Node.js 包管理器快速且节省空间。</p>
+</li>
+<li>
+<p><a href="https://www.jetbrains.com/toolbox-app/">JetBrains Toolbox</a>— JetBrains IDE管理器，它将其脚本添加到PATH。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_想要更深入">想要更深入</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://blog.andy2003.org/posts/2022/zsh-dotfiles/">Zsh 配置文件：完整指南</a>— 深入文章关于 Zsh dotfiles 管理。</p>
+</li>
+<li>
+<p><a href="https://wiki.archlinux.org/title/Zsh">Zsh 在 ArchWiki</a>— Zsh 社区文档之一。</p>
+</li>
+<li>
+<p><a href="https://github.com/nvm-sh/nvm/issues">NVM 在 GitHub 上的问题</a>— 要查看围绕符号链接的讨论`current`和 PATH问题。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : 将 AsciiDoc 转换为 MP4 视频</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">我的LLM消费审计：SQLite、OpenCode、Ollama Cloud，以及为什么我的专业订阅颠覆了全球市场</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">架构 « 插件独立 + 消费者根 »：为什么我的 Gradle 构建会重复</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">知识图谱作为推荐引擎：我是如何杀死那些按时间顺序的‘相关文章’的</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0106_opencode_path_sdkman_nvm_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

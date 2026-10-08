@@ -1,0 +1,1576 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>上下文代理审计：当你的治理成为问题时 — 以及如何在不失去任何东西的情况下修复它 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0111_audit_contexte_agent_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0111_audit_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0111_audit_contexte_agent_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="上下文代理审计：当你的治理成为问题时 — 以及如何在不失去任何东西的情况下修复它 — Cheroliv"/>
+        <meta property="og:description" content="在两篇关于代理上下文结构化和备份的文章之后，我发现记录该方法的文件本身已成为消耗 token 最多的部分。对 627 行的 AGENT_MODUS_OPERANDI 进行逐节审计，识别重复内容，并提出一种百科全书式的分割方案，既保持工程完整性，又不会导致上下文饱和。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0111_audit_contexte_agent_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0111_audit_contexte_agent_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="上下文代理审计：当你的治理成为问题时 — 以及如何在不失去任何东西的情况下修复它 — Cheroliv"/>
+        <meta name="twitter:description" content="在两篇关于代理上下文结构化和备份的文章之后，我发现记录该方法的文件本身已成为消耗 token 最多的部分。对 627 行的 AGENT_MODUS_OPERANDI 进行逐节审计，识别重复内容，并提出一种百科全书式的分割方案，既保持工程完整性，又不会导致上下文饱和。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0111_audit_contexte_agent_post.png"/>
+        <meta name="description" content="在两篇关于代理上下文结构化和备份的文章之后，我发现记录该方法的文件本身已成为消耗 token 最多的部分。对 627 行的 AGENT_MODUS_OPERANDI 进行逐节审计，识别重复内容，并提出一种百科全书式的分割方案，既保持工程完整性，又不会导致上下文饱和。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS订阅源" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">主页</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">专长</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">博客</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">联系</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择界面主题">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">光</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>浅色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>深色
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>高对比度
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="选择语言">
+                        <span class="me-1">🇨🇳</span>
+                        <span class="ms-1">ZH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0111_audit_contexte_agent_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0111_audit_contexte_agent_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0111_audit_contexte_agent_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0111_audit_contexte_agent_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0111_audit_contexte_agent_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0111_audit_contexte_agent_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0111_audit_contexte_agent_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0111_audit_contexte_agent_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0111_audit_contexte_agent_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0111_audit_contexte_agent_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0111_audit_contexte_agent_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0111_audit_contexte_agent_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0111_audit_contexte_agent_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0111_audit_contexte_agent_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0111_audit_contexte_agent_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0111_audit_contexte_agent_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0111_audit_contexte_agent_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0111_audit_contexte_agent_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0111_audit_contexte_agent_post.html"},
+                      "headline": "\u4E0A\u4E0B\u6587\u4EE3\u7406\u5BA1\u8BA1\uFF1A\u5F53\u4F60\u7684\u6CBB\u7406\u6210\u4E3A\u95EE\u9898\u65F6 \u2014 \u4EE5\u53CA\u5982\u4F55\u5728\u4E0D\u5931\u53BB\u4EFB\u4F55\u4E1C\u897F\u7684\u60C5\u51B5\u4E0B\u4FEE\u590D\u5B83",
+                      "description": "\u6211\u5173\u4E8E\u4EE3\u7406\u4EBA\u6CBB\u7406\u7CFB\u5217\u7684\u7B2C\u4E09\u90E8\u5206\u3002\u6211\u5BA1\u8BA1\u4E86\u6211\u81EA\u5DF1\u7684\u4E0A\u4E0B\u6587\u6587\u4EF6 \u2014  \u2014 1414 \u884C\u81EA\u52A8\u52A0\u8F7D \u2014  \u2014 \u6211\u53D1\u73B0\u6700\u5927\u7684\u5F00\u652F\u662F\u6211\u81EA\u5DF1\u7684 Eager\/Lazy \u65B9\u6CD5\u8BBA\u3002\u6211\u662F\u5982\u4F55\u5C06\u8FD9\u4E2A\u5355\u4F53\u5757\u5207\u5272\u6210\u8F7B\u91CF\u7EA7\u7684\u7CBE\u534E\u548C\u51B7\u51B0\u51B0\u7684\u767E\u79D1\u5168\u4E66\uFF0C\u800C\u4E0D\u4E22\u5931\u4EFB\u4F55\u4E00\u884C\u5DE5\u7A0B\u3002",
+                      "datePublished": "2026-04-27",
+                      "dateModified": "2026-04-27",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0111_audit_contexte_agent_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u4E0A\u4E0B\u6587\u4EE3\u7406\u5BA1\u8BA1\uFF1A\u5F53\u4F60\u7684\u6CBB\u7406\u6210\u4E3A\u95EE\u9898\u65F6 \u2014 \u4EE5\u53CA\u5982\u4F55\u5728\u4E0D\u5931\u53BB\u4EFB\u4F55\u4E1C\u897F\u7684\u60C5\u51B5\u4E0B\u4FEE\u590D\u5B83", "item": "https:\/\/cheroliv.com\/blog\/2026\/0111_audit_contexte_agent_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">上下文代理审计：当你的治理成为问题时 — 以及如何在不失去任何东西的情况下修复它</h1>
+                <p class="lead">
+                    <em>发布于 27 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_场景051号会议出了点问题">场景：051号会议，出了点问题</a></li>
+<li><a href="#_审计剖析_627_行">审计：剖析 627 行</a></li>
+<li><a href="#_害怕失去工程学">害怕失去工程学</a></li>
+<li><a href="#_解决方案split百科的">解决方案:split百科的</a></li>
+<li><a href="#_文件_essentials_的内容">文件 ESSENTIALS 的内容</a></li>
+<li><a href="#_结果_50_的_eager_上下文">结果：-50% 的 EAGER 上下文</a></li>
+<li><a href="#_为什么文件夹名为_encyclopedies">为什么文件夹名为 `encyclopedies/</a></li>
+<li><a href="#_该系列的逻辑续集">该系列的逻辑续集</a></li>
+<li><a href="#_我本来可以做得不同">我本来可以做得不同</a></li>
+<li><a href="#_审计您自身上下文的指南">审计您自身上下文的指南</a></li>
+<li><a href="#_充满活力的治理">充满活力的治理</a></li>
+<li><a href="#_链接">链接</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">阅读时间 : 14 minutes</div>
+<p>你花了数周时间打造了一个无懈可击的代理治理。急切/懒惰，会话结束程序，轮换备份。系统正在运行。然后有一天，代理变慢了。响应被稀释了。你测量：自动加载了1414行。而最糟的是，罪魁祸首既不是代码，也不是待办事项，也不是会话存档。罪魁祸首就是记录你方法的文件。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">强迫症</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_场景051号会议出了点问题">场景：051号会议，出了点问题</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>2026年4月30日，16:00。我正处于会议中`magic-stick`, 我的Linux Live ISO构建项目。Opencode代理自动加载了我的Eager文件，像往常一样 —<code>AGENT.adoc</code>, <code>PROMPT_REPRISE.adoc</code>, <code>.agents/INDEX.adoc</code>. 一切正常。</p>
+</div>
+<div class="paragraph">
+<p>只是答案变得软绵绵的。代理多用了两秒才推理出来。它忘记了三条消息前就在眼前的细节。这不是崩溃，也不是错误——而是一种缓慢的退化，起初并不容易被察觉。</p>
+</div>
+<div class="paragraph">
+<p>我在第 048 次会议中已经经历过这种情况，当时我发现治理文件的累计行数达到 5200 行。于是我提出了 Hot/Warm/Cold 机制，包含 10 次会议的滑动窗口、相同的冷浪以及双触发器传感器。问题在理论上已经解决。</p>
+</div>
+<div class="paragraph">
+<p>但现在，我们处于第 051 会话。备份轮转已经成功进行 —  — EAGER 文件从 2087 行减少到 500 行。然而，情况仍然沉重。我似乎漏掉了什么。</p>
+</div>
+<div class="paragraph">
+<p>我打开一个终端并输入：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">wc -l AGENT.adoc AGENT_MODUS_OPERANDI.adoc PROMPT_REPRISE.adoc \
+  .agents/INDEX.adoc .agents/SESSIONS_HISTORY.adoc \
+  .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">  287 AGENT.adoc
+  627 AGENT_MODUS_OPERANDI.adoc
+   51 PROMPT_REPRISE.adoc
+  218 .agents/INDEX.adoc
+   18 .agents/SESSIONS_HISTORY.adoc
+  213 .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc
+ 1414 total</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>1414 行。备份轮转已经很好地裁剪了 INDEX, SESSIONS_HISTORY 和 COMPLETED_TASKS — 它们很干净。但房间里有只我之前没看到的大象：<strong>627 行</strong>在单个文件中。<code>AGENT_MODUS_OPERANDI.adoc</code>.</p>
+</div>
+<div class="paragraph">
+<p>这个文件，就是我在会议1中编写的，用来记录 Eager/Lazy 策略的。这是该方法的手册。而且它仅凭自己就成为了 EAGER 上下文的 44%。</p>
+</div>
+<div id="diag-before-audit" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+title 上下文 EAGER — 1414 行
+rectangle "AGENT_MODUS_OPERANDI\n**627 行 (44%)**" as MOD #FFCDD2
+rectangle "AGENT.adoc
+287 行 (20%)" as AG #BBDEFB
+rectangle "INDEX.adoc
+218 行 (15%)" as IDX #C8E6C9
+rectangle "COMPLETED_TASKS\n213 行 (15%)" as ARC #FFF9C4
+rectangle "PROMPT_REPRISE
+51 行 (4%)" as PRO #E1BEE7
+rectangle "SESSIONS_HISTORY\n18 lignes (1%)" as HIS #FFE0B2
+
+note bottom of MOD
+  Le fichier qui documente
+  la méthode est devenu
+  le plus gros poste de dépense
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这完全是讽刺。设计用于*节省*上下文的文件已成为上下文的主要*消费者*。就像你的汽车使用手册比发动机还重。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_审计剖析_627_行">审计：剖析 627 行</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>我决定逐部分进行审计。不是为了删除 — 为了*理解*哪些内容值得放在EAGER中，哪些内容可以在其他地方存在而不丢失知识。</p>
+</div>
+<div class="paragraph">
+<p>这是确切的结构`AGENT_MODUS_OPERANDI.adoc`以及我在其中发现的 :</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2727%;">
+<col style="width: 2.2739%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">章节</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">线条</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">内容</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">已存在于&#8230;&#8203;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P1 — 概览</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">问题已解决，基本原则，仪表盘与手册的类比</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P2 — 文件结构</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">97</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">树形结构, 加载策略, 何时加载什么</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">您是专业翻译员。 将法语翻译成中文。 完全保留所有反引号代码片段（<code>&#8230;&#8203;</code>）原样不变——切勿修改反引号内的内容、间距或位置。 此文本可能是较大句子的一段——请在不请求更多上下文的情况下翻译此片段。 仅输出翻译后的文本——不要提供解释、评论、介绍、替代方案或选项。 —</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P3 — 绝对规则</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">34</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">禁止 Git，禁止破坏性命令，禁止泄露秘密</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AGENT.adoc</code>+<code>INDEX.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P4 — 会话生命周期</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">133</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">模板打开, 工作规则, 6 步骤结束会议, 清单</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AGENT.adoc</code>§会话结束 +<code>INDEX.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P5 — 指标和阈值</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">49</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">理想的会话 (15-30 分钟, 1-3 文件)，警示信号</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P6 — 会话类型</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">72</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">检测表, 提案格式, 例外</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P7 — 持续改进</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">跟踪指标，每周审查</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P8 — 启动检查清单</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bootstrap 新项目</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>P9 — 参考文献</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">参考文件，外部资源</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AGENT.adoc</code>(文件 EAGER/LAZY)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>附件A+B</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">术语表，版本历史</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>裁决无可上诉：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>完全重复</strong>(167行) : P3, P4, P9 — 已经全部在`AGENT.adoc` ou <code>INDEX.adoc</code>，经常逐字逐句</p>
+</li>
+<li>
+<p><strong>从未在实践中被咨询</strong>(215 行) : P5, P6, P7, P8, Annexes — 元治理，从未在任何会议中使用过</p>
+</li>
+<li>
+<p><strong>唯一的知识</strong>(161 行) : P1 和 P2 — LAZY/EAGER 词汇，类比，加载策略</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>在627行上，<strong>382 都是噪声</strong>. 这些 382 行在 <strong>每次会话开始时</strong> 被加载，被代理消费，在我甚至说出“你好”之前就稀释了他的注意力。</p>
+</div>
+<div id="diag-audit-result" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title 对 AGENT_MODUS_OPERANDI.adoc 的审计 — 627 行
+left to right direction
+
+rectangle "🟡 **重复**\n167 行 (27%)" as DUP #FFF9C4 {
+  card "P3 — 绝对规则\n(34 行)" as D1
+  card "P4 — 生活周期
+(133 行)" as D2
+  card "P9 — 参考文献
+(30行)" as D3
+}
+
+rectangle "🔴 **从未查询**
+215 行 (34%)" as JAM #FFCDD2 {
+  card "P5 — 指标
+(49 行)" as J1
+  card "P6 — 检测
+(72 行)" as J2
+  card "P7 — 改进
+(39 行)" as J3
+  card "P8 — Bootstrap
+(13 行)" as J4
+  card "附录 — 词汇表
+(42 行)" as J5
+}
+
+rectangle "🟢 **独特知识**
+161 行 (26%)" as UNI #C8E6C9 {
+  card "P1 — 概览
+(64 行)" as U1
+  card "P2 — 文件结构\n(97 行)" as U2
+}
+
+note bottom of UNI
+  C'est ÇA qu'il faut garder en EAGER.
+  Le reste → cold storage.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此图表是一切的关键。重复项（黄色）纯属噪声——代理会读取两次，分别来自两个不同的文件。从未被查看的（红色）是死记文档——精心编写却从未被使用。只有绿色部分包含了代理无法在其他地方找到的知识。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_害怕失去工程学">害怕失去工程学</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>此时，我眼前有确凿的证据：我必须减少`AGENT_MODUS_OPERANDI.adoc`. 但我犹豫。</p>
+</div>
+<div class="paragraph">
+<p>这个文件是我手写的。每一节都是从实际会议中学到的课程的结果。P3 部分源自`rm -rf`意外地在`bakery-plugin`让我花费了真实的 Firebase 令牌。P4 部分是十五次会话的结果，在这些会话中我忘记归档并失去了线索。这个六步骤的程序并非出自一本书 — 它源于痛苦。</p>
+</div>
+<div class="paragraph">
+<p>删除这些部分，就等于丢掉我自己工程的历史记录。产生这些内容的教训、我发现它们的时段、我不想再犯的错误。这不是文本——这是结晶的经验。</p>
+</div>
+<div class="paragraph">
+<p>这就是我提出将指导解决方案的原则的地方：</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ <strong>永远不要删除。始终重新定位。</strong>知识不必从项目中消失。它只需在不需要时不被自动加载。 </em>_</em></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_解决方案split百科的">解决方案:split百科的</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>我提出的模型很简单，它受到维基百科成长方式的启发：当一篇文章变得太长时，我们不把它切开——我们创建一篇详细的文章，并在主文章中保留一个摘要。</p>
+</div>
+<div class="paragraph">
+<p>为`AGENT_MODUS_OPERANDI.adoc`, 结果是：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>提取</strong>161 行唯一知识 (P1 + P2) 在一个新文件中`LAZY_EAGER_ESSENTIALS.adoc`— 压缩到~50行，严格EAGER</p>
+</li>
+<li>
+<p><strong>重命名</strong> <code>AGENT_MODUS_OPERANDI.adoc</code> en <code>.agents/encyclopedies/LAZY_EAGER_ENCYCLOPEDIE.adoc</code>— 627行的原始文件，保持 <strong>完整</strong>，在冷存储中</p>
+</li>
+<li>
+<p><strong>永远不要充电</strong>自动的百科文件 — 它是为人类而存在，为未来的蒸馏而存在，为六个月后在更好模型下调用的代理而存在。</p>
+</li>
+</ol>
+</div>
+<div id="diag-split-solution" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title 分割的百科全书 — AGENT_MODUS_OPERANDI
+left to right direction
+
+rectangle "**AGENT_MODUS_OPERANDI.adoc**
+627 行
+(拆分前)" as BEFORE #FFCDD2 {
+}
+
+rectangle " " as ARROW1
+rectangle " " as ARROW2
+
+rectangle "**LAZY_EAGER_ESSENTIALS.adoc**
+**大约50行 — EAGER**" as ESS #C8E6C9 {
+  card "P1浓缩
+(15行)" as E1
+  card "P2 精简版
+(35 行)" as E2
+}
+
+rectangle "**.agents/encyclopedies/**\n**LAZY_EAGER_ENCYCLOPEDIE.adoc**\n627 行 — COLD" as ENC #BBDEFB {
+  card "P1 附录
+(完整, 完好)" as C1
+}
+
+BEFORE -[#4CAF50]-&gt; ESS : "提取
+关键知识"
+BEFORE -[#2196F3]-&gt; ENC : "完整保存
+的工程"
+
+note bottom of ESS
+  Chargé automatiquement
+  en début de session
+  → L'agent comprend le vocabulaire
+end note
+
+note bottom of ENC
+  Jamais chargé automatiquement
+  Consultable par l'humain
+  Matériau brut pour distillation future
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>名称`encyclopedies/`这并非无关紧要。百科全书并不是档案文件——它是一套有组织的知识集合，可查询但不可携带。我们不会在地铁里阅读《Universalis百科全书》。我们把它放在图书馆里，只有在有具体问题时才会去查阅。</p>
+</div>
+<div class="paragraph">
+<p>这正是该文件夹的作用：一个冷的、结构化的、完整的参考库——代理不会自动触碰它。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_文件_essentials_的内容">文件 ESSENTIALS 的内容</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这就是新文件的具体样子`LAZY_EAGER_ESSENTIALS.adoc`, 从 P1 和 P2 提取并压缩 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-asciidoc hljs" data-lang="asciidoc">= Stratégie LAZY/EAGER — Principes Essentiels
+
+[abstract]
+Ce fichier définit la stratégie de gestion du contexte agent.
+Chargé automatiquement (EAGER) en début de session.
+
+== Principes
+
+|===
+| EAGER | LAZY
+| Tableau de bord | Manuel du propriétaire
+| Chargé automatiquement | Chargé sur demande
+| &lt;= 100 lignes, &lt;= 10k tokens | Illimité, détaillé
+| Règles absolues, mission courante | Archives, historique, références
+|===
+
+== Politique de Chargement
+
+|===
+| Fichier | Type | Quand charger
+| PROMPT_REPRISE.adoc | EAGER | Début session (auto)
+| *_ESSENTIALS.adoc | EAGER | Début session si EPIC active
+| .agents/INDEX.adoc | EAGER | Début session (auto)
+| *_REFERENCE.adoc | LAZY | Sur besoin (détails architecture)
+| .agents/sessions/N-*.adoc | LAZY | Sur demande (détails session)
+| .agents/encyclopedies/*.adoc | COLD | Jamais auto (humain seulement)
+|===
+
+== Comment l'Agent Sait Quoi Charger
+
+Début session → PROMPT_REPRISE + INDEX + ESSENTIALS actifs.
+Besoin de détails → charger les *_REFERENCE et sessions/ en LAZY.
+Connaissance froide → encyclopedies/, jamais automatique.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>五十行。这就是代理理解机制所需的全部。其余部分 — 课程历史、详细类比、逐步程序、附录 — 都存在于百科全书中。</p>
+</div>
+<div class="paragraph">
+<p>而且最重要的是：<strong>没有任何内容被删除</strong>. 627行工程代码仍然存在，在`.agents/encyclopedies/LAZY_EAGER_ENCYCLOPEDIE.adoc`. 它们只是被放在图书馆里，而不是放在工作台上。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_结果_50_的_eager_上下文">结果：-50% 的 EAGER 上下文</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>分割前：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"> 287 AGENT.adoc
+ 627 AGENT_MODUS_OPERANDI.adoc
+  51 PROMPT_REPRISE.adoc
+ 218 .agents/INDEX.adoc
+  18 .agents/SESSIONS_HISTORY.adoc
+ 213 .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc
+1414 total</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>拆分后：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs"> 287 AGENT.adoc
+  50 LAZY_EAGER_ESSENTIALS.adoc       ← remplace 627 lignes
+  51 PROMPT_REPRISE.adoc
+ 218 .agents/INDEX.adoc
+  18 .agents/SESSIONS_HISTORY.adoc
+ 213 .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc
+ 837 total                              ← -41%</code></pre>
+</div>
+</div>
+<div id="diag-after-audit" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+
+title 上下文 EAGER 在百科全书式拆分后 — 837 行（-41%）
+rectangle "AGENT.adoc
+287 行 (34%)" as AG #BBDEFB
+rectangle "INDEX.adoc
+218 行 (26%)" as IDX #C8E6C9
+rectangle "COMPLETED_TASKS
+213 行 (25%)" as ARC #FFF9C4
+rectangle "PROMPT_REPRISE
+51 行 (6%)" as PRO #E1BEE7
+rectangle "必需品
+50 行 (6%)" as ESS #A5D6A7
+rectangle "SESSIONS_HISTORY
+18 行 (2%)" as HIS #FFE0B2
+
+note bottom of ESS
+  De 627 → 50 lignes
+  577 lignes d'ingénierie
+  préservées en cold storage
+
+  Rien de perdu. Tout de relocalisé.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>最大的消费者 (<code>AGENT_MODUS_OPERANDI</code>, 627 行) 已被替换为一个 50 行的文件。收益立即可见：577 行上下文被释放。代理松了一口气。</p>
+</div>
+<div class="paragraph">
+<p>并且在`.agents/encyclopedies/`, 原始的 627 行文件正在等待。完整无缺。包含所有部分——包括那些是重复的部分，包括那些从未被使用过的部分。因为有一天，一个更好的模型或一个人类数据科学家会想要交叉这些角度，这些被接受的冗余，这些学到的教训。而那天，原始资料将会在那里。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_为什么文件夹名为_encyclopedies">为什么文件夹名为 `encyclopedies/</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>选择名称并非装饰性的。它编码了机制的哲学。</p>
+</div>
+<div class="paragraph">
+<p>一个 <strong>存档</strong> (<code>archives/</code>) 包含按时间顺序组织的历史数据 — 如每月的 COMPLETED_TASKS。一个 <strong>backup</strong> (<code>backup/</code>) 是一个带时间戳的快照——过去状态的备份。</p>
+</div>
+<div class="paragraph">
+<p><strong>百科全书</strong>，那是另外一回事。这是一种按主题结构的知识集合，全面但非线性。我们不会从头到尾读一本百科全书。我们会深入其中以回答特定的问题。</p>
+</div>
+<div class="paragraph">
+<p>这就是这个文件的确切合同：</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+<col style="width: 6.25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">档案</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">角色</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">访问</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">粒度</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>archives/</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">历史数据（每月完成的任务）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LAZY, 结构化</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">按时间顺序</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backup/</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">冷快照（每10次会话为一波）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">COLD，完整副本</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">时间顺序的</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>encyclopedies/</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">全面的主题知识 (方法论, 模式)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">COLD, 永不自动</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">主题</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>这种区别避免了混杂。每个文件都知道它应该存放的位置是根据 <strong>它包含的内容</strong>，而不是根据 <strong>它的创建时间</strong>。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_该系列的逻辑续集">该系列的逻辑续集</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>如果你已经读过前两篇文章，以下是这三部分如何相互嵌合的：</p>
+</div>
+<div id="diag-trilogie" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 220
+
+title 代理治理三部曲
+left to right direction
+
+package "📖 **文章 0108**\n策略 Eager/Lazy" as A1 #E8F5E9 {
+  card "记忆代理
+会话之间" as M1
+  card "EAGER 文件\n（自动加载）" as M2
+  card "懒惰文件\n(按需)" as M3
+  card "六步程序" as M4
+}
+
+package "🧊 **Article 0110**
+热/温/冷机制" as A2 #FFF9C4 {
+  card "老化
+上下文" as V1
+  card "滑动窗口
+10 次会话" as V2
+  card "寒潮
+相同" as V3
+  card "双触发传感器" as V4
+}
+
+package "🔍 **条目 0111**\n审计 + 百科全书解决方案" as A3 #BBDEFB {
+  card "文件审计
+EAGER" as E1
+  card "识别
+浪费" as E2
+  card "Split
+ESSENTIALS/百科全书" as E3
+  card "工程学的保存" as E4
+}
+
+A1 --&gt; A2 : "内存增长
+→ 需要一个机制
+衰老"
+A2 --&gt; A3 : "仅靠老化不够
+→ 我们必须审计值得成为 EAGER 的内容"
+
+note bottom of A3
+  ✅ Les trois couches sont en place
+  sur 6 projets actifs
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>0108</strong>回答： « 如何在两个会话之间为代理赋予记忆？</p>
+</li>
+<li>
+<p><strong>0110</strong>回答： « 如何防止这种记忆淹没代理？</p>
+</li>
+<li>
+<p><strong>0111</strong>回答 : « 如果问题不在于档案的大小，而在于我们 <strong>选择</strong> 放入 EAGER 的内容吗？</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>第一篇文章构建了结构。第二篇添加了老化机制。第三篇审查内容 — 并发现方法论本身已成为问题。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_我本来可以做得不同">我本来可以做得不同</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>事后看来，我看到了最初的设计错误。`AGENT_MODUS_OPERANDI.adoc`它被创建为一个单一的文档 —  — 一个宣言。这是形式化思想的正确方法。但一旦思想被形式化，文档本应立即被拆分：核心内容放在 EAGER 中，完整内容放在 cold 中。</p>
+</div>
+<div class="paragraph">
+<p>我没有这样做，因为我对这份文件感到自豪。627 行纯工程代码，手写而成，每一节都是一次课程的成果。这是我的作品。就像所有作者一样，我很难把它切开。</p>
+</div>
+<div class="paragraph">
+<p>课：<strong>一个文档很好并不意味着它必须自动加载。</strong>. 内容的质量与其在代理人即时上下文中的相关性无关。</p>
+</div>
+<div class="paragraph">
+<p>今天，规则很简单：在 EAGER 上下文中，超过 100 行的文档都是嫌疑对象。它值得审计。不是定罪 —  — 审计。而问题从来不是« 是否应该删除它？ »而是« 是否应该在每次会话中加载它？</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_审计您自身上下文的指南">审计您自身上下文的指南</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>如果您已经遵循了前两篇文章并建立了自己的 Eager/Lazy 治理，以下是一个五步审计程序：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>测量</strong>:`wc -l`在您所有的 EAGER 文件中。总数应少于 1000 行。</p>
+</li>
+<li>
+<p><strong>识别最大的</strong>: 占总量超过20%的文件是头号嫌疑犯。</p>
+</li>
+<li>
+<p><strong>逐节审计</strong>: 对每个部分，请自问 «此信息是否已经在其他地方？ 该代理是否已经在另一个文件中读取过此信息？ 它是否在最近的五次会议中被使用过？</p>
+</li>
+<li>
+<p><strong>分类器</strong>: 重复，从未使用过，独有的知识。</p>
+</li>
+<li>
+<p><strong>分路器或重新定位</strong>: 什么是独特且关键的 → ESSENTIALS 紧凑。其余全部 →<code>encyclopedies/</code>。</p>
+</li>
+</ol>
+</div>
+<div id="diag-audit-checklist" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title 代理上下文审计程序 — 5 步骤
+start
+
+:1. **Mesurer**\n`wc -l *.adoc .agents/*.adoc`;
+
+if (Total &gt; 1000 lignes ?) then (oui)
+  :⚠️ Contexte trop lourd;
+else (non)
+  :✅ Contexte OK;
+  stop
+endif
+
+:2. **Identifier le suspect**\nLe fichier &gt; 20% du total;
+
+:3. **Auditer section par section**\nPour chaque section :\n• Déjà ailleurs ? → doublon\n• Jamais servi ? → mort\n• Information unique ? → critique;
+
+:4. **Classifier**\n🟡 Doublons → à retirer de l'EAGER\n🔴 Jamais utilisé → cold storage\n🟢 Connaissance unique → à garder;
+
+:5. **Splitter**\n🟢 → ESSENTIALS (~50 lignes, EAGER)\n🟡🔴 → encyclopedies/ (cold storage);
+
+:✅ Contexte optimisé\nsans perte d'ingénierie;
+
+stop
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>此程序需要 15 分钟。在一个包含 50 次会话的项目中，它为每个未来的会话节省数百个 token。投资回报率立即可见。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_充满活力的治理">充满活力的治理</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>这三篇文章系列让我学到的就是，智能体治理不是一个成品。这是一个<strong>活的有机体</strong>. 她随着项目成长。 她会患上生长期疾病。 她需要定期体检。</p>
+</div>
+<div class="paragraph">
+<p>第048次会议发现档案在膨胀。第051次会议发现方法论本身也在膨胀。第060次会议可能会发现其他东西。这是正常的。这是健康的。从不自我反思的治理是死气沉沉的治理。</p>
+</div>
+<div class="paragraph">
+<p>已设置的三种机制 — Eager/Lazy、Hot/Warm/Cold、百科全书式分割 — 构成了防止上下文饱和的纵深防御体系。单独任何一种都不够。它们共同协同作用：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>急切/懒惰</strong>结构信息 <strong>按可用性</strong></p>
+</li>
+<li>
+<p><strong>热/温暖/冷</strong>结构信息 <strong>按新鲜度</strong></p>
+</li>
+<li>
+<p><strong>百科全书审计</strong>结构信息 <strong>按密度</strong></p>
+</li>
+</ul>
+</div>
+<div id="diag-defense-in-depth" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam nodeBackgroundColor #E3F2FD
+
+title 深度防御上下文饱和
+node "**代理上下文**
+~800 行
+健康" as CTX #C8E6C9
+
+node "层 1\n**EAGER / LAZY**" as C1 #BBDEFB
+node "第2层
+**热 / 暖 / 冷**" as C2 #BBDEFB
+node "第3层
+**必需 / 百科全书**" as C3 #BBDEFB
+
+CTX --&gt; C1 : "结构按
+**可用性**"
+CTX --&gt; C2 : "结构通过
+**新鲜度**"
+CTX --&gt; C3 : "按密度的结构"
+
+note bottom of C3
+  Les trois couches sont nécessaires.
+  Aucune n'est suffisante seule.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用这三层，代理上下文在`magic-stick`从 2087 行（在任何优化之前）减少到大约 800 行 —  — 减少了约 2.6 倍。没有丢失任何一行文档、任何一次会话存档、任何一条所学到的教训。</p>
+</div>
+<div class="paragraph">
+<p>一切都在那里。只是整理得更好。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_链接">链接</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>条目 0108 — 急切/延迟策略：<a href="/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html">用 AsciiDoc 管理 AI 代理</a></p>
+</li>
+<li>
+<p>条目 0110 — 热/温/冷机制 :<a href="/blog/2026/0110_mecanisme_backup_contexte_agent_post.html">滑动窗口和寒潮</a></p>
+</li>
+<li>
+<p>我的网站：https://cheroliv.com</p>
+</li>
+<li>
+<p>项目`magic-stick`: <a href="https://github.com/cheroliv/magic-stick" class="bare">https://github.com/cheroliv/magic-stick</a></p>
+</li>
+</ul>
+</div>
+<hr>
+<div class="paragraph">
+<p><strong>知识不必消失。它只需要在不必要的时候不被加载。</strong></p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">相关文章</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : 将 AsciiDoc 转换为 MP4 视频</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">我的LLM消费审计：SQLite、OpenCode、Ollama Cloud，以及为什么我的专业订阅颠覆了全球市场</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">架构 « 插件独立 + 消费者根 »：为什么我的 Gradle 构建会重复</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">知识图谱作为推荐引擎：我是如何杀死那些按时间顺序的‘相关文章’的</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0111_audit_contexte_agent_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    请启用JavaScript以查看
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">由 Disqus 提供的评论</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        专攻教学工程的培训开发者  
+设计创新的电子学习解决方案，以转变学习方式。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 订阅源">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="联系">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">导航</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>首页</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>博客</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">资源</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>档案</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 幻灯片</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 培训</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 可启动U盘</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">本地化</h6>
+                    <p class="mb-3">位于巴黎地区，可在法国及远程进行干预。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>法兰西岛, 法兰西</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>可提供远程工作</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>法国境内旅行</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv。版权所有。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

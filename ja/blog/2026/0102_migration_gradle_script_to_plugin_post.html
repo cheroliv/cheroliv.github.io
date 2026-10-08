@@ -1,0 +1,1522 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Asciidoctor RevealJSプラグインをKotlinのbuildSrcに移行する : Groovy APIのリバースエンジニアリング — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Asciidoctor RevealJSプラグインをKotlinのbuildSrcに移行する : Groovy APIのリバースエンジニアリング — Cheroliv"/>
+        <meta property="og:description" content="ルート buildscript の AsciidoctorJRevealJSTask の設定を、独立した buildSrc Kotlin プラグインに移行する方法は、バイトコードイントロスペクションで発見された基盤メカニズムに Groovy DSL の ruby { gems() } を置き換えることです。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0102_migration_gradle_script_to_plugin_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0102_migration_gradle_script_to_plugin_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Asciidoctor RevealJSプラグインをKotlinのbuildSrcに移行する : Groovy APIのリバースエンジニアリング — Cheroliv"/>
+        <meta name="twitter:description" content="ルート buildscript の AsciidoctorJRevealJSTask の設定を、独立した buildSrc Kotlin プラグインに移行する方法は、バイトコードイントロスペクションで発見された基盤メカニズムに Groovy DSL の ruby { gems() } を置き換えることです。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0102_migration_gradle_script_to_plugin_post.png"/>
+        <meta name="description" content="ルート buildscript の AsciidoctorJRevealJSTask の設定を、独立した buildSrc Kotlin プラグインに移行する方法は、バイトコードイントロスペクションで発見された基盤メカニズムに Groovy DSL の ruby { gems() } を置き換えることです。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSSフィード" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                シェロリブ
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="ナビゲーションを切り替え">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">ホーム</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">専門知識</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ブログ</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">お問い合わせ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="インターフェーステーマを選択">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">明るい</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>ライト
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>ダーク
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>ハイコントラスト
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="言語を選択">
+                        <span class="me-1">🇯🇵</span>
+                        <span class="ms-1">JA</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0102_migration_gradle_script_to_plugin_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0102_migration_gradle_script_to_plugin_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html"},
+                      "headline": "Asciidoctor RevealJS\u30D7\u30E9\u30B0\u30A4\u30F3\u3092Kotlin\u306EbuildSrc\u306B\u79FB\u884C\u3059\u308B : Groovy API\u306E\u30EA\u30D0\u30FC\u30B9\u30A8\u30F3\u30B8\u30CB\u30A2\u30EA\u30F3\u30B0",
+                      "description": "AsciidoctorJRevealJSTask \u304B\u3089 \u30B9\u30BF\u30F3\u30C9\u30A2\u30ED\u30F3 \u306A buildSrc Kotlin \u30D7\u30E9\u30B0\u30A4\u30F3 \u3078 \u306E \u5B8C\u5168\u306A \u79FB\u884C : ruby { gems() } \u306E \u7F6E\u63DB \u3001 javap \u306E \u5185\u7701 \u3001 Ivy \u30EA\u30DD\u30B8\u30C8\u30EA \u306E RubyGems \u3001 serviceOf \u3092 \u4ECB\u3057\u305F JavaToolchainService \u3001 grolifant \u306E forkOptions \u3001 \u304A\u3088\u3073 \u81EA\u52D5 Docker \u691C\u51FA\u3002",
+                      "datePublished": "2026-04-16",
+                      "dateModified": "2026-04-16",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Asciidoctor RevealJS\u30D7\u30E9\u30B0\u30A4\u30F3\u3092Kotlin\u306EbuildSrc\u306B\u79FB\u884C\u3059\u308B : Groovy API\u306E\u30EA\u30D0\u30FC\u30B9\u30A8\u30F3\u30B8\u30CB\u30A2\u30EA\u30F3\u30B0", "item": "https:\/\/cheroliv.com\/blog\/2026\/0102_migration_gradle_script_to_plugin_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Asciidoctor RevealJSプラグインをKotlinのbuildSrcに移行する : Groovy APIのリバースエンジニアリング</h1>
+                <p class="lead">
+                    <em>公開日: 16 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_背景と目的">背景と目的</a>
+<ul class="sectlevel2">
+<li><a href="#_出発点">出発点</a></li>
+<li><a href="#_目的">目的</a></li>
+</ul>
+</li>
+<li><a href="#_最初の障害ruby_gems">最初の障害：`ruby { gems() }</a>
+<ul class="sectlevel2">
+<li><a href="#_groovyのシンタックスシュガーが隠しているもの">Groovyのシンタックスシュガーが隠しているもの</a></li>
+<li><a href="#_メカニズムの分解">メカニズムの分解</a></li>
+</ul>
+</li>
+<li><a href="#_3部構成の解決策">3部構成の解決策</a>
+<ul class="sectlevel2">
+<li><a href="#_パート_1_rubygems用のivyリポジトリ">パート 1: rubygems用のIvyリポジトリ</a></li>
+<li><a href="#_パート_2_asciidoctorgems_の依存関係">パート 2: asciidoctorGems の依存関係</a></li>
+<li><a href="#_パート3_settings_gradle_kts">パート3: settings.gradle.kts</a></li>
+</ul>
+</li>
+<li><a href="#_バイトコードによるapiのイントロスペクション">バイトコードによるAPIのイントロスペクション</a>
+<ul class="sectlevel2">
+<li><a href="#_なぜ_javap">なぜ <code>javap</code> ?</a></li>
+<li><a href="#_タスクの階層">タスクの階層</a></li>
+<li><a href="#_forkoptionsの発見">forkOptions`の発見</a></li>
+<li><a href="#_javaforkoptionsのapi_grolifant">JavaForkOptionsのAPI (grolifant)</a></li>
+<li><a href="#_revealjs拡張">RevealJS拡張</a></li>
+</ul>
+</li>
+<li><a href="#_java_ツールチェーンの設定">Java ツールチェーンの設定</a>
+<ul class="sectlevel2">
+<li><a href="#_javatoolchainserviceの問題">JavaToolchainServiceの問題</a></li>
+</ul>
+</li>
+<li><a href="#_docker自動検出">Docker自動検出</a>
+<ul class="sectlevel2">
+<li><a href="#_文脈">文脈</a></li>
+<li><a href="#_戦略">戦略</a></li>
+</ul>
+</li>
+<li><a href="#_最終結果">最終結果</a>
+<ul class="sectlevel2">
+<li><a href="#_消費者のビルドスクリプト">消費者のビルドスクリプト</a></li>
+<li><a href="#_settings_gradle_kts">settings.gradle.kts</a></li>
+</ul>
+</li>
+<li><a href="#_罠と解決策のまとめ">�罠と解決策のまとめ</a></li>
+<li><a href="#_調査方法javap_を使って不明な_api_を読む">調査方法：javap を使って不明な API を読む</a>
+<ul class="sectlevel2">
+<li><a href="#_原則">原則</a></li>
+<li><a href="#_ステップ1gradleキャッシュ内のjarファイルを特定する">ステップ1：Gradleキャッシュ内のJARファイルを特定する</a></li>
+<li><a href="#_ステップ2_jarのクラスをリストする">ステップ2: jarのクラスをリストする</a></li>
+<li><a href="#_ステップ_3_クラスを検査する">ステップ 3 : クラスを検査する</a></li>
+<li><a href="#_ステップ4_階層を上がる">ステップ4: 階層を上がる</a></li>
+<li><a href="#_ステップ5_不明な型を追跡">ステップ5: 不明な型を追跡</a></li>
+<li><a href="#_ステップ6プロジェクトの拡張機能を確認する">ステップ6：プロジェクトの拡張機能を確認する</a></li>
+<li><a href="#_方法のまとめ">方法のまとめ</a></li>
+</ul>
+</li>
+<li><a href="#_次のステップ">次のステップ</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_背景と目的">背景と目的</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_出発点">出発点</h3>
+<div class="paragraph">
+<p>プロジェクト`slider-gradle`Gradleプラグインを介してAsciiDocファイルからReveal.jsプレゼンテーションを生成します`org.asciidoctor.jvm.revealjs`. 主要タスクの設定`asciidoctorRevealJs`ルートのビルドスクリプトに直接存在していた`build.gradle.kts`[space]</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins { id("org.asciidoctor.jvm.revealjs") }
+
+apply&lt;slides.SlidesPlugin&gt;()
+
+project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+    repositories { ruby { gems() } }
+    revealjs {
+        version = "3.1.0"
+        templateGitHub {
+            setOrganisation("hakimel")
+            setRepository("reveal.js")
+            setTag("3.9.1")
+        }
+    }
+    revealjsOptions {
+        // ... configuration complète
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_目的">目的</h3>
+<div class="paragraph">
+<p>この構成すべてを移動する`buildSrc/src/main/kotlin/slides/SlidesPlugin.kt`コンシューマーのbuildscriptが次のように簡略化されるように：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">apply&lt;slides.SlidesPlugin&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>プラグインは完全に自立している必要があります: それは自身でプラグインの依存関係を適用し、リポジトリを設定し、Ruby の gems を管理します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最初の障害ruby_gems">最初の障害：`ruby { gems() }</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_groovyのシンタックスシュガーが隠しているもの">Groovyのシンタックスシュガーが隠しているもの</h3>
+<div class="paragraph">
+<p>ライン`repositories { ruby { gems() } }`これはbuildscript実行コンテキストでのみ利用可能なGroovy DSL拡張です。buildSrcからアクセス可能な静的なKotlin APIとして存在しません。</p>
+</div>
+<div class="paragraph">
+<p>それを呼び出そうとしてから`SlidesPlugin.kt`, コンパイルはすぐに失敗します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_メカニズムの分解">メカニズムの分解</h3>
+<div class="paragraph">
+<p>Gradleキャッシュの分析後 (<code>~/.gradle/caches/modules-2/files-2.1/rubygems/</code>), ファイルの中で見つかる`ivy-3.1.0.xml`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;artifact type='gem' url='https://rubygems.org/gems/asciidoctor-revealjs-3.1.0.gem' /&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`ruby { gems() }`実際に行っていた<strong>3つの異なる操作</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>指しているIvyリポジトリを保存する`https://rubygems.org/gems/`</p>
+</li>
+<li>
+<p>グループを除外する`rubygems`Maven リポジトリで競合を避けるため</p>
+</li>
+<li>
+<p>ジェムを設定に保存`asciidoctorGems`JRubyがランタイムでそれをロードするように</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>これらの三つの責任は、Kotlinで個別に再実装しなければなりません。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_3部構成の解決策">3部構成の解決策</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_パート_1_rubygems用のivyリポジトリ">パート 1: rubygems用のIvyリポジトリ</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.repositories.mavenCentral() {
+    content { excludeGroup("rubygems") }
+}
+project.repositories.ivy {
+    url = project.uri("https://rubygems.org/gems/")
+    patternLayout { artifact("[module]-[revision].gem") } <i class="conum" data-value="1"></i><b>(1)</b>
+    metadataSources { artifact() }
+    content { includeGroup("rubygems") }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>拡張`.gem`ハードコーディングする必要がある。<code>[ext]`デフォルトで解決する</code>.jar`, これがエラーを引き起こす`Resource missing`.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Ivy リポジトリは直接上に宣言されます`project.repositories`そしてブロックの中にない`repositories { }`このブロックのレシーバーではないから`RepositoryHandler`Gradle標準だが、grolifantというAPIは拡張機能と互換性がない`ivy`Kotlin DSL.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_パート_2_asciidoctorgems_の依存関係">パート 2: asciidoctorGems の依存関係</h3>
+<div class="paragraph">
+<p>プラグイン`org.asciidoctor.jvm.gems`最初に適用する必要があります—これにより設定が作成されます`asciidoctorGems`とタスク`asciidoctorGemsPrepare`&lt;/think&gt;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.plugins.apply("org.asciidoctor.jvm.gems")
+project.plugins.apply("org.asciidoctor.jvm.revealjs") <i class="conum" data-value="1"></i><b>(1)</b>
+
+project.dependencies {
+    add("asciidoctorGems", "rubygems:asciidoctor-revealjs:3.1.0@gem") <i class="conum" data-value="2"></i><b>(2)</b>
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>適用順序は重要です:`gems`前に`revealjs`. &lt;2&gt; 修飾語`@gem`依存関係に正しい拡張子を強制する。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_パート3_settings_gradle_kts">パート3: settings.gradle.kts</h3>
+<div class="paragraph">
+<p>`dependencyResolutionManagement`中に`settings.gradle.kts`プロジェクトが自身のリポジトリを宣言できるようにする必要があります :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この行がなければ、Gradleはプラグインで宣言されたリポジトリを無視し、gemの解決が失敗します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_バイトコードによるapiのイントロスペクション">バイトコードによるAPIのイントロスペクション</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_なぜ_javap">なぜ <code>javap</code> ?</h3>
+<div class="paragraph">
+<p>プラグイン`asciidoctor-gradle-jvm-slides`バージョンです`4.0.0-alpha.1`. そのドキュメントは存在しないか不完全です。 唯一の信頼できるソースは、コンパイル済みクラスの直接検査です。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_タスクの階層">タスクの階層</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.slides.AsciidoctorJRevealJSTask</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>結果 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class AsciidoctorJRevealJSTask
+  extends org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask
+  implements org.asciidoctor.gradle.base.slides.SlidesToExportAware</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_forkoptionsの発見">forkOptions`の発見</h3>
+<div class="paragraph">
+<p>�検査しながら`AbstractAsciidoctorTask`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask | grep -i "fork\|exec\|jvm"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>見つかります：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">final org.ysb33r.grolifant.api.v4.JavaForkOptions javaForkOptions;
+public void forkOptions(org.gradle.api.Action&lt;org.ysb33r.grolifant.api.v4.JavaForkOptions&gt;);
+public static final org.asciidoctor.gradle.base.process.ProcessMode JAVA_EXEC;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_javaforkoptionsのapi_grolifant">JavaForkOptionsのAPI (grolifant)</h3>
+<div class="paragraph">
+<p>`javaLauncher`このタスクには存在しません。 実際のAPIは`org.ysb33r.grolifant.api.v4.JavaForkOptions`公開 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public void executable(java.lang.Object);  <i class="conum" data-value="1"></i><b>(1)</b>
+public void setExecutable(java.lang.Object);</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>方法`executable(Object)`代入を置き換える`executable = &#8230;&#8203;`コンパイルされない (`val`再割り当てすることはできません)。</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_revealjs拡張">RevealJS拡張</h3>
+<div class="paragraph">
+<p>`revealjs { }`タスクの方法ではなく、<strong>プロジェクトの拡張</strong> :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+  org.asciidoctor.gradle.jvm.slides.RevealJSExtension</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>アクセスするには：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">project.extensions.getByType&lt;RevealJSExtension&gt;().apply {
+    version = "3.1.0"
+    templateGitHub {
+        setOrganisation("hakimel")
+        setRepository("reveal.js")
+        setTag("3.9.1")
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_java_ツールチェーンの設定">Java ツールチェーンの設定</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_javatoolchainserviceの問題">JavaToolchainServiceの問題</h3>
+<div class="paragraph">
+<p>`JavaToolchainService`プロジェクトの拡張ではありません。次の呼び出しは失敗します :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// ERREUR : Extension of type 'JavaToolchainService' does not exist
+project.extensions.getByType&lt;JavaToolchainService&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>良いAPIは`serviceOf`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">import org.gradle.kotlin.dsl.support.serviceOf
+
+project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+    setInProcess("JAVA_EXEC")
+    forkOptions {
+        executable(
+            project.serviceOf&lt;JavaToolchainService&gt;()
+                .launcherFor {
+                    languageVersion.set(JavaLanguageVersion.of(17))
+                    vendor.set(JvmVendorSpec.ADOPTIUM)
+                }
+                .get()
+                .executablePath
+                .asFile
+                .absolutePath
+        )
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_docker自動検出">Docker自動検出</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_文脈">文脈</h3>
+<div class="paragraph">
+<p>Asciidoctor/JRuby プラグインは Java 17 が必要です。buildSrc における Kotlin 2.0.x は Java 25 をサポートしていません。(バージョン パーサーがクラッシュします。<code>"25.0.2"</code>)したがって、Gradle デーモンは Java 17 上で実行するか、または Docker を使用する必要があります。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_戦略">戦略</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Docker が利用可能 → コンテナを介した実行`eclipse-temurin:17`(デフォルトの動作)</p>
+</li>
+<li>
+<p>Docker がない + Java 17 → ローカル実行</p>
+</li>
+<li>
+<p>Dockerが不在 + Java &gt; 17 → 明示的なエラー</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val isDockerAvailable = try {
+    Runtime.getRuntime().exec(arrayOf("docker", "info")).waitFor() == 0
+} catch (e: Exception) {
+    false
+}
+
+val javaVersion = JavaVersion.current().majorVersion.toInt()
+
+when {
+    isDockerAvailable -&gt; project.tasks.register&lt;Exec&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+        group = GROUP_TASK_SLIDER
+        description = "Slider settings and generation (via Docker)"
+        dependsOn(TASK_CLEAN_SLIDES_BUILD)
+        finalizedBy(TASK_DASHBOARD_SLIDES_BUILD)
+        commandLine(
+            "docker", "run", "--rm",
+            "-v", "${project.rootDir.absolutePath}:/workspace",
+            "-v", "${System.getProperty("user.home")}/.gradle:/root/.gradle",
+            "-w", "/workspace",
+            "eclipse-temurin:17",
+            "./gradlew", TASK_ASCIIDOCTOR_REVEALJS
+        )
+        workingDir = project.rootDir
+    }
+    javaVersion == 17 -&gt; {
+        project.repositories.mavenCentral() {
+            content { excludeGroup("rubygems") }
+        }
+        project.repositories.ivy {
+            url = project.uri("https://rubygems.org/gems/")
+            patternLayout { artifact("[module]-[revision].gem") }
+            metadataSources { artifact() }
+            content { includeGroup("rubygems") }
+        }
+        project.extensions.getByType&lt;RevealJSExtension&gt;().apply {
+            version = "3.1.0"
+            templateGitHub {
+                setOrganisation("hakimel")
+                setRepository("reveal.js")
+                setTag("3.9.1")
+            }
+        }
+        project.tasks.getByName&lt;AsciidoctorJRevealJSTask&gt;(TASK_ASCIIDOCTOR_REVEALJS) {
+            setInProcess("JAVA_EXEC")
+            forkOptions {
+                executable(
+                    project.serviceOf&lt;JavaToolchainService&gt;()
+                        .launcherFor {
+                            languageVersion.set(JavaLanguageVersion.of(17))
+                            vendor.set(JvmVendorSpec.ADOPTIUM)
+                        }
+                        .get()
+                        .executablePath
+                        .asFile
+                        .absolutePath
+                )
+            }
+            // ... reste de la configuration
+        }
+    }
+    else -&gt; error(
+        "Docker est requis pour exécuter $TASK_ASCIIDOCTOR_REVEALJS " +
+        "avec Java $javaVersion. Installez Docker ou utilisez Java 17."
+    )
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最終結果">最終結果</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_消費者のビルドスクリプト">消費者のビルドスクリプト</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">apply&lt;slides.SlidesPlugin&gt;()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>それだけです。 プラグインがすべての責任を負います。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_settings_gradle_kts">settings.gradle.kts</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+}
+
+@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}
+
+rootProject.name = "slider-gradle"</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_罠と解決策のまとめ">�罠と解決策のまとめ</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">問題</th>
+<th class="tableblock halign-left valign-top">原因</th>
+<th class="tableblock halign-left valign-top">解決策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`ruby { gems() }`Kotlinでは利用できません</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Groovy DSL専用の拡張</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3つの別々のメカニズム : repo Ivy + exclusion Maven +<code>asciidoctorGems</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradleは`.jar`代わりの`.gem`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`[ext]`解決するで`jar`デフォルト</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ハードコーダー`.gem`Ivy パターン + 修飾子`@gem`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ivy { }`でコンパイルされない`repositories { }</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コトリンDSLと互換性のないレシーバーグルリファント</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">直接呼び出し`project.repositories.ivy { }`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`javaLauncher`未解決</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">存在しないプロパティに`AsciidoctorJRevealJSTask`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>setInProcess("JAVA_EXEC")</code>(Note: No output)<code>forkOptions { executable(&#8230;&#8203;) }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`executable = &#8230;&#8203;`コンパイルされません</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">財産`val`中に`JavaForkOptions`グロリファント</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">方法`executable(Object)`代わりに</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>JavaToolchainService`経由で見つからない`extensions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">これは Gradle のサービスであり、拡張機能ではありません。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.serviceOf&lt;JavaToolchainService&gt;()</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`revealjs { }`タスクでは未解決</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プロジェクトの拡張、タスクの方法ではない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.extensions.getByType&lt;RevealJSExtension&gt;()</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Build は Java 25 でクラッシュします</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kotlin 2.0.xは2桁のJavaバージョンをパースしません</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">自動Docker検出 + Java 17 フォールバック</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_調査方法javap_を使って不明な_api_を読む">調査方法：javap を使って不明な API を読む</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_原則">原則</h3>
+<div class="paragraph">
+<p>ドキュメントが欠如しているか、または不完全な場合、バイトコードが真実のソースとなります。 <code>javap`はJDKの標準ツールで、ファイルをデコンパイルします。</code>.class`� 読みやすい Java のシグニチャー, ソースコードを必要としない。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ1gradleキャッシュ内のjarファイルを特定する">ステップ1：Gradleキャッシュ内のJARファイルを特定する</h3>
+<div class="paragraph">
+<p>グラドル ダウンロードする すべての依存関係 に`~/.gradle/caches/modules-2/files-2.1/`。 最初のステップは、検査したいクラスを含む jar ファイルを見つけることです：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "asciidoctor-gradle-jvm-slides*.jar" 2&gt;/dev/null</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">結果 :</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">/home/user/.gradle/caches/modules-2/files-2.1/org.asciidoctor/
+asciidoctor-gradle-jvm-slides/4.0.0-alpha.1/.../
+asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ2_jarのクラスをリストする">ステップ2: jarのクラスをリストする</h3>
+<div class="paragraph">
+<p>クラスを検査する前に、それがjar内に確かに存在することを確認します :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">jar tf asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar | grep -i "RevealJS\|revealjs"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これはすべての利用可能なクラスを示します： <code>AsciidoctorJRevealJSTask</code>, <code>RevealJSExtension</code>, <code>RevealJSOptions</code>, など</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_3_クラスを検査する">ステップ 3 : クラスを検査する</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.slides.AsciidoctorJRevealJSTask</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>オプション`-p`すべてのメンバー、プライベートなものも含めて表示します。 結果はすぐにキー行を表示します：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class AsciidoctorJRevealJSTask
+extends org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ4_階層を上がる">ステップ4: 階層を上がる</h3>
+<div class="paragraph">
+<p>タスクは伸ばす`AbstractAsciidoctorTask`その後、それを検査します まずその jar を特定して：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "asciidoctor-gradle-jvm-[0-9]*.jar" 2&gt;/dev/null
+
+javap -p -classpath asciidoctor-gradle-jvm-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.AbstractAsciidoctorTask | grep -i "fork\|exec\|jvm\|java"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そこで見つける`forkOptions`, <code>JAVA_EXEC</code>, et <code>javaForkOptions</code> タイプの`org.ysb33r.grolifant.api.v4.JavaForkOptions`。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ5_不明な型を追跡">ステップ5: 不明な型を追跡</h3>
+<div class="paragraph">
+<p>`JavaForkOptions`これは不明なgrolifantクラスです。そのjarファイルを見つけます：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">find ~/.gradle/caches -name "grolifant*.jar" 2&gt;/dev/null</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>次に、それを検査します：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath grolifant40-legacy-api-2.0.0-alpha.6.jar \
+org.ysb33r.grolifant.api.v4.JavaForkOptions</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そこにはある`executable(java.lang.Object)<code>— 呼び出すべき正しいメソッド, 対照的に`executable = &#8230;&#8203;`これはプロパティだからコンパイルできない`val</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ6プロジェクトの拡張機能を確認する">ステップ6：プロジェクトの拡張機能を確認する</h3>
+<div class="paragraph">
+<p>ために`revealjs { }`, 質問は：これはタスクの方法ですか？ またはプロジェクトの拡張ですか？検査の`AsciidoctorJRevealJSTask` 方法を示さない`revealjs`. その後、検査します`RevealJSExtension` :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">javap -p -classpath asciidoctor-gradle-jvm-slides-4.0.0-alpha.1.jar \
+org.asciidoctor.gradle.jvm.slides.RevealJSExtension | head -5</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">public class RevealJSExtension implements groovy.lang.GroovyObject {
+public static final java.lang.String NAME;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>の存在`NAME`それがプロジェクトに登録された拡張機能であることを確認します。 経由でアクセス可能`project.extensions.getByType&lt;RevealJSExtension&gt;()`.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_方法のまとめ">方法のまとめ</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ステップ</th>
+<th class="tableblock halign-left valign-top">アクション</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>find ~/.gradle/caches -name "*.jar"</code>— jar を特定する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jar tf jar.jar | grep NomClasse</code>— クラスが存在することを確認する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>javap -p -classpath jar.jar NomCompletClasse</code>— クラスを検査する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">識別する`extends`そして階層を上がる</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">未知の型を自身のJAR内で追跡する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">探す`NAME`プロジェクトの拡張を特定するために</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>このメソッドは、ドキュメント化されていない API を持つ任意の Gradle プラグインに適用されます。 または、アルファバージョンが既存のドキュメントに合わなくなった。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_次のステップ">次のステップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この buildSrc プラグインは、Gradle Plugin Portal または Maven Local に公開された独立したプロジェクトに抽出されます。消費者側の buildscript は次のようになります：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins { id("slides") version "1.0.0" }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Et <code>settings.gradle.kts`最小限に抑えられ、参照なしで`foojay-resolver-convention</code>, JDKのプロビジョニングはプラグイン自身によって管理され、または前提条件としてドキュメント化されている。</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">関連記事</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDocをMP4動画に変換</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">私のLLM消費の監査：SQLite、OpenCode、Ollama Cloud、そしてなぜ私のプロサブスクリプションが世界市場を破壊するのか</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">プラグイン独立＋コンシューマー ルート アーキテクチャ：なぜ私のGradleビルドが重複するのか</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">レコメンデーション エンジンとしての Knowledge Graph：私が時系列の「関連記事」をどう廃止したか</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0102_migration_gradle_script_to_plugin_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    JavaScriptを有効にして、表示してください
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqusによって提供されるコメント</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        教育工学に特化した開発者トレーナー。学習を変革するための革新的なeラーニングソリューションの設計。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="ギットハブ">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSSフィード">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="コンタクト">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">ナビゲーション</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>ホーム</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ブログ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">リソース</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>アーカイブ</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> スライド</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> トレーニング</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 起動可能なUSBメモリ</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">ローカライズ</h6>
+                    <p class="mb-3">パリ地域に拠点を置き、フランス国内および遠隔での対応が可能です。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>イル・ド・フランス, フランス</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>テレワーク可</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>フランスでの移動</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. すべての権利が予約されています。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

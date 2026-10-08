@@ -1,0 +1,1682 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Gradle 9、Docker 29、Testcontainersがいら立つとき：JHipsterビルドのデバッグ — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Gradle 9、Docker 29、Testcontainersがいら立つとき：JHipsterビルドのデバッグ — Cheroliv"/>
+        <meta property="og:description" content="./gradlew build` が11回連続でエラーになる。存在しない変数 `reportsDir` から、Docker Engine 29 が docker-java クライアント 1.32 を拒否するまで。以下は、Gradle 9、Java 21、Testcontainers 2.0.5 上での JHipster ビルドのデバッグの完全な記録です。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Gradle 9、Docker 29、Testcontainersがいら立つとき：JHipsterビルドのデバッグ — Cheroliv"/>
+        <meta name="twitter:description" content="./gradlew build` が11回連続でエラーになる。存在しない変数 `reportsDir` から、Docker Engine 29 が docker-java クライアント 1.32 を拒否するまで。以下は、Gradle 9、Java 21、Testcontainers 2.0.5 上での JHipster ビルドのデバッグの完全な記録です。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.png"/>
+        <meta name="description" content="./gradlew build` が11回連続でエラーになる。存在しない変数 `reportsDir` から、Docker Engine 29 が docker-java クライアント 1.32 を拒否するまで。以下は、Gradle 9、Java 21、Testcontainers 2.0.5 上での JHipster ビルドのデバッグの完全な記録です。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSSフィード" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                シェロリブ
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="ナビゲーションを切り替え">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">ホーム</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">専門知識</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ブログ</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">お問い合わせ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="インターフェーステーマを選択">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">明るい</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>ライト
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>ダーク
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>ハイコントラスト
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="言語を選択">
+                        <span class="me-1">🇯🇵</span>
+                        <span class="ms-1">JA</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"},
+                      "headline": "Gradle 9\u3001Docker 29\u3001Testcontainers\u304C\u3044\u3089\u7ACB\u3064\u3068\u304D\uFF1AJHipster\u30D3\u30EB\u30C9\u306E\u30C7\u30D0\u30C3\u30B0",
+                      "description": "Gradle 9.4.1\u3001Java 21\u3001Docker Engine 29.4.1\u3078\u306E\u30D0\u30FC\u30B8\u30E7\u30F3\u30A2\u30C3\u30D7\u5F8C\u306EJHipster Gradle\u30D3\u30EB\u30C9\u30B9\u30AF\u30EA\u30D7\u30C8\u306E\u30C7\u30D0\u30C3\u30B0\u306B\u95A2\u3059\u308B\u7D4C\u9A13\u306E\u30D5\u30A3\u30FC\u30C9\u30D0\u30C3\u30AF\u3002buildSrc\u30B9\u30AF\u30EA\u30D7\u30C8\u5185\u306E\u8AA4\u3063\u305F\u540D\u524D\u306E\u5909\u6570\u304B\u3089Docker API 1.32\u306E\u4E92\u63DB\u6027\u554F\u984C\u307E\u3067\u3001\u5B8C\u5168\u306A\u6280\u8853\u30CE\u30FC\u30C8\u3002",
+                      "datePublished": "2026-04-25",
+                      "dateModified": "2026-04-25",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Gradle 9\u3001Docker 29\u3001Testcontainers\u304C\u3044\u3089\u7ACB\u3064\u3068\u304D\uFF1AJHipster\u30D3\u30EB\u30C9\u306E\u30C7\u30D0\u30C3\u30B0", "item": "https:\/\/cheroliv.com\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Gradle 9、Docker 29、Testcontainersがいら立つとき：JHipsterビルドのデバッグ</h1>
+                <p class="lead">
+                    <em>公開日: 25 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Table des matières</div>
+<ul class="sectlevel1">
+<li><a href="#_シーンjhipsterプロジェクトロードされなくなったビルド">シーン：JHipsterプロジェクト、ロードされなくなったビルド</a></li>
+<li><a href="#_エラー_1_ファントム変数_reportsdir">エラー 1: ファントム変数 `reportsDir</a></li>
+<li><a href="#_エラー_2_main_は_gradle_9_で存在しなくなりました">エラー 2 : <code>main = \"&#8230;&#8203;\"</code> は Gradle 9 で存在しなくなりました</a></li>
+<li><a href="#_エラー_3_sourcecompatibility_はもはやプロジェクトのプロパティではありません">エラー 3 : <code>sourceCompatibility</code> はもはやプロジェクトのプロパティではありません</a></li>
+<li><a href="#_エラー_4_3項演算子の_groovy_アサーション">エラー 4 : 3項演算子の Groovy アサーション</a></li>
+<li><a href="#_エラー_5_暗黙の依存_compilekotlin_openapigenerate">エラー 5 : 暗黙の依存 <code>compileKotlin</code> → `openApiGenerate</a></li>
+<li><a href="#_エラー_6_generategitproperties_で壊れる_filteroutputstream_write">エラー 6 : <code>generateGitProperties</code> で壊れる `FilterOutputStream.write()</a></li>
+<li><a href="#_最後にtestcontainersが舞台に登場">最後に：Testcontainersが舞台に登場</a></li>
+<li><a href="#_phase_1_docker_javaのトラック">Phase 1 : docker-javaのトラック</a></li>
+<li><a href="#_phase_2_ウェブ検索とgithubのパンくずリスト">Phase 2: ウェブ検索とGitHubのパンくずリスト</a></li>
+<li><a href="#_フェーズ3_リネームされたアーティファクトの罠">フェーズ3 : リネームされたアーティファクトの罠</a></li>
+<li><a href="#_フェーズ4解決を強制する">フェーズ4：解決を強制する</a></li>
+<li><a href="#_最終結果">最終結果</a></li>
+<li><a href="#_修正のサマリーテーブル">修正のサマリーテーブル</a></li>
+<li><a href="#_結論">結論</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">読了時間 : 15 minutes</div>
+<p>あなたは、シンプルな瞬間を経験したことがあります。`./gradlew build`1日100回も起動していると、突然、これまで見たことのないエラーでクラッシュするようになる？これを11回連続のエラーで掛け合わせ、Docker Engine 29の互換性不足をたっぷりと加え、10年使っていたAPIが消えてしまうGradle 9を振りかけると。これが完全なログです。</p>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">図 1 — Gradle 9 移行 (エラーチェーン)</div>
+<p>目的：不互換性のシリーズを示す。</p>
+</div>
+<div class="listingblock">
+<div class="title">👉 明確で、Gradle を中心とした。</div>
+<div class="content">
+<pre>@startuml
+left to right direction
+title Gradle 9 移行
+rectangle "1
+レポートディレクトリ" as A
+rectangle "2
+メインクラス" as B
+rectangle "3
+ソース互換性" as C
+rectangle "4
+Groovy アサート" as D
+
+A --&gt; B
+B --&gt; C
+C --&gt; D
+
+@enduml</pre>
+</div>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">図 2 — 互換性のない JHipster プラグイン</div>
+<p>目的：壊れたプラグインを隔離する。</p>
+</div>
+<div class="listingblock">
+<div class="title">👉 依存関係の明確なビジョン.</div>
+<div class="content">
+<pre>@startuml
+left to right direction
+title 修正が必要なプラグイン
+skinparam shadowing false
+skinparam roundcorner 18
+
+rectangle "1
+openApiGenerate" as A #FFF3E0
+rectangle "2\ngitProperties\n2.5.7" as B #FFF3E0
+rectangle "3
+バージョン
+修正された" as C #E3F2FD
+rectangle "4
+組み立て OK" as D #E8F5E9
+
+A --&gt; B
+B --&gt; C
+C --&gt; D
+
+@enduml</pre>
+</div>
+</div>
+<hr>
+<div class="paragraph">
+<p>�図3 — Docker 29 / Testcontainers</p>
+</div>
+<div class="paragraph">
+<p>目的 : 実行時問題。</p>
+</div>
+<div class="listingblock">
+<div class="title">👉 ランタイムの明瞭な歴史</div>
+<div class="content">
+<pre>@startuml
+left to right direction
+title Docker 29 + Testcontainers
+
+skinparam shadowing false
+skinparam roundcorner 18
+skinparam defaultFontSize 14
+
+rectangle "1\n組み立て OK" as A #E8F5E9
+rectangle "2
+テスト Cucumber 失敗" as B #FFEBEE
+rectangle "3
+Testcontainers 1.32
+拒否された" as C #FFF3E0
+rectangle "4
+アップグレード
+バージョン" as D #E3F2FD
+rectangle "5
+最終ビルド OK" as E #E8F5E9
+
+A --&gt; B
+B --&gt; C
+C --&gt; D
+D --&gt; E
+
+@enduml</pre>
+</div>
+</div>
+<hr>
+<div class="listingblock">
+<div class="title">もう一つの自分なりに表現する方法</div>
+<div class="content">
+<pre>@startuml
+
+!option handwritten true
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Inter
+skinparam defaultFontSize 14
+skinparam ArrowThickness 2
+skinparam RoundCorner 18
+
+title 安定化ロードマップ — Gradle 9 から最終ビルドまで
+left to right direction
+
+rectangle "⚙️ Gradle 9 への移行" as A #E3F2FD
+rectangle "🧩 プラグイン JHipster" as B #FFF3E0
+rectangle "�🐳 Docker 29
+Testcontainers" as C #FCE4EC
+rectangle "�✅ 安定ビルド" as D #E8F5E9
+
+note bottom of A
+reportsDir
+mainClass
+sourceCompatibility
+Groovy assert
+end note
+
+note bottom of B
+openApiGenerate
+gitProperties
+versions alignées
+end note
+
+note bottom of C
+tests Cucumber KO
+image Docker rejetée
+upgrade libs
+end note
+
+A -[#42A5F5]-&gt; B : corrections build.gradle
+B -[#FB8C00]-&gt; C : assemble OK
+C -[#E53935]-&gt; D : tests réparés
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シーンjhipsterプロジェクトロードされなくなったビルド">シーン：JHipsterプロジェクト、ロードされなくなったビルド</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>プロジェクト`edster`2024年に生成されたJHipsterアプリケーションです。ルートビルドスクリプト`build.gradle`数か月間、安定していた。それから、バージョンアップすることに決めた：</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1436%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンポーネント</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ターゲットバージョン</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">グラドル</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9.4.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ジャバ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21.0.11-tem (Eclipse Temurin)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JHipster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.x (フレームワーク`tech.jhipster:jhipster-framework:8.11.0`)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">スプリングブート</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コトリン</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.3.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker Engine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">29.4.1 (API 1.54)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Javaバージョンの変更はSDKMANを通じて行われます :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sdk use java 21.0.11-tem</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>初回起動 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew build --no-daemon
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file '/home/.../edster/build.gradle' line: 18
+
+* What went wrong:
+An exception occurred applying plugin request [id: 'jhipster.cucumber-conventions']
+&gt; Failed to apply plugin 'jhipster.cucumber-conventions'.
+   &gt; Could not create task ':cucumberTest'.
+      &gt; Could not create task ':consoleLauncherTest'.
+         &gt; Could not set unknown property 'reportsDir' for task ':consoleLauncherTest'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ビルドスクリプトのロードさえ行われず、問題は`buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エラー_1_ファントム変数_reportsdir">エラー 1: ファントム変数 `reportsDir</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>スクリプト`jhipster.cucumber-conventions.gradle`含む：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">tasks.register('consoleLauncherTest', JavaExec) {
+    dependsOn(testClasses)
+    String cucumberReportsDir = file("$buildDir/reports/tests")
+    outputs.dir(reportsDir)           // &lt;-- reportsDir n'existe PAS
+    classpath = sourceSets["test"].runtimeClasspath
+    main = "org.junit.platform.console.ConsoleLauncher"
+    // ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>定義された変数は`cucumberReportsDir`. 使用されているものは`reportsDir`-- どこにも定義されていない。</p>
+</div>
+<div class="paragraph">
+<p><strong>修正</strong>:`outputs.dir(cucumberReportsDir)`</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エラー_2_main_は_gradle_9_で存在しなくなりました">エラー 2 : <code>main = \"&#8230;&#8203;\"</code> は Gradle 9 で存在しなくなりました</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>即時フォローアップ：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not set unknown property 'main' for task ':consoleLauncherTest' of type org.gradle.api.tasks.JavaExec.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9はプロパティを削除します`main`の利益のために`mainClass`タスクについて`JavaExec`.</p>
+</div>
+<div class="paragraph">
+<p><strong>�訂正</strong>:`mainClass = "org.junit.platform.console.ConsoleLauncher"`</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エラー_3_sourcecompatibility_はもはやプロジェクトのプロパティではありません">エラー 3 : <code>sourceCompatibility</code> はもはやプロジェクトのプロパティではありません</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>新しいエラー：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not set unknown property 'sourceCompatibility' for root project 'edster' of type org.gradle.api.Project.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ルートスクリプトは持っていた：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">sourceCompatibility=17
+targetCompatibility=17</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>グラドル9はルートレベルでこれらのプロパティを削除します。これらのプロパティはブロック内に存在する必要があります。<code>java</code>.</p>
+</div>
+<div class="paragraph">
+<p><strong>修正</strong> :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エラー_4_3項演算子の_groovy_アサーション">エラー 4 : 3項演算子の Groovy アサーション</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>古いスクリプトには:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">assert System.properties["java.specification.version"] == "17" || "21" || "24"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Groovyでは,<code>"21"</code> et <code>"24"`は strings truthy。 式は &#8230;&#8203; に解決されます</code>(&#8230;&#8203; == "17") || true || true`, これは常に真である&#8201;&#8212;&#8201;しかし、構文は望まれる厳密なアサーションには無効です。</p>
+</div>
+<div class="paragraph">
+<p><strong>修正</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">assert System.properties["java.specification.version"] in ["17", "21", "23", "24"]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エラー_5_暗黙の依存_compilekotlin_openapigenerate">エラー 5 : 暗黙の依存 <code>compileKotlin</code> → `openApiGenerate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ビルドが進行しています。Kotlinのコンパイルに成功しました。その後：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Task ':compileKotlin' uses this output of task ':openApiGenerate'
+without declaring an explicit or implicit dependency.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 は暗黙的なタスク間の依存関係を拒否します。以来`compileKotlin`生成されたソースを読む`openApiGenerate`、リンクを宣言する必要がある。</p>
+</div>
+<div class="paragraph">
+<p><strong>�訂正</strong>中に`build.gradle`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">afterEvaluate {
+    tasks.named("compileKotlin").configure {
+        dependsOn(tasks.named("openApiGenerate"))
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `afterEvaluate`必要です なぜなら`openApiGenerate`est une extension (plugin OpenAPI Generator) et non une tâche directement accessible pendant la phase de configuration. &#8594; Japanese translation:</p>
+</div>
+<div class="paragraph">
+<p>これは OpenAPI Generator プラグインの拡張機能であり、構成フェーズにおいて直接アクセス可能なタスクではありません。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エラー_6_generategitproperties_で壊れる_filteroutputstream_write">エラー 6 : <code>generateGitProperties</code> で壊れる `FilterOutputStream.write()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Javaのコンパイルが通ります。リソースが処理されます。次に：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&gt; Task :generateGitProperties FAILED
+
+No signature of method: java.io.FilterOutputStream.write() is applicable for argument types: (Integer) values: [103]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>プラグイン`gradle-git-properties`version 2.5.0 は Java 21 / Gradle 9 と互換性がありません。内部バグが呼び出しを試みます`write(int)`Groovy経由でそれを閉じたストリーム上で</p>
+</div>
+<div class="paragraph">
+<p><strong>修正</strong>中に`gradle.properties` :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">gitPropertiesPluginVersion=2.5.7</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最後にtestcontainersが舞台に登場">最後に：Testcontainersが舞台に登場</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>今のところ、これは純粋な "build script debugging" でした。各エラーは、ビルドスクリプトにおけるGradle 9またはJava 21の互換性の問題でした。前述の6つの修正後、`./gradlew assemble`成功裏に通ります。</p>
+</div>
+<div class="paragraph">
+<p>しかし`./gradlew build`実行し、Cucumberのテストも Testcontainers を使って一時的な PostgreSQL を起動します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not find a valid Docker environment.
+
+EnvironmentAndSystemPropertyClientProviderStrategy: failed with exception BadRequestException
+(Status 400: {"message":"client version 1.32 is too old. Minimum supported API version is 1.40"}
+UnixSocketClientProviderStrategy: failed with exception BadRequestException
+(Status 400: {"message":"client version 1.32 is too old. Minimum supported API version is 1.40"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>TestcontainersはDockerと通信できません。異なる2つの戦略（環境変数＋Unixソケット）が同じエラーで失敗します。</p>
+</div>
+<div id="diag-docker-handshake" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+
+actor "Testcontainers
+1.20.6" as TC
+participant "docker-java
+3.4.1" as DJ
+participant "Docker Engine
+29.4.1" as DE
+
+TC -&gt; DJ : new DockerClient()
+DJ -&gt; DE : GET /_ping\nUser-Agent: docker-java/3.4.1\nAPI-Version: 1.32
+DE --&gt; DJ : HTTP 400 Bad Request\nclient version 1.32 is too old.\nMinimum supported API version is 1.40
+DJ --&gt; TC : BadRequestException
+TC --&gt; TC : Could not find a valid\nDocker environment
+
+note right of DE
+  Docker Engine 29.x impose
+  API minimum = 1.40
+  (défaut ancien : 1.24)
+end note
+
+note left of DJ
+  docker-java 3.4.1 envoie
+  hardcoded API version 1.32
+  dans l'en-tête HTTP
+end note
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_1_docker_javaのトラック">Phase 1 : docker-javaのトラック</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>まず最初に、Testcontainers が使用する Docker Java クライアントは、API のバージョンを送信します。<code>1.32`そのHTTPハンドシェイクにおいてですが、Docker Engine 29.4.1は最低限`1.40</code>. 問題はクライアント側にあり、デーモン側ではありません。</p>
+</div>
+<div class="paragraph">
+<p>Testcontainers 1.20.6 によって解決された docker-java のバージョンの確認 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew dependencies --configuration testRuntimeClasspath | grep docker-java
+
++--- com.github.docker-java:docker-java-api:3.4.1
++--- com.github.docker-java:docker-java-transport:3.4.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>docker-java 3.4.1（Testcontainers 1.20.6 から）。docker-java の最新のパブリックバージョンは 3.5.1 です。バージョンアップを強制するために`resolutionStrategy`ブロックの中`configurations` de <code>build.gradle</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">configurations {
+    all {
+        resolutionStrategy.eachDependency { details -&gt;
+            if (details.requested.group == "com.github.docker-java"
+                &amp;&amp; details.requested.name.startsWith("docker-java")) {
+                details.useVersion("3.5.1")
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ビルドの再起動。同じエラー：<code>client version 1.32 is too old</code>。</p>
+</div>
+<div class="paragraph">
+<p>Gradleキャッシュの確認：JARsは正しく再ダウンロードされましたが、エラーは依然として残っています。docker-java 3.5.1 はまだ送信しています`1.32`. このバージョンはしたがって Docker Engine 29.4.1 に対して十分ではありません。</p>
+</div>
+<div class="paragraph">
+<p><strong>�浄化のアクション</strong>: Gradleキャッシュを完全にクリアして、念のため :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">rm -rf ~/.gradle/caches
+rm -rf /path/to/project/.gradle</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>パージ後に完全再起動。同じエラー。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_phase_2_ウェブ検索とgithubのパンくずリスト">Phase 2: ウェブ検索とGitHubのパンくずリスト</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>docker-java 3.5.1 は不十分です。あとは、誰かがこの問題に正確に遭遇したかどうかを調べるだけです。</p>
+</div>
+<div class="paragraph">
+<p>testcontainers-java と docker-java の issue に対するターゲット検索:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">site:github.com/testcontainers "client version 1.32 is too old"
+site:github.com/docker-java "client version 1.32" Docker Engine 29</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>最初の即時の結果：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11210">testcontainers-java#11210</a>—<code>[Bug]: client version 1.32 is too old. Minimum supported API version is 1.44</code></p>
+</li>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11212">testcontainers-java#11212</a>—<code>[Bug]: Docker 29.0.0 could not find a valid Docker environment</code></p>
+</li>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11491">testcontainers-java#11491</a>—<code>[Bug]: Incompatibility in Ubuntu Github runners with Docker Engine 29.1.*</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>パンくずリストは明確です : Docker Engine 29.x は最低 API バージョンを`1.24`(古い欠陥) に`1.40`. Testcontainers 1.20.x は docker-java 3.4.x を使用し、API バージョンを送信してネゴシエートします。<code>1.32</code>. デーモンは礼儀正しくしかし固く拒否します。</p>
+</div>
+<div class="paragraph">
+<p>issue #11491では、メンテナーが返信します:</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ ハイ、バージョン2.0.3で動作しているプロジェクトをGHランナー上でエンジン29.1を使用して実行しており、正常に動作しています。 皆さん、バージョンの競合がないかどうか確認していただけますか？ お忘れなく、すべてのモジュールはプリフィックスが付いていました`testcontainers-<code>。 それで、バージョン2.xから始めて、私たちはから進んできた`postgresql</code> to <code>testcontainers-postgresql</code> </em>_</em></p>
+</div>
+<div class="paragraph">
+<p>この回答には<strong>重要な情報が2つ</strong>&lt;/think&gt; &lt;/think&gt; (Note: Since no French text was provided after the colon, there is nothing to translate, so the output is empty.)</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Testcontainers 2.0.3+ は問題を解決します</p>
+</li>
+<li>
+<p>モジュールは<strong>プレフィックス `testcontainers-`を付けてリネームされます</strong></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_フェーズ3_リネームされたアーティファクトの罠">フェーズ3 : リネームされたアーティファクトの罠</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>名前の変更は厳しいです。Testcontainers 2.x では、以前の名前のいずれもその名前では機能しなくなりました：</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">旧名 (1.x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">新しい名前 (2.x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:postgresql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-postgresql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:jdbc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-jdbc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:junit-jupiter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-junit-jupiter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">変更されていない</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>最初の試み : Testcontainers BOM 2.0.5 と新しいアーティファクト名を適用する`build.gradle`。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencies {
+    testImplementation platform("org.testcontainers:testcontainers-bom:2.0.5")
+    testImplementation "org.testcontainers:testcontainers-postgresql"
+    testImplementation "org.testcontainers:testcontainers-jdbc"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>./gradlew build</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">FAILURE: Could not find org.testcontainers:jdbc:2.0.5.
+Could not find org.testcontainers:junit-jupiter:2.0.5.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>testcontainers-bomのBOMだけでは十分ではありません。</strong>なぜ？ Spring Boot 3.4.5は独自の依存関係管理BOMを公開しているため（<code>spring-boot-dependencies</code>) 誰<strong>勝つ</strong>TestcontainersのBOMの transitive 解決において。 Spring Bootは修正します。<code>testcontainers</code> à <code>1.20.6</code>, したがって、Spring Boot BOMに明示的に含まれていないすべてのアーティファクト（新しいものなど）は`testcontainers-*<code>) 彼らは古い名前に向かって解決する`1.20.6</code>-- このバージョンでは存在しなくなりました。</p>
+</div>
+<div class="paragraph">
+<p>検査している際の`dependencies --configuration testRuntimeClasspath`, 見つかる :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">+--- org.testcontainers:testcontainers -&gt; 1.20.6 (*)
+|    \--- org.testcontainers:testcontainers:2.0.5 -&gt; 1.20.6</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le <code>&#8594;`置換を示します : Testcontainers 2.0.5 は <strong>要求されています</strong>, しかし Spring Boot は強制します`1.20.6</code>.</p>
+</div>
+<div id="diag-bom-war" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+skinparam componentStyle rectangle
+
+left to right direction
+
+component "build.gradle
+(消費者)" as BG #E3F2FD {
+    rectangle "要求
+`testcontainers-bom:2.0.5" as REQ
+    rectangle "要求
+`testcontainers-postgresql" as REQ2
+}
+
+component "Mavenセントラル" as MC #FFF3E0
+
+component "声明" as DEC #E8F5E9 {
+    rectangle "testcontainers-bom:2.0.5`
+修正 2.0.5" as BOM2
+    rectangle "spring-boot-dependencies:3.4.5`
+修正 1.20.6" as BOM1
+}
+
+component "Gradle 解決" as RES #FFEBEE {
+    rectangle "勝ち抜いたバージョン
+`testcontainers:1.20.6" as WIN #EF9A9A
+}
+
+BG --&gt; DEC : "BOMsを分析する"
+BOM2 --&gt; RES : "バージョン2.0.5を提案"
+BOM1 --&gt; RES : "提案 1.20.6"
+WIN -&gt; MC : "ダウンロード
+testcontainers:1.20.6"
+
+note bottom of WIN
+  Spring Boot BOM prime car
+  le plugin spring-boot applique
+  ses dépendances de gestion
+  après la résolution du consommateur
+end note
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_フェーズ4解決を強制する">フェーズ4：解決を強制する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>戦略は二重になります：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>docker-java のバージョンを 3.7.1 に固定する（Docker Engine 29 と互換性があるとテスト済み）</p>
+</li>
+<li>
+<p>Spring BootのBOMを回避してTestcontainersコアを2.0.5に強制する</p>
+</li>
+</ol>
+</div>
+<div id="diag-resolution-override" class="listingblock">
+<div class="content">
+<pre>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+skinparam componentStyle rectangle
+
+left to right direction
+
+component "build.gradle
+(resolutionStrategyを使用して)" as BG #E8F5E9 {
+    rectangle "BOM テストコンテナーズ
+`2.0.5" as BOM2
+    rectangle "resolutionStrategy\n.eachDependency" as RS #66BB6A
+}
+
+component "解決済み" as RESOLVED #E3F2FD {
+    rectangle "docker-java
+`3.7.1` (強制)" as DJ
+    rectangle "testcontainers
+`2.0.5` (強制)" as TC #81C784
+    rectangle "testcontainers-postgresql
+`2.0.5" as TPG
+    rectangle "testcontainers-jdbc
+`2.0.5" as TJ
+    rectangle "testcontainers-junit-jupiter
+`2.0.5" as TJJ
+}
+
+component "BOM Spring Boot
+(暗黙の, オーバーライドされた)" as BOM1 #FFEBEE
+
+component "マーベンセントラル" as MC #FFF3E0
+
+BG --&gt; RESOLVED : "BOM Testcontainers 2.0.5
+直接通ります"
+RS -&gt; DJ : "力 3.7.1"
+RS -&gt; TC : "力 2.0.5"
+RESOLVED --&gt; MC : "JARsをダウンロード
+Docker 29 と互換性がある"
+BOM1 -[#gray,dashed]-&gt; RESOLVED : "testcontainersで無視された\nそして docker-java"
+
+note bottom of RS
+  Le `eachDependency` intercepte
+  la résolution Gradle AVANT
+  que le BOM Spring Boot ne gagne.
+  C'est une intervention chirurgicale.
+end note
+
+@enduml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>最終修正</strong>中に`build.gradle`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">configurations {
+    all {
+        resolutionStrategy.eachDependency { details -&gt;
+            if (details.requested.group == "com.github.docker-java"
+                &amp;&amp; details.requested.name.startsWith("docker-java")) {
+                details.useVersion("3.7.1")
+            }
+            if (details.requested.group == "org.testcontainers"
+                &amp;&amp; details.requested.name == "testcontainers") {
+                details.useVersion("2.0.5")
+            }
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform("org.testcontainers:testcontainers-bom:2.0.5")
+    testImplementation "org.testcontainers:testcontainers-jdbc"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers-postgresql"
+    testImplementation "org.testcontainers:testcontainers"
+    // ... autres dépendances Spring Boot
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `resolutionStrategy.eachDependency`はBOMをバイパスする唯一の方法だ`spring-boot-dependencies`管理されている Spring Boot プラグインによって。等しさのテストは`details.requested.name == "testcontainers"`は意図的に制限的です：コアモジュールのみを強制します。モジュール`testcontainers-*`Testcontainers 2.0.5のBOM（明示的に宣言したもの）に従います。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最終結果">最終結果</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew build --no-daemon
+
+&gt; Task :consoleLauncherTest
+[2 containers found]
+[2 containers started]
+[2 containers successful]
+
+BUILD SUCCESSFUL in 1m 16s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Testcontainers 2.0.5 + docker-java 3.7.1 は、Docker Engine 29.4.1 を介して PostgreSQL コンテナを finally 作成できるようになりました。最終的なビジネスエラー（Cucumber テストでの HTTP 500）は、ビルドスクリプトとは完全に独立したアプリケーションの問題です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_修正のサマリーテーブル">修正のサマリーテーブル</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">#</th>
+<th class="tableblock halign-left valign-top">ファイル</th>
+<th class="tableblock halign-left valign-top">問題</th>
+<th class="tableblock halign-left valign-top">修正</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">変数`reportsDir`存在しない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs.dir(cucumberReportsDir)</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`main`非推奨の Gradle 9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mainClass</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sourceCompatibility`トップレベルでは Gradle 9 は禁止されています</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ブロック`java { sourceCompatibility = JavaVersion.VERSION_21 }`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Groovyのアサーションの構文が無効です</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>assert &#8230;&#8203; in ["17", "21", "23", "24"]</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">暗黙的依存`compileKotlin`→<code>openApiGenerate</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>afterEvaluate { tasks.named("compileKotlin").dependsOn("openApiGenerate") }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradle.properties</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`gitPropertiesPluginVersion`互換性のない Java 21</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2.5.7</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle キャッシュ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">docker-java 3.5.1 テスト済み、解決されたが不十分です</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">パージュ + 通過 docker-java 3.7.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Testcontainers 1.20.6 は Docker Engine 29 と互換性がありません</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Testcontainers 2.0.5 + プレフィックスの強制`testcontainers-*`+ resolutionStrategy と Spring Boot BOM の比較</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_結論">結論</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>JHipster/GradleのビルドがGradle 9 + Docker Engine 29へのアップグレード後にクラッシュする場合、エラーは2つのカテゴリに分類されます：</p>
+</div>
+<div class="paragraph">
+<p><strong>ビルドスクリプトのエラー</strong>(最初の6つ) : Gradle 9は、何年も機能していたプロパティと構文を削除します (<code>sourceCompatibility=</code>, <code>main =</code>, `reportsDir`これらは新しいAPIを知った後の機械的な移行です。</p>
+</div>
+<div class="paragraph">
+<p><strong>Dockerランタイムエラー</strong>(最後の2つ) : Docker Engine 29.4.1 は API バージョン &lt; 1.40 のクライアントを除外します。 Testcontainers 1.20.6 (Spring Boot 3.4.5 によって強制されます) は、API バージョン 1.32 を送信する docker‑java 3.4.1 を使用します。 問題を解決するのは、アーティファクトの名前変更とバージョンの強制を経由で行われる Testcontainers 2.0.5 + docker‑java 3.7.1 のみです。`resolutionStrategy.eachDependency`Spring Bootの暗黙のBOMを回避する唯一の手段として。</p>
+</div>
+<div class="paragraph">
+<p>プロジェクトのルートにある Gradle ビルドスクリプトは現在きれいです。`./gradlew build`Java 21、Gradle 9.4.1、Spring Boot 3.4.5、Docker Engine 29.4.1 に移行しました。</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">関連記事</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDocをMP4動画に変換</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">私のLLM消費の監査：SQLite、OpenCode、Ollama Cloud、そしてなぜ私のプロサブスクリプションが世界市場を破壊するのか</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">プラグイン独立＋コンシューマー ルート アーキテクチャ：なぜ私のGradleビルドが重複するのか</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">レコメンデーション エンジンとしての Knowledge Graph：私が時系列の「関連記事」をどう廃止したか</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    JavaScriptを有効にして、表示してください
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqusによって提供されるコメント</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        教育工学に特化した開発者トレーナー。学習を変革するための革新的なeラーニングソリューションの設計。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="ギットハブ">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSSフィード">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="コンタクト">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">ナビゲーション</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>ホーム</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ブログ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">リソース</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>アーカイブ</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> スライド</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> トレーニング</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 起動可能なUSBメモリ</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">ローカライズ</h6>
+                    <p class="mb-3">パリ地域に拠点を置き、フランス国内および遠隔での対応が可能です。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>イル・ド・フランス, フランス</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>テレワーク可</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>フランスでの移動</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. すべての権利が予約されています。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>
