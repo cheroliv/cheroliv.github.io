@@ -1,0 +1,1033 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>第3項：GradleプラグインにおけるTDDを用いたYAMLパースのためのJacksonの統合 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="第3項：GradleプラグインにおけるTDDを用いたYAMLパースのためのJacksonの統合 — Cheroliv"/>
+        <meta property="og:description" content="JacksonライブラリをGradleプラグインに組み込んでYAML設定ファイルをKotlinオブジェクトにパースする方法を、テスト駆動開発（TDD）のアプローチに従って学びます。"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0091_jackson_yaml_tdd_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0091_jackson_yaml_tdd_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="第3項：GradleプラグインにおけるTDDを用いたYAMLパースのためのJacksonの統合 — Cheroliv"/>
+        <meta name="twitter:description" content="JacksonライブラリをGradleプラグインに組み込んでYAML設定ファイルをKotlinオブジェクトにパースする方法を、テスト駆動開発（TDD）のアプローチに従って学びます。"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0091_jackson_yaml_tdd_post.png"/>
+        <meta name="description" content="JacksonライブラリをGradleプラグインに組み込んでYAML設定ファイルをKotlinオブジェクトにパースする方法を、テスト駆動開発（TDD）のアプローチに従って学びます。"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSSフィード" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                シェロリブ
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="ナビゲーションを切り替え">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">ホーム</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">専門知識</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ブログ</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">お問い合わせ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="インターフェーステーマを選択">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">明るい</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>ライト
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>ダーク
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>ハイコントラスト
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="言語を選択">
+                        <span class="me-1">🇯🇵</span>
+                        <span class="ms-1">JA</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0091_jackson_yaml_tdd_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2025/0091_jackson_yaml_tdd_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0091_jackson_yaml_tdd_post.html"},
+                      "headline": "\u7B2C3\u9805\uFF1AGradle\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u304A\u3051\u308BTDD\u3092\u7528\u3044\u305FYAML\u30D1\u30FC\u30B9\u306E\u305F\u3081\u306EJackson\u306E\u7D71\u5408",
+                      "description": "Jackson\u30E9\u30A4\u30D6\u30E9\u30EA\u3092Gradle\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u7D44\u307F\u8FBC\u3093\u3067YAML\u8A2D\u5B9A\u30D5\u30A1\u30A4\u30EB\u3092Kotlin\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306B\u30D1\u30FC\u30B9\u3059\u308B\u65B9\u6CD5\u3092\u3001\u30C6\u30B9\u30C8\u99C6\u52D5\u958B\u767A\uFF08TDD\uFF09\u306E\u30A2\u30D7\u30ED\u30FC\u30C1\u306B\u5F93\u3063\u3066\u5B66\u3073\u307E\u3059\u3002",
+                      "datePublished": "2025-09-25",
+                      "dateModified": "2025-09-25",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0091_jackson_yaml_tdd_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u7B2C3\u9805\uFF1AGradle\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u304A\u3051\u308BTDD\u3092\u7528\u3044\u305FYAML\u30D1\u30FC\u30B9\u306E\u305F\u3081\u306EJackson\u306E\u7D71\u5408", "item": "https:\/\/cheroliv.com\/blog\/2025\/0091_jackson_yaml_tdd_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">第3項：GradleプラグインにおけるTDDを用いたYAMLパースのためのJacksonの統合</h1>
+                <p class="lead">
+                    <em>公開日: 25 September 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_導入">導入</a></li>
+<li><a href="#_1_コンテキスト_私たちのプラグイン_site_baker">1. コンテキスト: 私たちのプラグイン `site-baker</a></li>
+<li><a href="#_2_kotlin_での設定のモデリング">2. Kotlin での設定のモデリング</a></li>
+<li><a href="#_3_jacksonのbuild_gradle_ktsへの統合">3. Jacksonの`build.gradle.kts`への統合</a></li>
+<li><a href="#_4_tddアプローチyamlパースのテスト">4. TDDアプローチ：YAMLパースのテスト</a>
+<ul class="sectlevel2">
+<li><a href="#_4_1_単体テスト_yamlをkotlinオブジェクトにマッピング">4.1. 単体テスト: YAMLをKotlinオブジェクトにマッピング</a></li>
+<li><a href="#_4_2_機能テスト構成ファイルの読み取りを検証する">4.2. 機能テスト：構成ファイルの読み取りを検証する</a></li>
+</ul>
+</li>
+<li><a href="#_5_パースフローの可視化">5. パースフローの可視化</a></li>
+<li><a href="#_結論">結論</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_導入">導入</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">対象 : 中級 Gradle 開発者で、複雑な設定を管理したい人</div>
+<p>Gradleプラグインの開発において、複雑な構成の管理は一般的な作業です。DSLに数百のプロパティを詰め込むのではなく、外部ファイル、例えばYAMLに設定を定義するほうが、すっきりしており保守しやすいことが多いです。この記事では、強力なJacksonライブラリを使ってYAMLファイルをKotlinオブジェクトにパースする統合方法を、厳格なTDDアプローチを採用してプラグインの堅牢性を確保する形でガイドします。<code>site-baker</code>。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_1_コンテキスト_私たちのプラグイン_site_baker">1. コンテキスト: 私たちのプラグイン `site-baker</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>私たちのプラグイン`site-baker`は、静的サイトの生成とデプロイを自動化するように設計されています。YAML設定ファイルを読み込む必要があります (<code>managed-jbake-context.yml</code>) ソースのパス、デプロイ先、Gitの識別子などの情報を取得するために。</p>
+</div>
+<div class="paragraph">
+<p>パースしたいYAML設定はこのようになります：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">bake:
+  srcPath: "./site/jbake"
+  destDirPath: "bake"
+  cname: "cheroliv.com"
+pushPage:
+  from: "bake"
+  to: "cvs"
+  repo:
+    name: "trainings"
+    repository: "https://github.com/pages-content/pages-content.github.io.git"
+    credentials:
+      username: "USERNAME"
+      password: "SECRET_TOKEN"
+  branch: "main"
+  message: "cheroliv.com"
+# ... autres configurations (pushMaquette, supabase, etc.)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_2_kotlin_での設定のモデリング">2. Kotlin での設定のモデリング</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>パースする前に、Kotlinでデータの構造を定義する必要があります。Jacksonはこれらのクラスを使用してYAMLコンテンツを自動的にマッピングします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// plugin/src/main/kotlin/com/cheroliv/site/baker/data/SiteConfiguration.kt
+package com.cheroliv.site.baker.data
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+
+fun parseSiteConfiguration(yaml: String): SiteConfiguration {
+    val mapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
+    return mapper.readValue(yaml)
+}
+
+data class GitPushConfiguration(
+    val from: String = "",
+    val to: String = "",
+    val repo: RepositoryConfiguration = RepositoryConfiguration(),
+    val branch: String = "",
+    val message: String = "",
+)
+
+data class RepositoryConfiguration(
+    val name: String = "",
+    val repository: String = "",
+    val credentials: RepositoryCredentials = RepositoryCredentials(),
+) {
+    companion object {
+        const val ORIGIN = "origin"
+        const val CNAME = "CNAME"
+        const val REMOTE = "remote"
+    }
+}
+
+data class RepositoryCredentials(val username: String = "", val password: String = "")
+
+data class SiteConfiguration(
+    val bake: BakeConfiguration = BakeConfiguration(),
+    val pushPage: GitPushConfiguration = GitPushConfiguration(),
+    val pushMaquette: GitPushConfiguration = GitPushConfiguration(),
+    val pushSource: GitPushConfiguration? = null,
+    val pushTemplate: GitPushConfiguration? = null,
+    val supabase: SupabaseContactFormConfig? = null
+)
+
+data class BakeConfiguration(
+    val srcPath: String = "",
+    val destDirPath: String = "",
+    val cname: String? = null,
+)
+
+// ... (autres data classes pour Supabase, si nécessaire)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>機能`parseSiteConfiguration`これはデシリアライズのエントリーポイントです。使用します`ObjectMapper`Jacksonの、設定済みの`YAMLFactory`YAMLフォーマットに対して`registerKotlinModule()`Kotlinの特殊機能のサポート（例えばプロパティのデフォルト値など）のため。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_3_jacksonのbuild_gradle_ktsへの統合">3. Jacksonの`build.gradle.kts`への統合</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Jacksonを使用するには、必要な依存関係を追加する必要がありますの`build.gradle.kts`私たちのモジュールの`plugin`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// plugin/build.gradle.kts
+dependencies {
+    // Jackson for YAML parsing
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.3")
+
+    // ... autres dépendances
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>私たちは使用します`jackson-module-kotlin`Kotlinのサポートのためにおよび`jackson-dataformat-yaml`YAML形式の管理のために。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_4_tddアプローチyamlパースのテスト">4. TDDアプローチ：YAMLパースのテスト</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>今、TDDを適用してパースロジックを検証しましょう。</p>
+</div>
+<div class="sect2">
+<h3 id="_4_1_単体テスト_yamlをkotlinオブジェクトにマッピング">4.1. 単体テスト: YAMLをKotlinオブジェクトにマッピング</h3>
+<div class="paragraph">
+<p>私たちは単体テストで始めます`SiteBakerPluginTest.kt`関数が機能しているかを確認するために`parseSiteConfiguration`YAML文字列をオブジェクトに正しく変換できます`SiteConfiguration`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// plugin/src/test/kotlin/com/cheroliv/site/baker/SiteBakerPluginTest.kt
+@Test
+fun `can map configuration text to SiteConfiguration object`() {
+    val yamlString = "../../managed-jbake-context.yml"
+        .run(::File)
+        .readText()
+        .trimIndent()
+
+    val config: SiteConfiguration = parseSiteConfiguration(yamlString)
+
+    assertEquals("cheroliv.com", config.bake.cname)
+    assertEquals("main", config.pushPage.branch)
+    assertEquals("https://github.com/pages-content/pages-content.github.io.git", config.pushPage.repo.repository)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>このテストはファイルの内容を読み込みます`managed-jbake-context.yml`(テストが有効であるために存在しなければならない)およびオブジェクトに対するアサーションを実行する`SiteConfiguration`結果として。 YAML のキーの値が正しくマッピングされていることを検証します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_4_2_機能テスト構成ファイルの読み取りを検証する">4.2. 機能テスト：構成ファイルの読み取りを検証する</h3>
+<div class="paragraph">
+<p>プラグインがそのDSLを通じて設定ファイルを読み取ることができ、実際のGradle環境でパースが機能することを確認するために、私たちは機能テストを追加します`SiteBakerPluginFunctionalTest.kt`。</p>
+</div>
+<div class="paragraph">
+<p>このテストは重要です。なぜなら、実際のプロジェクトでのプラグインの実行をシミュレートするからです。これが必要です<strong>密閉</strong>, すなわち彼は自分でファイルを作成しなければならない`managed-jbake-context.yml`制御されたコンテンツを使用して、テストの再現性と隔離を保証します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// plugin/src/functionalTest/kotlin/com/cheroliv/site/baker/SiteBakerPluginFunctionalTest.kt
+@Test
+fun `config file contains good data`(){
+    val configContent = configFile.readText(UTF_8)
+    // Vérifications comme dans vos commentaires
+    assertTrue(configContent.contains("bake"))
+    assertTrue(configContent.contains("pushPage"))
+    assertTrue(configContent.contains("repository"))
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この機能テストは、テストの一時ディレクトリにコピーされた設定ファイルに期待されるデータが含まれていることを確認します。このテストは直接 YAML を Kotlin オブジェクトにパースしませんが、ファイルとその内容の存在を検証し、これはプラグインによるパースに必要な前提条件となります。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_5_パースフローの可視化">5. パースフローの可視化</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次の図は、YAML 設定のパース時のデータフローとインタラクションを示しています：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@startuml
+actor "Gradle ユーザー" as User
+participant "build.gradle.kts" as BuildScript
+participant "SiteBakerPlugin" as Plugin
+participant "サイトエクステンション" as Extension
+participant "managed-jbake-context.yml" as ConfigFile
+participant "parseSiteConfiguration()" as Parser
+participant "SiteConfiguration ( Kotlin オブジェクト )" as KotlinObject
+
+User -&gt; BuildScript : Applique le plugin et configure le DSL
+BuildScript -&gt; Plugin : apply()
+Plugin -&gt; Extension : Crée et enregistre l'extension 'site'
+User -&gt; BuildScript : site { configPath = "..." }
+BuildScript -&gt; Extension : Définit configPath
+
+Plugin -&gt; ConfigFile : Lit le fichier (via configPath)
+ConfigFile --&gt; Plugin : Contenu YAML
+Plugin -&gt; Parser : Appelle parseSiteConfiguration(yamlString)
+Parser -&gt; KotlinObject : Mappe le YAML en objet SiteConfiguration
+KotlinObject --&gt; Plugin : Retourne l'objet configuré
+
+@enduml</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_結論">結論</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TDDのアプローチを取ることで、Jacksonライブラリを使用してYAML設定ファイルをKotlinオブジェクトにパースし、Gradleプラグインに正常に組み込むことができました。この方法により、以下のことが可能になりました：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>明確にモデリング</strong>私たちの構成とKotlinのデータクラス。</p>
+</li>
+<li>
+<p><strong>パースロジックを検証する</strong>対象となる単体テストで。</p>
+</li>
+<li>
+<p><strong>統合の確保</strong>実際の Gradle 環境で、密閉された機能テストにより。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>この堅固な基盤により、この設定に基づく機能でプラグインを拡張する大きな自信を得られ、コードの保守性と堅牢性も確保できます。YAMLのパースは今ではプラグインの信頼性が高くテスト済みの機能となっています。<code>site-baker</code>。</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">関連記事</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDocをMP4動画に変換</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">私のLLM消費の監査：SQLite、OpenCode、Ollama Cloud、そしてなぜ私のプロサブスクリプションが世界市場を破壊するのか</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">プラグイン独立＋コンシューマー ルート アーキテクチャ：なぜ私のGradleビルドが重複するのか</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">レコメンデーション エンジンとしての Knowledge Graph：私が時系列の「関連記事」をどう廃止したか</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0091_jackson_yaml_tdd_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    JavaScriptを有効にして、表示してください
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqusによって提供されるコメント</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        教育工学に特化した開発者トレーナー。学習を変革するための革新的なeラーニングソリューションの設計。
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="ギットハブ">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSSフィード">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="コンタクト">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">ナビゲーション</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>ホーム</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ブログ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">リソース</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>アーカイブ</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> スライド</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> トレーニング</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 起動可能なUSBメモリ</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">ローカライズ</h6>
+                    <p class="mb-3">パリ地域に拠点を置き、フランス国内および遠隔での対応が可能です。</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>イル・ド・フランス, フランス</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>テレワーク可</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>フランスでの移動</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. すべての権利が予約されています。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

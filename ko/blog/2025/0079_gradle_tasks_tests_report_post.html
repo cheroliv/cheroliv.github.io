@@ -1,0 +1,1070 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kotlin DSL과 buildSrc를 사용한 Gradle 작업 관리 최적화 — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Kotlin DSL과 buildSrc를 사용한 Gradle 작업 관리 최적화 — Cheroliv"/>
+        <meta property="og:description" content="Gradle을 buildSrc와 Kotlin DSL을 사용해 재사용 가능한 작업과 더 깔끔한 빌드로 최적화하세요."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/blog/2025/0079_gradle_tasks_tests_report_post.html"/>
+        <meta property="og:locale" content="fr_FR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2025/0079_gradle_tasks_tests_report_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Kotlin DSL과 buildSrc를 사용한 Gradle 작업 관리 최적화 — Cheroliv"/>
+        <meta name="twitter:description" content="Gradle을 buildSrc와 Kotlin DSL을 사용해 재사용 가능한 작업과 더 깔끔한 빌드로 최적화하세요."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2025/0079_gradle_tasks_tests_report_post.png"/>
+        <meta name="description" content="Gradle을 buildSrc와 Kotlin DSL을 사용해 재사용 가능한 작업과 더 깔끔한 빌드로 최적화하세요."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS 피드" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                쉐롤리브
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="탐색 전환">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">홈</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">전문 분야</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">블로그</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">연락처</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="인터페이스 테마 선택">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">명료한</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>밝게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>어둡게
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>고대비
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="언어 선택">
+                        <span class="me-1">🇰🇷</span>
+                        <span class="ms-1">KO</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0079_gradle_tasks_tests_report_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2025/0079_gradle_tasks_tests_report_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2025\/0079_gradle_tasks_tests_report_post.html"},
+                      "headline": "Kotlin DSL\uACFC buildSrc\uB97C \uC0AC\uC6A9\uD55C Gradle \uC791\uC5C5 \uAD00\uB9AC \uCD5C\uC801\uD654",
+                      "description": "Gradle\uC744 buildSrc\uC640 Kotlin DSL\uC744 \uC0AC\uC6A9\uD574 \uC7AC\uC0AC\uC6A9 \uAC00\uB2A5\uD55C \uC791\uC5C5\uACFC \uB354 \uAE54\uB054\uD55C \uBE4C\uB4DC\uB85C \uCD5C\uC801\uD654\uD558\uC138\uC694.",
+                      "datePublished": "2025-07-11",
+                      "dateModified": "2025-07-11",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2025\/0079_gradle_tasks_tests_report_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Kotlin DSL\uACFC buildSrc\uB97C \uC0AC\uC6A9\uD55C Gradle \uC791\uC5C5 \uAD00\uB9AC \uCD5C\uC801\uD654", "item": "https:\/\/cheroliv.com\/blog\/2025\/0079_gradle_tasks_tests_report_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Kotlin DSL과 buildSrc를 사용한 Gradle 작업 관리 최적화</h1>
+                <p class="lead">
+                    <em>게시: 11 July 2025</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Sommaire</div>
+<ul class="sectlevel1">
+<li><a href="#_allprojects와_subprojects를_사용하여_configurations을_중앙_집중화하세요">allprojects`와 `subprojects`를 사용하여 Configurations을 중앙 집중화하세요</a></li>
+<li><a href="#_sourceplantuml">[source,plantuml]</a></li>
+<li><a href="#_enduml">@enduml</a></li>
+<li><a href="#_sourcekotlin">[source,kotlin]</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>빌드 작업 자동화는 모든 소프트웨어 프로젝트에 매우 중요하며, Gradle의 Kotlin DSL을 사용하면 뛰어난 유연성을 제공합니다. 우리의 대화 중에, 우리는 빌드 로직을 중앙화하고 재사용하는 방법을 탐구했으며, 특히 테스트 보고서에 이를 활용하여<strong>모든 프로젝트</strong>, <strong>buildSrc</strong>, 그리고 코틀린에서의 맞춤형 작업.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_allprojects와_subprojects를_사용하여_configurations을_중앙_집중화하세요">allprojects`와 `subprojects`를 사용하여 Configurations을 중앙 집중화하세요</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>블록들`allprojects` et `subprojects`당신의`build.gradle.kts`루트는 여러 모듈 프로젝트 전반에 걸쳐 공통 구성을 적용하는 데 기본적입니다.</p>
+</div>
+<div class="paragraph">
+<p>*<code>allprojects { &#8230;&#8203; }</code>: 구성을 적용<strong>루트 프로젝트 및 모든 하위 프로젝트</strong>. 정의하기에 좋은`group`, 하나의`version`, 또는`repositories`공통의. *<code>subprojects { &#8230;&#8203; }`구성을 적용<strong>하위 프로젝트에만</strong>, 루트 프로젝트를 제외하고. 모듈에 특정한 플러그인을 적용하기에 완벽함 (예`java</code> ou <code>kotlin-jvm</code>) 또는 라이브러리에 공통된 종속성</p>
+</div>
+<div class="paragraph">
+<p>다음은 예시입니다 :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// build.gradle.kts (projet racine)
+plugins {
+    base // Appliqué au projet racine
+}
+
+allprojects {
+    group = "com.example"
+    version = "1.0.0"
+
+    repositories {
+        mavenCentral()
+    }
+
+    tasks.withType&lt;org.gradle.api.tasks.testing.Test&gt; {
+        useJUnitPlatform() // Configuration commune des tests pour tous les projets
+    }
+}
+
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+    dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>\==<code>buildSrc</code>: 빌드 로직의 스위스 군용 칼</p>
+</div>
+<div class="paragraph">
+<p>작업의 로직이 복잡해지거나 재사용해야 할 때,<strong>buildSrc</strong>선호되는 솔루션입니다. 이는 주요 빌드 스크립트보다 먼저 컴파일되는 특수 Gradle 모듈이며, 이는 모든 빌드의 클래스패스에서 해당 클래스를 사용할 수 있게 합니다.</p>
+</div>
+<div class="paragraph">
+<p>왜 사용하나요?`buildSrc`작업을 위해?</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>재사용성</strong>정의된 작업 안에`buildSrc`해당 빌드의 모든 프로젝트에 적용할 수 있습니다.</p>
+</li>
+<li>
+<p><strong>조직</strong>빌드 코드를 중앙 집중화하여 더 깔끔하고 유지보수하기 쉽게 만든다.</p>
+</li>
+<li>
+<p><strong>타입 안전성과 자동 완성</strong>: Kotlin 코드 안의`buildSrc`컴파일되어 IDE의 오류 검사와 자동완성을 제공하여 개발 경험을 향상시킵니다.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>흐름도`buildSrc`(PlantUML 코드)</p>
+</div>
+<div class="paragraph">
+<p>이 다이어그램을 생성하려면 아래 코드를 복사하고 PlantUML을 지원하는 도구에 붙여넣으세요.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sourceplantuml">[source,plantuml]</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>@startuml skinparam handwritten true skinparam monochrome true</p>
+</div>
+<div class="paragraph">
+<p>rectangle "Gradle 빌드 프로세스" { component "buildSrc" as BS { file "MyCustomTask.kt" as T file "MyConventionPlugin.kt" as P } 컴포넌트 "Root Project"으로서 RP 컴포넌트 "Subproject A"를 SA로 구성요소 "Subproject B"를 SB로 }</p>
+</div>
+<div class="paragraph">
+<p>T --\&gt; P : "정의됨 P --\&gt; RP : "적용됨 P --\&gt; SA : "적용됨 P --\&gt; SB : "적용됨</p>
+</div>
+<div class="paragraph">
+<p>RP --|\&gt; SA : "contains RP --|\&gt; SB : "contains</p>
+</div>
+<div class="paragraph">
+<p>RP -up-\&gt; BS : "빌드 로직을 위해 의존함 SA -up&#8594; BS : "의존 (빌드 로직을 위한) SB -up-\&gt; BS : "depends on (for build logic)</p>
+</div>
+<div class="paragraph">
+<p>T 오른쪽에 메모 커스텀 작업 클래스 (예: OpenTestReportTask) 끝 노트</p>
+</div>
+<div class="paragraph">
+<p>P 오른쪽의 메모 협약 플러그인 작업을 기록하는 미주</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_enduml">@enduml</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>\== 추상 보고서 작업 생성</p>
+</div>
+<div class="paragraph">
+<p>테스트 보고서를 관리하기 위해 우리는 모듈식 접근 방식을 설계했습니다 추상 작업 클래스를 사용하여 안에서`buildSrc`. 귀하의 필요에 따라 이 클래스는 상속받을 수 있습니다`DefaultTask` ou de <code>Exec</code>.</p>
+</div>
+<div class="paragraph">
+<p>\=== 추상적 작업`OpenTestReportTask`(상속받는`DefaultTask`)</p>
+</div>
+<div class="paragraph">
+<p>파일 시스템이나 다른 Gradle API와 상호작용하는 맞춤 Kotlin 로직이 필요한 경우 이 접근 방식을 사용하는 것이 권장됩니다. 그런 다음 외부 명령을 실행합니다.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sourcekotlin">[source,kotlin]</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>패키지 com.yourpackage</p>
+</div>
+<div class="paragraph">
+<p>import org.gradle.api.DefaultTask 가져오기 org.gradle.api.tasks.Input import org.gradle.api.tasks.TaskAction import java.io.File</p>
+</div>
+<div class="paragraph">
+<p>추상 클래스 OpenTestReportTask : DefaultTask()</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">----
+----
+init {
+    group = "verification"
+    description = "Opens a test report in Firefox."
+    dependsOn("check") // Assure que les rapports sont générés
+}
+
+@get:Input
+abstract var reportPath: String
+
+@TaskAction
+fun openReport() {
+    val separator = File.separator
+    val reportFile = project.layout.projectDirectory.asFile.toPath()
+        .resolve(reportPath.replace("/", separator))
+        .toAbsolutePath()
+        .toFile()
+
+    if (!reportFile.exists()) {
+        logger.warn("Report file does not exist: $reportFile. Ensure 'check' ran.")
+        return
+    }
+
+    project.exec {
+        commandLine("firefox", "--new-tab", reportFile.absolutePath)
+    }
+    logger.lifecycle("Opened test report: ${reportFile.absolutePath}")
+}
+----
+
+## }
+
+구체적인 구현
+
+이 클래스들은 추상 작업을 상속받고 보고서의 특정 경로를 정의합니다.
+
+## [source,kotlin]
+
+패키지 com.yourpackage
+
+추상 클래스 ReportUnitTestsTask : OpenTestReportTask() init { Firefox에서 단위 테스트 보고서를 엽니다. reportPath = "build/reports/tests/test/index.html } }
+
+패키지 com.yourpackage
+
+## abstract class ReportFunctionalTestsTask : OpenTestReportTask() { init { description = "파이어폭스에서 기능 테스트 보고서를 엽니다." reportPath = "build/reports/tests/functionalTest/index.html" } }
+
+\=== 작업 기록
+
+안에`build.gradle.kts`당신의 루트 프로젝트:
+
+## [source,kotlin]
+
+tasks.register&lt;com.yourpackage.ReportUnitTestsTask&gt;("reportTests") {} tasks.register&lt;com.yourpackage.ReportFunctionalTestsTask&gt;("reportFunctionalTests") {}
+
+\=== 보고서 작업의 UML 다이어그램 (PlantUML 코드)
+
+아래 코드를 복사하여 PlantUML을 지원하는 도구에 붙여넣으세요.
+
+## [source,plantuml]
+
+@startuml skinparam handwritten true skinparam 단색 true
+
+추상 클래스 DefaultTask { }
+
+추상 클래스 Exec { \+ commandLine(args: String...) \+ exec() }
+
+추상 클래스 OpenTestReportTask 확장 DefaultTask { \+ group: String = "검증 \+ 설명: 문자열 \+ dependsOn("check") \+ abstract reportPath: String \+ openReport() : void }
+
+추상 클래스 AbstractJbakeExecTask는 Exec를 확장합니다 { \+ group: String = "검증 \+ 설명: 문자열 \+ dependsOn("check") \+ 추상 보고상대경로: 문자열 \+ exec() : void }
+
+클래스 ReportUnitTestsTask는 OpenTestReportTask를 확장합니다 { \+ reportPath: String = "build/reports/tests/test/index.html }
+
+클래스 ReportFunctionalTestsTask extends OpenTestReportTask { \+ reportPath: String = "build/reports/tests/functionalTest/index.html }
+
+class ReportJbakeTestsTask extends AbstractJbakeExecTask { \+ reportRelativePath: String = "build/reports/tests/test/index.html }
+
+class ReportJbakeFunctionalTestsTask extends AbstractJbakeExecTask { \+ reportRelativePath: String = "build/reports/tests/functionalTest/index.html }
+
+OpenTestReportTask \&lt;-- ReportUnitTestsTask OpenTestReportTask \&lt;-- ReportFunctionalTestsTask
+
+AbstractJbakeExecTask \&lt;-- ReportJbakeTestsTask AbstractJbakeExecTask \&lt;-- ReportJbakeFunctionalTestsTask
+
+DefaultTask \&lt;|-- OpenTestReportTask Exec \&lt;|-- AbstractJbakeExecTask DefaultTask \&lt;|-- Exec
+
+## @enduml
+
+\== 추상적인 작업`AbstractJbakeExecTask`(상속받는`Exec`)
+
+주로 외부 명령에 변수 인자를 실행하는 작업이라면, 직접 상속받는**실행**더 직접적입니다.
+
+## [source,kotlin]
+
+패키지 com.yourpackage
+
+import org.gradle.api.tasks.Exec import org.gradle.api.tasks.Input import java.io.File
+
+추상 클래스 AbstractJbakeExecTask : Exec() {
+
+----
+
+init { group = "verification" description = "Opens a Jbake project report in Firefox." dependsOn("check") }
+
+@get:Input abstract var reportRelativePath: String
+
+override fun exec() { val separator = File.separator val reportFile = project.layout.projectDirectory.asFile.toPath() .resolve(reportRelativePath.replace("/", separator)) .toAbsolutePath() .toFile()
+
+if (!reportFile.exists()) { logger.warn("Report file does not exist: $reportFile. Ensure 'check' ran.") return }
+
+commandLine("firefox", "--new-tab", reportFile.absolutePath) logger.lifecycle("Attempting to open report: ${reportFile.absolutePath}") super.exec() // Appelle la méthode exec() de la super-classe Exec }
+
+## }
+
+\=== 구체적인 구현을 위한`Exec`
+
+## [source,kotlin]
+
+package com.yourpackage
+
+추상 클래스 ReportJbakeTestsTask : AbstractJbakeExecTask() { init { description = "Firefox에서 Jbake 단위 테스트 보고서를 엽니다. reportRelativePath = "build/reports/tests/test/index.html } }
+
+package com.yourpackage
+
+abstract class ReportJbakeFunctionalTestsTask : AbstractJbakeExecTask() { init { description = "파이어폭스에서 기능 테스트 보고서를 엽니다." reportRelativePath = "build/reports/tests/functionalTest/index.html" } }
+
+\== 작업 가시성`buildSrc`
+
+당신이 정의하는 작업 및 클래스는**buildSrc**이다 :
+
+***보이고 사용 가능한**votre 메인 빌드의 모든 프로젝트(루트 및 하위 프로젝트)에서. 따라서 사용할 수 있습니다`com.yourpackage.ReportUnitTestsTask`안에`allprojects { ... }`. ***실행 불가능한**직접 buildSrc 작업으로서 (예를 들어,`gradle :buildSrc:reportTests`작업이 특정하게 기록되지 않으면 작동하지 않을 것입니다`buildSrc/build.gradle.kts`).`buildSrc`컴파일 모듈일 뿐, 이 메인 빌드 작업에 사용되는 실행 가능한 애플리케이션 모듈이 아닙니다.
+
+테스트를 위한 보고서 실행`buildSrc`자기
+
+Si `buildSrc`자신만의 테스트를 수행하고 보고서를 생성하면, 보고 작업을 직접 기록할 수 있습니다`buildSrc/build.gradle.kts`:
+
+## [source,kotlin]
+
+plugins { `kotlin-jvm` }
+
+저장소 { mavenCentral() }
+
+tasks.withType\&lt;Test\&gt; { useJUnitPlatform() 보고서.html.출력위치.set(레이아웃.빌드디렉터리.dir("보고서/테스트")) }
+
+import com.yourpackage.ReportJbakeTestsTask // 작업 클래스를 가져옵니다
+
+tasks.register\&lt;ReportJbakeTestsTask\&gt;("reportBuildSrcTests") { // Le chemin est déjà défini dans la classe, il pointera vers les rapports de buildSrc }
+
+그 다음에 실행할 수 있습니다 :`./gradlew :buildSrc:test`다음에`./gradlew :buildSrc:reportBuildSrcTests`.
+
+이러한 관행을 채택함으로써 Kotlin DSL을 사용한 Gradle 빌드 시스템을 구축하게 되며, 이는 단순히 강력할 뿐만 아니라 놀랍도록 모듈화 가능하고 유지 보수가 쉬우며 이해하기 쉽습니다.</code></pre>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">관련 기사</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDoc을 MP4 비디오로 변환</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">나의 LLM 소비 감사 : SQLite, OpenCode, Ollama Cloud, 그리고 왜 나의 프로 구독이 세계 시장을 폭발시키는가?</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">아키텍처 « 독립 플러그인 + 소비자 루트 » : 왜 내 Gradle 빌드가 중복되는가</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">추천 엔진으로서의 Knowledge Graph: 시간 순서의 « 관련 기사 »를 죽인 방법</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2025\/0079_gradle_tasks_tests_report_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    자바스크립트를 활성화하여 보세요
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqus로 구동되는 댓글</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        교육공학 전문 트레이너 겸 개발자
+학습을 변화시키기 위한 혁신적인 e-러닝 솔루션 설계
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="깃허브">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS 피드">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="연락처">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">내비게이션</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>홈</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>블로그</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">리소스</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>아카이브</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> 슬라이드</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> 교육</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> 부팅 가능한 키</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">위치</h6>
+                    <p class="mb-3">파리 지역에 기반을 두고, 프랑스 내 및 원격으로 가능한 개입.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>일드프랑스, 프랑스</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>재택근무 가능</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>프랑스 내 이동</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. 모든 권리 보유.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>
