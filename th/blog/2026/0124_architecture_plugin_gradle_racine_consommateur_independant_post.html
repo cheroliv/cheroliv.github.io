@@ -1,0 +1,1353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="th">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>สถาปัตยกรรม « Plugin อิสระ + Root ฝั่งผู้บริโภค » : ทำไม Gradle Builds ของฉันจึงซ้ำซ้อน — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/th/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="สถาปัตยกรรม « Plugin อิสระ + Root ฝั่งผู้บริโภค » : ทำไม Gradle Builds ของฉันจึงซ้ำซ้อน — Cheroliv"/>
+        <meta property="og:description" content="โคลนหนึ่งครั้ง รัน `./gradlew tasks` หนึ่งครั้ง แล้วปลั๊กอิน Gradle ของคุณก็ใช้งานได้ ไม่ต้องตั้งค่าใด ๆ ไม่ต้องอ่าน README เลย นี่คือสถาปัตยกรรมที่ผมใช้งานกับปลั๊กอิน Gradle 6 ตัวของผมใน foundry/public/ : รูทฝั่งผู้บริโภคแบบมินิมอล + โฟลเดอร์ `{name}-plugin/` ที่อยู่ได้ด้วยตัวเอง ทำไมแพตเทิร์น “การซ้ำซ้อนที่ดูเหมือนซ้ำ” นี้จึงเป็นวิธีที่ให้ผลผลิตสูงที่สุดสำหรับการพัฒนา Gradle plugin — ด้วย dogfooding แบบเนทีฟ การแยกบิลด์ออกจากกัน และสัญญา DAG ที่ชัดเจน"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/th/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"/>
+        <meta property="og:locale" content="th_TH"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="สถาปัตยกรรม « Plugin อิสระ + Root ฝั่งผู้บริโภค » : ทำไม Gradle Builds ของฉันจึงซ้ำซ้อน — Cheroliv"/>
+        <meta name="twitter:description" content="โคลนหนึ่งครั้ง รัน `./gradlew tasks` หนึ่งครั้ง แล้วปลั๊กอิน Gradle ของคุณก็ใช้งานได้ ไม่ต้องตั้งค่าใด ๆ ไม่ต้องอ่าน README เลย นี่คือสถาปัตยกรรมที่ผมใช้งานกับปลั๊กอิน Gradle 6 ตัวของผมใน foundry/public/ : รูทฝั่งผู้บริโภคแบบมินิมอล + โฟลเดอร์ `{name}-plugin/` ที่อยู่ได้ด้วยตัวเอง ทำไมแพตเทิร์น “การซ้ำซ้อนที่ดูเหมือนซ้ำ” นี้จึงเป็นวิธีที่ให้ผลผลิตสูงที่สุดสำหรับการพัฒนา Gradle plugin — ด้วย dogfooding แบบเนทีฟ การแยกบิลด์ออกจากกัน และสัญญา DAG ที่ชัดเจน"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.png"/>
+        <meta name="description" content="โคลนหนึ่งครั้ง รัน `./gradlew tasks` หนึ่งครั้ง แล้วปลั๊กอิน Gradle ของคุณก็ใช้งานได้ ไม่ต้องตั้งค่าใด ๆ ไม่ต้องอ่าน README เลย นี่คือสถาปัตยกรรมที่ผมใช้งานกับปลั๊กอิน Gradle 6 ตัวของผมใน foundry/public/ : รูทฝั่งผู้บริโภคแบบมินิมอล + โฟลเดอร์ `{name}-plugin/` ที่อยู่ได้ด้วยตัวเอง ทำไมแพตเทิร์น “การซ้ำซ้อนที่ดูเหมือนซ้ำ” นี้จึงเป็นวิธีที่ให้ผลผลิตสูงที่สุดสำหรับการพัฒนา Gradle plugin — ด้วย dogfooding แบบเนทีฟ การแยกบิลด์ออกจากกัน และสัญญา DAG ที่ชัดเจน"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="สลับการนำทาง">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">หน้าหลัก</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">ความเชี่ยวชาญ</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">บล็อก</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">ติดต่อ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="เลือกธีมอินเทอร์เฟซ">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">ชัดเจน</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>สว่าง
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>มืด
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>คอนทราสต์สูง
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="เลือกภาษา">
+                        <span class="me-1">🇹🇭</span>
+                        <span class="ms-1">TH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"},
+                      "headline": "\u0E2A\u0E16\u0E32\u0E1B\u0E31\u0E15\u0E22\u0E01\u0E23\u0E23\u0E21 \u00AB Plugin \u0E2D\u0E34\u0E2A\u0E23\u0E30 + Root \u0E1D\u0E31\u0E48\u0E07\u0E1C\u0E39\u0E49\u0E1A\u0E23\u0E34\u0E42\u0E20\u0E04 \u00BB : \u0E17\u0E33\u0E44\u0E21 Gradle Builds \u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19\u0E08\u0E36\u0E07\u0E0B\u0E49\u0E33\u0E0B\u0E49\u0E2D\u0E19",
+                      "description": "\u0E1B\u0E25\u0E31\u0E4A\u0E01\u0E2D\u0E34\u0E19 Gradle \u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14\u0E02\u0E2D\u0E07\u0E1C\u0E21\u0E43\u0E19 foundry\/public\/ \u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49\u0E43\u0E0A\u0E49\u0E2A\u0E16\u0E32\u0E1B\u0E31\u0E15\u0E22\u0E01\u0E23\u0E23\u0E21\u0E40\u0E14\u0E35\u0E22\u0E27\u0E01\u0E31\u0E19\u0E41\u0E25\u0E49\u0E27: \u0E1A\u0E34\u0E25\u0E14\u0E4C\u0E41\u0E22\u0E01\u0E2D\u0E34\u0E2A\u0E23\u0E30\u0E43\u0E19 `{name}-plugin\/` \u0E41\u0E25\u0E30\u0E23\u0E39\u0E17\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E41\u0E1A\u0E1A dogfood \u0E17\u0E33\u0E44\u0E21\u0E01\u0E32\u0E23\u0E0B\u0E49\u0E33\u0E0B\u0E49\u0E2D\u0E19\u0E17\u0E35\u0E48\u0E14\u0E39\u0E40\u0E2B\u0E21\u0E37\u0E2D\u0E19\u0E40\u0E01\u0E34\u0E14\u0E02\u0E36\u0E49\u0E19\u0E19\u0E35\u0E49\u0E08\u0E36\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E41\u0E1E\u0E15\u0E40\u0E17\u0E34\u0E23\u0E4C\u0E19\u0E17\u0E35\u0E48\u0E43\u0E2B\u0E49\u0E1C\u0E25\u0E1C\u0E25\u0E34\u0E15\u0E2A\u0E39\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14\u0E40\u0E17\u0E48\u0E32\u0E17\u0E35\u0E48\u0E1C\u0E21\u0E40\u0E04\u0E22\u0E19\u0E33\u0E21\u0E32\u0E43\u0E0A\u0E49\u0E43\u0E19\u0E01\u0E32\u0E23\u0E40\u0E02\u0E35\u0E22\u0E19\u0E1B\u0E25\u0E31\u0E4A\u0E01\u0E2D\u0E34\u0E19 Gradle \u0E40\u0E1B\u0E23\u0E35\u0E22\u0E1A\u0E40\u0E17\u0E35\u0E22\u0E1A\u0E01\u0E31\u0E1A monorepo \u0E41\u0E1A\u0E1A\u0E14\u0E31\u0E49\u0E07\u0E40\u0E14\u0E34\u0E21, composite build \u0E41\u0E25\u0E30\u0E1B\u0E25\u0E31\u0E4A\u0E01\u0E2D\u0E34\u0E19\u0E41\u0E1A\u0E1A\u0E41\u0E22\u0E01\u0E40\u0E14\u0E35\u0E48\u0E22\u0E27",
+                      "datePublished": "2026-05-14",
+                      "dateModified": "2026-05-14",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u0E2A\u0E16\u0E32\u0E1B\u0E31\u0E15\u0E22\u0E01\u0E23\u0E23\u0E21 \u00AB Plugin \u0E2D\u0E34\u0E2A\u0E23\u0E30 + Root \u0E1D\u0E31\u0E48\u0E07\u0E1C\u0E39\u0E49\u0E1A\u0E23\u0E34\u0E42\u0E20\u0E04 \u00BB : \u0E17\u0E33\u0E44\u0E21 Gradle Builds \u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19\u0E08\u0E36\u0E07\u0E0B\u0E49\u0E33\u0E0B\u0E49\u0E2D\u0E19", "item": "https:\/\/cheroliv.com\/blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">สถาปัตยกรรม « Plugin อิสระ + Root ฝั่งผู้บริโภค » : ทำไม Gradle Builds ของฉันจึงซ้ำซ้อน</h1>
+                <p class="lead">
+                    <em>เผยแพร่เมื่อ 14 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">สารบัญ</div>
+<ul class="sectlevel1">
+<li><a href="#_ปัญหา_สถาปัตยกรรมสามแบบที่ทำให้ฉันเสียเวลา">ปัญหา: สถาปัตยกรรมสามแบบที่ทำให้ฉันเสียเวลา</a>
+<ul class="sectlevel2">
+<li><a href="#_ตัวเลือก_1_ปลั๊กอินแบบแยกเดี่ยว_ไม่มีการ_dogfooding">ตัวเลือก 1: ปลั๊กอินแบบแยกเดี่ยว (ไม่มีการ dogfooding)</a></li>
+<li><a href="#_ตัวเลือก_2_โมโนเรโปแบบคลาสสิก_includeplugin">ตัวเลือก 2: โมโนเรโปแบบคลาสสิก (<code>include(":plugin")</code>)</a></li>
+<li><a href="#_ตัวเลือกที่_3_composite_build_includebuild">ตัวเลือกที่ 3 : Composite Build (<code>includeBuild()</code>)</a></li>
+</ul>
+</li>
+<li><a href="#_โซลูชัน_สองบิลด์อิสระ_หนึ่งรากผู้บริโภค">โซลูชัน: สองบิลด์อิสระ หนึ่งรากผู้บริโภค</a>
+<ul class="sectlevel2">
+<li><a href="#_เวิร์กโฟลว์">เวิร์กโฟลว์</a></li>
+<li><a href="#_เวิร์กโฟลว์ที่เป็นรูปธรรม">เวิร์กโฟลว์ที่เป็นรูปธรรม</a></li>
+</ul>
+</li>
+<li><a href="#_ทำไมสถาปัตยกรรมนี้จึงชนะใจฉัน">ทำไมสถาปัตยกรรมนี้จึงชนะใจฉัน</a>
+<ul class="sectlevel2">
+<li><a href="#_1_การใช้ผลิตภัณฑ์ของตนเองแบบเนทีฟ_รับฟีดแบ็กทันที">1. การใช้ผลิตภัณฑ์ของตนเองแบบเนทีฟ รับฟีดแบ็กทันที</a></li>
+<li><a href="#_2_การโคลนแบบไม่ต้องตั้งค่า">2. การโคลนแบบไม่ต้องตั้งค่า</a></li>
+<li><a href="#_3_บิลด์แบบแยกเดี่ยว_ci_อิสระ">3. บิลด์แบบแยกเดี่ยว, CI อิสระ</a></li>
+</ul>
+</li>
+<li><a href="#_โครงสร้างของโฟลเดอร์ย่อย_name_plugin">โครงสร้างของโฟลเดอร์ย่อย `{name}-plugin/</a>
+<ul class="sectlevel2">
+<li><a href="#_แค็ตตาล็อกเวอร์ชัน_ไฟล์ที่แตกต่างกันสองไฟล์">แค็ตตาล็อกเวอร์ชัน: ไฟล์ที่แตกต่างกันสองไฟล์</a></li>
+</ul>
+</li>
+<li><a href="#_สิ่งที่เราไม่ทำ">สิ่งที่เราไม่ทำ</a></li>
+<li><a href="#_การเปรียบเทียบ_สถาปัตยกรรมทั้งสามเมื่อต้องรับมือกับ_dogfooding">การเปรียบเทียบ: สถาปัตยกรรมทั้งสามเมื่อต้องรับมือกับ Dogfooding</a></li>
+<li><a href="#_สัญญา_dag_บิลด์รากจะไม่นำเข้าจากโฟลเดอร์ย่อยเลย">สัญญา DAG: บิลด์รากจะไม่นำเข้าจากโฟลเดอร์ย่อยเลย</a></li>
+<li><a href="#_บทสรุป_การทำซ้ำที่ดูเหมือนจะช่วยประหยัดเวลา">บทสรุป: การทำซ้ำที่ดูเหมือนจะช่วยประหยัดเวลา</a></li>
+<li><a href="#_เอกสารอ้างอิง">เอกสารอ้างอิง</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">เวลาในการอ่าน : 11 minutes</div>
+<p>คุณโคลนรีโพซิทอรีปลั๊กอิน Gradle คุณเปิดเทอร์มินัล คุณพิมพ์อะไร แล้วต่อไปล่ะ ?<code>./gradlew tasks</code>, แน่นอน แต่ในโฟลเดอร์ไหน? โฟลเดอร์ราก? ซับโมดูล? ต้องอ่าน README ก่อนเพื่อรู้วิธี build หรือไม่? หากคุณลังเลแม้เพียง เพียงวินาทีเดียว สถาปัตยกรรมของโปรเจกต์ก็พังทลาย</p>
+</div>
+<div class="paragraph">
+<p>นี่คือวิธีที่ฉันแก้ปัญหานี้ได้อย่างเด็ดขาด — และทำไมสิ่งนี้ pattern คือเอกลักษณ์ของปลั๊กอิน Gradle ทั้งหมดของฉันในปัจจุบันใน`foundry/public/`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ปัญหา_สถาปัตยกรรมสามแบบที่ทำให้ฉันเสียเวลา">ปัญหา: สถาปัตยกรรมสามแบบที่ทำให้ฉันเสียเวลา</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ก่อนที่จะลงตัวกับแพตเทิร์นปัจจุบัน ฉันลองผิดลองถูกระหว่างสามแนวทาง วิธีคลาสสิกในการจัดระเบียบปลั๊กอิน Gradle แต่ละวิธีมีข้อบกพร่องร้ายแรงจนไม่อาจยอมรับได้</p>
+</div>
+<div class="sect2">
+<h3 id="_ตัวเลือก_1_ปลั๊กอินแบบแยกเดี่ยว_ไม่มีการ_dogfooding">ตัวเลือก 1: ปลั๊กอินแบบแยกเดี่ยว (ไม่มีการ dogfooding)</h3>
+<div class="paragraph">
+<p>โปรเจกต์มีเพียงปลั๊กอินเท่านั้น ไม่มีตัวอย่างการใช้งาน ไม่มี โปรเจกต์ที่ใช้งานมัน เพื่อทดสอบมัน จำเป็นต้องสร้างโปรเจกต์ภายนอก ไปที่ อ้างอิงปลั๊กอินผ่าน`mavenLocal`หรือบิลด์แบบคอมโพสิต และเพียงเท่านั้น ตรงนั้นตรวจสอบว่ามันทำงานได้</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">$ git clone mon-plugin
+$ cd mon-plugin
+$ ./gradlew build          # le plugin compile
+$ # ... et maintenant ? comment je l'essaie ?</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="⚠️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>ปลั๊กอิน Gradle ที่ไม่มีตัวอย่างการใช้งาน มันคือไลบรารีที่ไม่มี การทดสอบการรวมระบบ คุณไม่มีทางรู้เลยว่าการแก้ไขล่าสุดได้ ทำให้ประสบการณ์ผู้ใช้เสียหาย</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ตัวเลือก_2_โมโนเรโปแบบคลาสสิก_includeplugin">ตัวเลือก 2: โมโนเรโปแบบคลาสสิก (<code>include(":plugin")</code>)</h3>
+<div class="paragraph">
+<p>Gradle`init`สร้าง`settings.gradle.kts`กับ`include("plugin")`. root และโมดูลย่อยใช้ daemon เดียวกันและการกำหนดค่าเดียวกัน, แค็ตตาล็อกเดียวกัน สะดวก แต่ผูกติดกัน</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">.
+├── settings.gradle.kts   → include("plugin")
+├── build.gradle.kts      → plugins { id("mon-plugin") }
+├── plugin/
+│   └── build.gradle.kts  → java-gradle-plugin
+└── gradle/
+    └── libs.versions.toml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>สิ่งที่ติดขัด:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>รูท<strong>ต้อง</strong>มีเวอร์ชัน Gradle เดียวกับซับโมดูล</p>
+</li>
+<li>
+<p>`libs.versions.toml`ใช้ร่วมกัน — แค็ตตาล็อกเวอร์ชันร่วม, การพึ่งพา</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>ที่รั่วไหลจากโมดูลหนึ่งไปยังอีกโมดูลหนึ่ง</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ไม่สามารถบิลด์ปลั๊กอินแยกจาก root ได้</p>
+</li>
+<li>
+<p>CI ต้อง build ทั้งสองโมดูล แม้ว่าจะมีเพียงปลั๊กอินเท่านั้นที่เปลี่ยนแปลง</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ตัวเลือกที่_3_composite_build_includebuild">ตัวเลือกที่ 3 : Composite Build (<code>includeBuild()</code>)</h3>
+<div class="paragraph">
+<p>เราแยกทั้งสองออกเป็นบิลด์ Gradle ที่แยกจากกัน แล้วเชื่อมโยงกันผ่าน <code>includeBuild("mon-plugin")`ใน`settings.gradle.kts</code>.</p>
+</div>
+<div class="paragraph">
+<p>ดีขึ้นแล้ว การบิลด์ของปลั๊กอินถูกแยกออกมาแล้ว แต่ผู้บริโภค ต้องอ้างอิงบิลด์ภายนอกอย่างชัดเจน — และเอาต์พุตของ `./gradlew tasks`ที่รากขึ้นอยู่กับการกำหนดค่าที่ถูกต้องของ คอมโพสิต การโคลนไม่ใช่ zero-config: ต้องรู้ว่า&#8230;&#8203; ปลั๊กอินอยู่ในโฟลเดอร์แยกต่างหาก ซึ่ง root อ้างอิงถึงมัน ฯลฯ</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">.
+├── settings.gradle.kts   → includeBuild("plugin-build/")
+├── build.gradle.kts      → plugins { id("mon-plugin") }
+└── plugin-build/
+    ├── settings.gradle.kts
+    └── build.gradle.kts</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ฉันกำลังมองหาสิ่งที่ดีกว่า ดีกว่ามาก</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_โซลูชัน_สองบิลด์อิสระ_หนึ่งรากผู้บริโภค">โซลูชัน: สองบิลด์อิสระ หนึ่งรากผู้บริโภค</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>นี่คือแพตเทิร์นที่ฉันลงเอยด้วยการนำมาใช้:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">.
+├── settings.gradle.kts          ← racine consommateur
+├── build.gradle.kts              ← 3 lignes : apply plugin + dogfood
+├── gradle/
+│   └── libs.versions.toml        ← catalogue du consommateur
+├── {name}-plugin/                ← BUILD INDÉPENDANT
+│   ├── gradlew                    ← son propre wrapper
+│   ├── settings.gradle.kts        ← rootProject.name = "{name}-plugin"
+│   ├── build.gradle.kts           ← java-gradle-plugin, signing, publish
+│   ├── gradle/
+│   │   ├── libs.versions.toml     ← catalogue du plugin
+│   │   └── wrapper/
+│   ├── src/                       ← sources du plugin
+│   ├── .agents/                   ← gouvernance agent
+│   └── *.adoc                     ← AGENT, PROMPT_REPRISE, snapshot, etc.
+└── site.yml / slides-context.yml / ...   ← configs dogfood</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>กุญแจ :`{name}-plugin/`เป็นโปรเจกต์ Gradle ที่ <strong>สมบูรณ์และพึ่งพาตนเองได้</strong> มันมี wrapper ของตัวเอง มีการตั้งค่าของตัวเอง มีแคตตาล็อกของตัวเองของ เวอร์ชัน มันโคลนตัวเอง บิลด์ตัวเอง ทดสอบตัวเอง และเผยแพร่ตัวเองโดยที่ root รับรู้ถึงการมีอยู่ของเขา</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>ส่วน root นั้นทำเพียง*สิ่งเดียว*เท่านั้น: ใช้ปลั๊กอิน</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">plugins {
+    alias(libs.plugins.bakery)
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+bakery { configPath = file("site.yml").absolutePath }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>สามบรรทัดในกรณีของ`bakery-gradle`. ไม่มีอะไรเพิ่มเติม ศูนย์`include()<code>, ศูนย์`includeBuild()</code>, ไม่มีโครงการย่อย บิลด์ Gradle แบบคลาสสิกที่ใช้ปลั๊กอินเหมือนกับ&#8230;&#8203; ผู้บริโภคคนไหนจะทำเช่นนั้น</p>
+</div>
+<div class="sect2">
+<h3 id="_เวิร์กโฟลว์">เวิร์กโฟลว์</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/architecture-deux-builds.svg" alt="architecture deux builds" width="1270" height="151">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_เวิร์กโฟลว์ที่เป็นรูปธรรม">เวิร์กโฟลว์ที่เป็นรูปธรรม</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># 1. Builder le plugin
+$ cd codebase-plugin
+$ ./gradlew publishToMavenLocal
+
+# 2. L'exercer depuis la racine
+$ cd ..
+$ ./gradlew indexCodebase queryCodebase snapshot
+
+# La boucle est fermée. Le plugin est testé dans des conditions
+# réelles de consommation, par le projet même qui l'héberge.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ทำไมสถาปัตยกรรมนี้จึงชนะใจฉัน">ทำไมสถาปัตยกรรมนี้จึงชนะใจฉัน</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>สามประโยชน์ซึ่งเมื่อรวมกันแล้วคุ้มค่ากับต้นทุนของ “การทำซ้ำ”:</p>
+</div>
+<div class="sect2">
+<h3 id="_1_การใช้ผลิตภัณฑ์ของตนเองแบบเนทีฟ_รับฟีดแบ็กทันที">1. การใช้ผลิตภัณฑ์ของตนเองแบบเนทีฟ รับฟีดแบ็กทันที</h3>
+<div class="paragraph">
+<p>การทดสอบปลั๊กอิน Gradle ที่ดีที่สุดคือการนำมันไปใช้ ไม่ใช่การทดสอบหน่วยที่ถูกม็อก ไม่ใช่`GradleRunner`ด้วยโครงการ ของการทดสอบ. บิลด์ <strong>จริง</strong> ที่ใช้ปลั๊กอินกับไฟล์จริง</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">$ git clone bakery-gradle
+$ cd bakery-gradle
+$ ./gradlew bake    # ← le plugin est exercé immédiatement</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ถ้าปลั๊กอินเสีย บิลด์รากจะบอกไว้ ไม่จำเป็นต้องไป ค้นหาโครงการทดสอบจากภายนอก การทำ dogfooding คือ*สิ่งแรก* งานที่ผู้มีส่วนร่วมคนใหม่เริ่มต้นขึ้น นี่คือ smoke test ขั้นสุดท้าย</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="💡"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>กฎนั้นง่าย: ถ้ารากคอมไพล์และว่า`./gradlew tasks` แสดงงานของปลั๊กอินของคุณ, ปลั๊กอินทำงานได้. ไม่มีเรื่องเซอร์ไพรส์ ในการผลิต</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_การโคลนแบบไม่ต้องตั้งค่า">2. การโคลนแบบไม่ต้องตั้งค่า</h3>
+<div class="paragraph">
+<p>Un `git clone &amp;&amp; ./gradlew tasks`และผู้มาใหม่เห็นทุกสิ่ง ทำงานได้โดยไม่ต้องกำหนดค่าใดๆ เลอ`build.gradle.kts`รากคือ เอกสารการใช้งานปลั๊กอินแบบมีชีวิต Le`site.yml`ข้างๆ แสดงการกำหนดค่าที่คาดไว้</p>
+</div>
+<div class="paragraph">
+<p>เปรียบเทียบกับทางเลือกอื่น: README สามย่อหน้าที่ อธิบายวิธี build ปลั๊กอิน และวิธี build โปรเจกต์ ของการทดสอบ ผู้มีส่วนร่วมใหม่อ่าน README ผ่านๆ, เข้าใจผิด ให้เปิด issue — ในขณะที่ข้อมูลอาจ เป็น <strong>สิ่งที่สามารถรันได้</strong>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="❗"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>เอกสารประกอบที่แข็งแกร่งที่สุดไม่ใช่เอกสารที่เราอ่าน นั่นคือคนที่เรา<strong>ดำเนินการ</strong>. บิลด์ระดับรากคือเอกสารประกอบ ไฟล์ปฏิบัติการของปลั๊กอิน</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_บิลด์แบบแยกเดี่ยว_ci_อิสระ">3. บิลด์แบบแยกเดี่ยว, CI อิสระ</h3>
+<div class="paragraph">
+<p>ปลั๊กอินมี Gradle wrapper ของตัวเอง มีวงจรชีวิตของตัวเอง การทดสอบของตนเอง คุณสามารถ:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>อัปเกรด Gradle ในปลั๊กอินโดยไม่แตะต้อง root</p>
+</li>
+<li>
+<p>เพิ่ม dependency ใน plugin โดยไม่ให้รั่วไหลไปยัง root</p>
+</li>
+<li>
+<p>ทำให้ปลั๊กอินพังโดยไม่กระทบต่อบิลด์ราก (ตราบใดที่คุณไม่</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>อย่าเผยแพร่เวอร์ชันที่เสีย)</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>มี CI ที่ build/test ปลั๊กอิน และอีกอันหนึ่งที่ทดลองใช้งานมัน</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>รูท — อย่างเป็นอิสระ</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">.github/workflows/
+├── test-plugin.yml      → codebase-plugin/.gradlew build
+├── test-root.yml        → .gradlew tasks (vérifie que le plugin est consommable)
+└── publish.yml          → codebase-plugin/.gradlew publish</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_โครงสร้างของโฟลเดอร์ย่อย_name_plugin">โครงสร้างของโฟลเดอร์ย่อย `{name}-plugin/</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ลองมาดูให้ละเอียดขึ้นว่ามีอะไรอยู่ในโฟลเดอร์ของปลั๊กอิน:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">codebase-plugin/
+├── gradlew                           ← wrapper indépendant
+├── settings.gradle.kts               ← @Suppress("UnstableApiUsage")
+│                                       + foobar-resolver-convention
+├── build.gradle.kts                  ← java-gradle-plugin + signing + publish
+├── gradle/
+│   ├── libs.versions.toml            ← catalogue complet (langchain4j, pgvector...)
+│   └── wrapper/
+├── buildSrc/                         ← classes utilitaires buildSrc
+│   ├── build.gradle.kts
+│   └── src/main/kotlin/
+│       ├── codebase/                 ← CodebaseYmlAnonymizer, CodebaseConfiguration
+│       ├── benchmark/                ← BenchmarkConfig, BenchmarkProtocol
+│       ├── readme/                   ← ReadmeYmlAnonymizer
+│       ├── site/                     ← SiteYmlAnonymizer
+│       ├── slider/                   ← SliderYmlAnonymizer
+│       └── snapshot/                 ← SnapshotManager
+├── src/
+│   ├── main/kotlin/codebase/
+│   │   ├── CodebasePlugin.kt         ← class Plugin&lt;Project&gt;
+│   │   ├── rag/                      ← pgvector, embedding, anonymization...
+│   │   ├── benchmark/                ← BenchmarkRunner, export, comparison...
+│   │   └── walker/                   ← WorkspaceWalker
+│   └── test/
+│       ├── kotlin/codebase/scenarios/ ← steps Cucumber
+│       ├── features/                  ← .feature files
+│       └── resources/datasets/        ← fixtures .adoc, .yml, .json
+├── .agents/                          ← gouvernance agent (INDEX, SESSIONS, etc.)
+├── AGENT.adoc                        ← règles agent
+├── PROMPT_REPRISE.adoc              ← mission session
+├── BACKLOG.adoc                      ← backlog produit
+├── snapshot.adoc                     ← snapshot auto-généré du projet
+└── embeds.yml                        ← config RAG embeds</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ทุกอย่างอยู่ที่นั่นแล้ว ไม่มีการกระจายระหว่างรากและโฟลเดอร์ย่อย นักพัฒนาที่ทำงานบนปลั๊กอินไม่จำเป็นต้อง ออกจาก`codebase-plugin/`. นักพัฒนาที่ใช้ปลั๊กอิน มองเพียงรากเท่านั้น — และ`build.gradle.kts`3 บรรทัด บอกเขาทุกสิ่งที่เขาจำเป็นต้องรู้</p>
+</div>
+<div class="sect2">
+<h3 id="_แค็ตตาล็อกเวอร์ชัน_ไฟล์ที่แตกต่างกันสองไฟล์">แค็ตตาล็อกเวอร์ชัน: ไฟล์ที่แตกต่างกันสองไฟล์</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradle/libs.versions.toml</code>(ราก)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{name}-plugin/gradle/libs.versions.toml</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">จำนวนการพึ่งพา</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2-3 (plugin + readme หากมี)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30+ (langchain4j, pgvector, cucumber&#8230;&#8203;)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">บทบาท</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ใช้ปลั๊กอิน</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สร้างปลั๊กอิน</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ใครอ่านมัน</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ผู้ใช้ของปลั๊กอิน</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ผู้พัฒนา plugin</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>root มีแค็ตตาล็อกที่จงใจให้มีน้อยที่สุด ปลั๊กอินมีแค็ตตาล็อก สมบูรณ์ ความสับสนเป็นไปไม่ได้: แต่ละ build มี scope ของตัวเอง ของ dependencies</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ℹ️"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>หากคุณเคยใช้เวลาหนึ่งชั่วโมงไปกับการดีบักความขัดแย้งของ dependency ระหว่างปลั๊กอินของคุณกับโปรเจกต์ทดสอบของคุณ คุณเข้าใจคุณค่าของ การแยกนี้ แคตตาล็อกอิสระขจัดปัญหานี้ โดยการสร้าง</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_สิ่งที่เราไม่ทำ">สิ่งที่เราไม่ทำ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>แพตเทิร์นนี้ไม่ใช่เวทมนตร์ มันกำหนดข้อจำกัดที่ฉัน ที่ฉันยินดีก่อให้ตัวเอง:</p>
+</div>
+<div class="paragraph">
+<p><strong>รูทไม่บิลด์ปลั๊กอิน</strong> คุณต้อง`publishToMavenLocal` ou ดีพลอยไปยัง repository ก่อนที่ root จะสามารถนำไปใช้งานได้</p>
+</div>
+<div class="paragraph">
+<p>มันเป็นค่าใช้จ่ายเพียงเล็กน้อย และเป็นข้อจำกัดที่ <strong>ถูกต้อง</strong> รูท ใช้ปลั๊กอินเป็นไคลเอนต์ภายนอก — ผ่าน Maven อย่างแน่นอน เช่นเดียวกับที่โปรเจกต์ของบุคคลที่สามจะทำ หากปลั๊กอินไม่สามารถเผยแพร่ได้ รูทบอกคุณทันที</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># La seule "friction" du pattern
+$ cd codebase-plugin &amp;&amp; ./gradlew publishToMavenLocal &amp;&amp; cd ..
+$ ./gradlew tasks --group=codebase</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_การเปรียบเทียบ_สถาปัตยกรรมทั้งสามเมื่อต้องรับมือกับ_dogfooding">การเปรียบเทียบ: สถาปัตยกรรมทั้งสามเมื่อต้องรับมือกับ Dogfooding</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ปลั๊กอินแบบแยกเดี่ยว</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">โมโนเรโป`include()`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">คอมโพสิต`includeBuild()`</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>รูท + ปลั๊กอินอิสระ</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`git clone &amp;&amp; gradlew tasks`ให้งานของปลั๊กอิน</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(No source text provided to translate.)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กรุณาระบุข้อความภาษาฝรั่งเศสที่ต้องการแปล</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate into Thai.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สร้างปลั๊กอินที่เป็นอิสระจาก root</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you want translated — no source text was included in your message.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate into Thai.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">แคตตาล็อกเวอร์ชันแยกต่างหาก</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate into Thai.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate into Thai.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No French text was provided to translate. Please send the source text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่มี`include()` ni <code>includeBuild()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(No text provided to translate — please send the French source text.)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ด็อกฟู้ดเนทีฟโดยไม่ต้องตั้งค่า</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️ (หมายเหตุ: ไม่พบข้อความภาษาฝรั่งเศสที่จะแปลในข้อความที่ให้มา — กรุณาส่งข้อความต้นฉบับ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ปลั๊กอิน CI แบบอิสระ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No source text was provided to translate. Please send the French text you&#8217;d like translated into Thai.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">root เป็นตัวอย่างของการบริโภคจริง</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">❌</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">⚠️</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Please provide the French text you&#8217;d like me to translate into Thai.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>คอลัมน์ด้านขวาติ๊กครบทุกช่อง นั่นคือเหตุผลที่ฉันไม่ จะไม่ย้อนกลับไปอีก</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_สัญญา_dag_บิลด์รากจะไม่นำเข้าจากโฟลเดอร์ย่อยเลย">สัญญา DAG: บิลด์รากจะไม่นำเข้าจากโฟลเดอร์ย่อยเลย</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>สถาปัตยกรรมนี้ผสานเข้ากับ DAG N0→N3 ได้อย่างเป็นธรรมชาติ จากเวิร์กสเปซของฉัน รูปแบบคือ: <strong>ปลั๊กอิน N2 คือฮับ ของการพึ่งพาของตัวเอง, ราก N3 เป็นเทอร์มินัล ซึ่งใช้ฮับ</strong></p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/contrat-dag-architecture.svg" alt="contrat dag architecture" width="742" height="428">
+</div>
+</div>
+<div class="paragraph">
+<p>Le <code>codebase-gradle/build.gradle.kts`ทำ 6 บรรทัด ไม่มี`src/</code>, ไม่มี`buildSrc/<code>, ไม่มี`gradle/rag-bench.gradle.kts</code>. ยุติธรรม <code>plugins { alias(libs.plugins.codebase) }`และรีโพซิทอรี ความซับซ้อนทั้งหมดดำรงอยู่ใน`codebase-plugin/</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_บทสรุป_การทำซ้ำที่ดูเหมือนจะช่วยประหยัดเวลา">บทสรุป: การทำซ้ำที่ดูเหมือนจะช่วยประหยัดเวลา</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>เมื่อฉันแสดงโครงสร้างนี้ให้ใครบางคนดู ปฏิกิริยาแรก มักจะเป็น: « แต่คุณมีสอง`gradlew`, สอง`settings.gradle.kts`, สอง`libs.versions.toml`— นี่คือการทำซ้ำ!</p>
+</div>
+<div class="paragraph">
+<p>ใช่. และไม่ใช่.</p>
+</div>
+<div class="paragraph">
+<p>“การทำซ้ำ” คือการผลิตข้อมูลเดียวกันขึ้นมาในสองตำแหน่ง ในที่นี้ เป็นไฟล์ <strong>ที่แตกต่างกัน</strong> สองไฟล์ซึ่งรองรับการใช้งาน <strong>ที่แตกต่างกัน</strong> สองแบบ : แค็ตตาล็อกของปลั๊กอิน ( dependencies 30+ รายการสำหรับการบิลด์) และแค็ตตาล็อก จากราก (ดีเพนเดนซี 2-3 รายการสำหรับการใช้งาน) wrapper ของปลั๊กอิน (เวอร์ชันที่ล็อกไว้สำหรับการพัฒนา) และตัวห่อของรูท (เวอร์ชันที่อาจแตกต่างกัน สำหรับการฝึกใช้งานปลั๊กอิน)</p>
+</div>
+<div class="paragraph">
+<p>นี่ไม่ใช่การทำซ้ำ นี่คือ<strong>การแยกของ ความรับผิดชอบ</strong> ที่นำไปใช้กับระบบบิลด์ แต่ละบิลด์ ทำสิ่งเดียว และเพียงสิ่งเดียว รูทบริโภค ปลั๊กอินถูกบิลด์</p>
+</div>
+<div class="paragraph">
+<p>ค่าใช้จ่าย? คำสั่งซื้อ`publishToMavenLocal`ระหว่างการบิลด์ของปลั๊กอิน และการ build ของรูท ประโยชน์ที่ได้? ความชัดเจนเชิงสถาปัตยกรรมที่ ขจัดเวลาหลายชั่วโมงในการดีบักปลายน้ำ</p>
+</div>
+<div class="paragraph">
+<p>ตั้งแต่ที่ฉันได้นำแพตเทิร์นนี้ไปใช้บน`bakery-gradle`, <code>plantuml-gradle</code>, <code>codebase-gradle</code>, และปลั๊กอินอื่น ๆ ของ`foundry/public/<code>, ฉันไม่มี ไม่ลังเลอีกเลยเมื่อเปิดเทอร์มินัลในหนึ่งในรีโพซิทอรีของฉัน Le ปฏิกิริยาแรก —</code>./gradlew tasks`— จงเดินอยู่เสมอ จงให้อยู่เสมอ งานที่ถูกต้อง และบอกฉันทันทีว่าทุกอย่างอยู่ในสภาพดีหรือไม่</p>
+</div>
+<div class="paragraph">
+<p>นั่นแหละคือสถาปัตยกรรมที่ถูกต้อง มันไม่ได้อ่านได้จาก README สามารถทดลองใช้งานได้ในเทอร์มินัลภายในเวลาไม่ถึงสิบวินาที</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_เอกสารอ้างอิง">เอกสารอ้างอิง</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="0105_integrer_graphify_workflow_gradle_post.html">บทความ 0105 — การผสาน Graphify เข้ากับเวิร์กโฟลว์ Gradle</a></p>
+</li>
+<li>
+<p><a href="0117_granularisation_oss_css_repositorie_workspace_post.html">บทความ 0117 — การแบ่งส่วนย่อย OSS/CSS</a></p>
+</li>
+<li>
+<p><a href="0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html">บทความ 0123 — Knowledge Graph ในฐานะระบบแนะนำ</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">บทความที่เกี่ยวข้อง</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : แปลง AsciiDoc เป็นวิดีโอ MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">การตรวจสอบการใช้งาน LLM ของฉัน: SQLite, OpenCode, Ollama Cloud และทำไมการสมัครสมาชิกแบบ Pro ของฉันถึงเขย่าตลาดโลก</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Knowledge Graph ในฐานะเครื่องยนต์แนะนำ: ฉันกำจัด «บทความที่เกี่ยวข้อง» แบบเรียงตามลำดับเวลาได้อย่างไร</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    กรุณาเปิดใช้งาน JavaScript เพื่อดู
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">ความคิดเห็นโดย Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        นักพัฒนาและวิทยากรผู้เชี่ยวชาญด้านวิศวกรรมการเรียนการสอน
+การออกแบบโซลูชัน e-learning นวัตกรรมใหม่เพื่อพลิกโฉมการเรียนรู้
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="ติดต่อ">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">การนำทาง</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>หน้าแรก</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>บล็อก</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">ทรัพยากร</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>คลังข้อมูล</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> สไลด์</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> ฝึกอบรม</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> ไดรฟ์ USB ที่บูตได้</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">การแปลเป็นท้องถิ่น</h6>
+                    <p class="mb-3">ตั้งอยู่ในเขตปารีส สามารถปฏิบัติงานได้ทั่วประเทศฝรั่งเศสและทางไกล</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>อีล-เดอ-ฟร็องส์, ฝรั่งเศส</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>สามารถทำงานจากที่บ้านได้</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>การเดินทางในฝรั่งเศส</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. สงวนลิขสิทธิ์ทุกประการ</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,941 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nhân viên Đầu tiên của Chúng tôi: Bộ Ẩn danh Tập dữ liệu — MVP0 trong Giai đoạn Thử nghiệm — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/vi/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Nhân viên Đầu tiên của Chúng tôi: Bộ Ẩn danh Tập dữ liệu — MVP0 trong Giai đoạn Thử nghiệm — Cheroliv"/>
+        <meta property="og:description" content="Trước khi thực hiện RAG, fine-tuning hay SaaS, bạn cần có dữ liệu sạch. Nhân viên đầu tiên của chúng tôi trong thời gian thử việc — Anonymiseur — phát hiện và làm sạch PII trong các nguồn đa công nghệ (`SQL`, `pgvector`, `ONNX`, `Graphify`, `JSON`, `YAML`, `AsciiDoc`). Đây chính là MVP0. Không có nó, mọi thứ còn lại hoặc là bất hợp pháp, hoặc bị suy giảm về mặt kỹ thuật. Dưới đây là cách thành phần này biến một vấn đề phổ biến thành một sản phẩm có khả năng tiếp thị."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/vi/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"/>
+        <meta property="og:locale" content="vi_VN"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Nhân viên Đầu tiên của Chúng tôi: Bộ Ẩn danh Tập dữ liệu — MVP0 trong Giai đoạn Thử nghiệm — Cheroliv"/>
+        <meta name="twitter:description" content="Trước khi thực hiện RAG, fine-tuning hay SaaS, bạn cần có dữ liệu sạch. Nhân viên đầu tiên của chúng tôi trong thời gian thử việc — Anonymiseur — phát hiện và làm sạch PII trong các nguồn đa công nghệ (`SQL`, `pgvector`, `ONNX`, `Graphify`, `JSON`, `YAML`, `AsciiDoc`). Đây chính là MVP0. Không có nó, mọi thứ còn lại hoặc là bất hợp pháp, hoặc bị suy giảm về mặt kỹ thuật. Dưới đây là cách thành phần này biến một vấn đề phổ biến thành một sản phẩm có khả năng tiếp thị."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.png"/>
+        <meta name="description" content="Trước khi thực hiện RAG, fine-tuning hay SaaS, bạn cần có dữ liệu sạch. Nhân viên đầu tiên của chúng tôi trong thời gian thử việc — Anonymiseur — phát hiện và làm sạch PII trong các nguồn đa công nghệ (`SQL`, `pgvector`, `ONNX`, `Graphify`, `JSON`, `YAML`, `AsciiDoc`). Đây chính là MVP0. Không có nó, mọi thứ còn lại hoặc là bất hợp pháp, hoặc bị suy giảm về mặt kỹ thuật. Dưới đây là cách thành phần này biến một vấn đề phổ biến thành một sản phẩm có khả năng tiếp thị."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    <meta name="robots" content="noindex, follow"/>
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Bật/tắt điều hướng">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Trang chủ</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Chuyên môn</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Liên hệ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Chọn giao diện chủ đề">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Rõ ràng</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Sáng
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Tối
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Độ tương phản cao
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Chọn ngôn ngữ">
+                        <span class="me-1">🇻🇳</span>
+                        <span class="ms-1">VI</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/pilot-batch/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"},
+                      "headline": "Nh\u00E2n vi\u00EAn \u0110\u1EA7u ti\u00EAn c\u1EE7a Ch\u00FAng t\u00F4i: B\u1ED9 \u1EA8n danh T\u1EADp d\u1EEF li\u1EC7u \u2014 MVP0 trong Giai \u0111o\u1EA1n Th\u1EED nghi\u1EC7m",
+                      "description": "Nh\u00E2n vi\u00EAn \u0111\u1EA7u ti\u00EAn trong h\u1EC7 sinh th\u00E1i agent c\u1EE7a t\u00F4i kh\u00F4ng ph\u1EA3i l\u00E0 m\u1ED9t LLM \u2014 \u0111\u00F3 l\u00E0 m\u1ED9t chuy\u00EAn gia \u1EA9n danh h\u00F3a c\u00E1c t\u1EADp d\u1EEF li\u1EC7u \u0111a ngu\u1ED3n. Tr\u01B0\u1EDBc m\u1ECDi RAG, tr\u01B0\u1EDBc m\u1ECDi fine-tuning, tr\u01B0\u1EDBc m\u1ECDi SaaS, nh\u00E2n vi\u00EAn n\u00E0y s\u1EBD l\u00E0m s\u1EA1ch d\u1EEF li\u1EC7u. \u0110\u00E2y l\u00E0 l\u00FD do t\u1EA1i sao \u0111\u00E2y l\u00E0 MVP0, ch\u00EDnh x\u00E1c nh\u1EEFng g\u00EC nh\u00E2n vi\u00EAn n\u00E0y l\u00E0m, v\u00E0 c\u00E1ch n\u00F3 m\u1EDF ra c\u00E1nh c\u1EEDa cho th\u1EF1c t\u1EBF t\u0103ng c\u01B0\u1EDDng trong prompt.",
+                      "datePublished": "2026-05-01",
+                      "dateModified": "2026-05-01",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Nh\u00E2n vi\u00EAn \u0110\u1EA7u ti\u00EAn c\u1EE7a Ch\u00FAng t\u00F4i: B\u1ED9 \u1EA8n danh T\u1EADp d\u1EEF li\u1EC7u \u2014 MVP0 trong Giai \u0111o\u1EA1n Th\u1EED nghi\u1EC7m", "item": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Nhân viên Đầu tiên của Chúng tôi: Bộ Ẩn danh Tập dữ liệu — MVP0 trong Giai đoạn Thử nghiệm</h1>
+                <p class="lead">
+                    <em>Đăng ngày 01 May 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Mục lục</div>
+<ul class="sectlevel1">
+<li><a href="#_vấn_đề_khiến_mọi_người_đều_né_tránh">Vấn đề khiến mọi người đều né tránh</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">thời gian đọc: 12 minutes</div>
+<p>Tôi không thuê một LLM. Tôi thuê một công cụ ẩn danh hóa. Trước khi thực hiện RAG pgvector, trước khi fine-tune các chuyên gia CDA/FPA, trước khi cấp phát các workspace cho khách hàng — ai đó phải dọn dẹp "nhà vệ sinh" của dữ liệu. Nhân viên đó chính là chuyên gia ẩn danh hóa (<code>MVP0</code>, <code>EPIC 2</code> của <code>codebase-gradle</code>). Và chính người này là người khiến sản phẩm có thể tiếp thị được.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">mục lục</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+<!-- toc disabled -->
+</div>
+</div>
+<div class="sect1">
+<h2 id="_vấn_đề_khiến_mọi_người_đều_né_tránh">Vấn đề khiến mọi người đều né tránh</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Bất kỳ startup AI nào xử lý dữ liệu huấn luyện đều vấp phải cùng một rào cản:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">----
+Données brutes client (SPG, cours, évaluations)
+  ├→ Noms de stagiaires en clair dans les PDF
+  ├→ Emails dans les métadonnées JSON
+  ├→ IP de connexion dans les logs pgvector
+  ├→ Identifiants dans les nœuds Graphify
+  └→ Références OF pilote dans les schémas SQL
+----
+
+Kết quả là: hoặc bạn thực hiện RAG trên dữ liệu bẩn (ảo giác về PII, không tuân thủ GDPR, rủi ro pháp lý), hoặc bạn không làm gì cả (không có sản phẩm). Con đường thứ ba — làm sạch thủ công — không có khả năng mở rộng.
+
+Câu trả lời của tôi: không né tránh vấn đề. L'**tự động hóa**Vui lòng cung cấp văn bản cần dịch.
+
+== MVP0: Bộ Ẩn danh, Nhân viên đầu tiên trong thời gian thử việc
+
+MVP0 không phải là một tính năng. Đó là một**chuyên gia về hàng hóa**— một nhân viên chuyên làm những công việc nhơ nhuốc một cách máy móc và tàn nhẫn, người mà không ai muốn nhắc đến trong các pitch deck.
+
+Điều nó làm:
+
+[source]
+----
+ENTRÉE : Données brutes multi-sources
+  ├→ AsciiDoc (SPG_A2SP.adoc) → noms, dates, OF pilote
+  ├→ JSON (catalogue formations) → emails, téléphones
+  ├→ YAML (config workspace) → tokens OAuth2
+  ├→ SQL (schémas DDL) → IP, adresses
+  ├→ pgvector (métadonnées embeddings) → identifiants
+  ├→ ONNX (outputs classification) → noms propres
+  └→ Graphify (graph.json) → nœuds avec PII
+
+SORTIE : Datasets propres, format standardisé
+  ├→ [ANONYMIZED] remplace les PII détectées
+  ├→ Classification RGPD (niveau 0→4)
+  ├→ Rapport d'audit (quoi a été nettoyé)
+  └→ Dataset prêt pour RAG ET fine-tuning
+----
+
+Nó phát hiện các mẫu rõ ràng nhất trước tiên (emails`.*@.*`, tokens`sk-*`, `ghp_*`, IP), sau đó nó sẽ học. Giai đoạn thử nghiệm là như vậy: chúng ta xác nhận rằng nó không bỏ sót các trường hợp âm tính giả trước khi chính thức đưa vào vận hành.
+
+== Những gì MVP này mở khóa (và không chỉ đơn thuần là sự Tuân thủ)
+
+Việc ẩn danh hóa như một MVP0 không phải là trạm thu phí GDPR trước khi vào đường cao tốc. Nó chính là con đường cao tốc. Dưới đây là những gì nó mở ra:
+
+=== Hiện tại: Thực tế tăng cường trong Prompt
+
+[source]
+----
+DONNÉES BRUTES CLIENT
+    ↓
+Anonymiseur MVP0 → datasets propres
+    ↓
+RAG pgvector (MVP1) → top-K documents similaires (filtrés, anonymisés)
+    ↓
+LLM (deepseek-v4-pro) → réponse augmentée, zéro PII
+----
+
+RAG không tìm kiếm trong dữ liệu nhiễu — nó tìm kiếm trong một không gian**sạch theo thiết kế**Điều này thay đổi hoàn toàn chất lượng của các câu trả lời: LLM không còn mất thời gian để né tránh các PII mà nó nhận diện được nhưng không được phép đề cập đến.
+
+=== Tương lai: Fine-Tuning trên Dữ liệu Sạch
+
+[source]
+----
+MVP0 → datasets propres accumulés (session après session)
+    ↓
+Fine-tuning expert métier (CDA, FPA) sur données zéro PII
+    ↓
+Modèle fine-tuné exposé via Ollama (sans fuite de données)
+----
+
+Việc fine-tuning trên dữ liệu thô là một thảm họa pháp lý tiềm tàng. Trên dữ liệu sạch, đó là một**phương pháp có thể tái lập**. Mỗi khách hàng tích lũy các dataset đã được làm sạch của mình, mỗi khách hàng có thể fine-tune các chuyên gia nghiệp vụ trên dữ liệu của họ — mà không bao giờ làm lộ dữ liệu cá nhân.
+
+== Tại sao nó có khả năng tiếp thị
+
+Đây không phải là "một công cụ tuân thủ GDPR". Đó là một**phương pháp có thể tái lập giúp chuyển đổi một vấn đề phổ biến thành tài sản**Vui lòng cung cấp văn bản cần dịch.
+
+1. *Bất kỳ doanh nghiệp đào tạo nào cũng có dữ liệu bẩn* — đó chính là vấn đề
+2. *Không có đơn vị nào có pipeline tự động làm sạch đa nguồn* — đó chính là thị trường
+3. *Vòng lặp: anonymisation → RAG → fine-tuning là độc quyền* — đó chính là rào cản
+
+SaaS Edster (MVP3) sẽ không bán "một workspace Gradle". Nó sẽ bán vòng lặp khép kín này. Và MVP0 chính là cánh cửa dẫn vào.
+
+== Định dạng SQL như một Phương thức Ngữ cảnh Thứ ba
+
+Việc nhập dữ liệu cấu trúc không chỉ đơn thuần là một định dạng trao đổi. Sơ đồ SQL (DDL) mang theo**mô hình thực thể-quan hệ của miền**Vui lòng cung cấp văn bản cần dịch.
+
+[source]
+----
+CREATE TABLE formation (
+  id UUID PRIMARY KEY,
+  titre VARCHAR NOT NULL,
+  referentiel RNCP REFERENCES rncp(id),
+  organisme OF REFERENCES of_pilote(id)  -- ← va être anonymisé
+);
+----
+
+DDL này, sau khi được ẩn danh (dòng 4), sẽ trở thành một nguồn ngữ cảnh cho LLM. Không phải là văn bản — mà là**mô hình kinh doanh**. RAG cung cấp nội dung (độ tương đồng vector), Graphify cung cấp các mối quan hệ (cấu trúc chính xác), và sơ đồ SQL cung cấp**Thiết kế hướng miền (Domain-Driven Design) ngầm định**: bounded contexts, agrégats, value objects. LLM hiểu nghiệp vụ vì nó đọc lược đồ của nghiệp vụ đó.
+
+== Lộ trình: từ MVP0 đến SaaS
+
+[source]
+----
+MVP0 — Anonymiseur (ce que cet article décrit)
+  Sortie : datasets propres, reproductible
+
+MVP1 — RAG pgvector (dépend de MVP0)
+  Realité augmentée en prompt sur données nettoyées
+
+MVP2 — Graphify + ONNX + SQL DDD (dépend de MVP1)
+  Vecteur composite de contexte (règles + similarité + relations exactes)
+
+MVP3 — SaaS Edster (dépend de MVP0-2)
+  Provisionnement workspace client complet
+----
+
+Mỗi MVP đều phụ thuộc vào MVP trước đó. Không có MVP nào có thể được bàn giao nếu thiếu MVP0. Đó là lý do tại sao Anonymiseur không phải là « P0 » trong backlog — nó là**MVP0**. Đây là sản phẩm bàn giao thương mại đầu tiên, và tất cả những phần còn lại đều phụ thuộc vào sự thành công của nó.
+
+== Kết luận: Công việc Vô hình giúp Mọi thứ Trở nên Khả thi
+
+Trong một startup điển hình, việc làm sạch dữ liệu được thuê ngoài, thực hiện thủ công hoặc bị bỏ qua. Trong kiến trúc này, đó là cái**cốt lõi của sản phẩm**. Bộ Ẩn danh là nhân viên đầu tiên bởi vì nếu không có nó, không có gì hoạt động được:
+
+* Không có MVP0 → không có RAG pháp lý (MVP1)
+* Không có MVP0 → không có fine-tuning không rò rỉ dữ liệu (EPIC 5)
+* Không có MVP0 → không có SaaS đáng tin cậy (MVP3)
+* Không có MVP0 → không có thực tế tăng cường trong prompt
+* Không có MVP0 → không có hướng ngữ cảnh thứ ba (SQL DDD)
+
+Anh ấy làm những công việc bẩn thỉu. Anh ấy sẽ không bao giờ được nhắc tên trong các bài pitch. Nhưng anh ấy chính là người vận hành cả nhà máy.
+
+Và đó là lý do tại sao chúng tôi tuyển dụng anh ấy đầu tiên.
+
+== Tham khảo
+
+* Bài viết về bản thể luận không gian và các vòng tròn tin cậy:link:../2026/0114_gouvernance_cercles_confiance_ontologie_spatiale_alignement_llm_post.html[Ontology Không gian như một Cơ chế Căn chỉnh]
+* Bài viết về quản trị agent Eager/Lazy:link:../2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[Quản trị một Agent AI bằng AsciiDoc]
+* Bài viết về cơ chế Hot/Warm/Cold:link:../2026/0110_mecanisme_backup_contexte_agent_post.html[Sliding Window và Vague Froide]
+* Bài viết so sánh ba LLM:link:../2026/0112_comparaison_kimi_glm_deepseek_long_contexte_plugin_gradle_opencode_post.html[DeepSeek-V4-Pro, Kimi K2.6, GLM-5.1]</code></pre>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Bài viết liên quan</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: Chuyển đổi AsciiDoc thành Video MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Kiểm toán Mức tiêu thụ LLM của tôi: SQLite, OpenCode, Ollama Cloud, và Tại sao Gói đăng ký Pro của tôi lại làm bùng nổ Thị trường Toàn cầu</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Kiến trúc « Plugin độc lập + Root tiêu thụ »: Tại sao các bản build Gradle của tôi bị nhân đôi</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Knowledge Graph với vai trò là công cụ đề xuất: cách tôi đã loại bỏ các &quot;bài viết liên quan&quot; theo trình tự thời gian</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/pilot-batch\/0115_anonymiseur_dataset_mvp0_realite_augmentee_llm_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Vui lòng bật JavaScript để xem các
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">bình luận được cung cấp bởi Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Nhà phát triển đào tạo chuyên về kỹ thuật sư phạm.
+                        Thiết kế các giải pháp e-learning sáng tạo để chuyển đổi việc học tập.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="Nguồn cấp RSS">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Liên hệ">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Điều hướng</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Trang chủ</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">tài nguyên</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>lưu trữ</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> trang chiếu</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> các buổi đào tạo</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> khóa khởi động</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Vị trí</h6>
+                    <p class="mb-3">Có trụ sở tại vùng Paris, có thể can thiệp tại Pháp và từ xa.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Pháp</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Có hỗ trợ làm việc từ xa</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Di chuyển tại Pháp</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Bảo lưu mọi quyền.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

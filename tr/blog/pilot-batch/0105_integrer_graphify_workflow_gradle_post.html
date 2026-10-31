@@ -1,0 +1,1587 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="tr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Graphify&#39;ı bir Gradle iş akışına entegre etmek: tek bir komutla Knowledge Graph&#39;tan PlantUML diyagramına — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/tr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Graphify&#39;ı bir Gradle iş akışına entegre etmek: tek bir komutla Knowledge Graph&#39;tan PlantUML diyagramına — Cheroliv"/>
+        <meta property="og:description" content="Graphify, kod tabanınızdan bir Bilgi Grafiği (Knowledge Graph) çıkarır. Gradle PlantUML eklentisi ise bu grafiği deterministik PlantUML diyagramlarına dönüştürür. Tam işlem hattı: `pip install graphify` → `graphify . --no-viz` → `./gradlew generateKnowledgeGraphDiagram` → Git&#39;te versiyonlanmış PNG diyagramları."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/tr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+        <meta property="og:locale" content="tr_TR"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Graphify&#39;ı bir Gradle iş akışına entegre etmek: tek bir komutla Knowledge Graph&#39;tan PlantUML diyagramına — Cheroliv"/>
+        <meta name="twitter:description" content="Graphify, kod tabanınızdan bir Bilgi Grafiği (Knowledge Graph) çıkarır. Gradle PlantUML eklentisi ise bu grafiği deterministik PlantUML diyagramlarına dönüştürür. Tam işlem hattı: `pip install graphify` → `graphify . --no-viz` → `./gradlew generateKnowledgeGraphDiagram` → Git&#39;te versiyonlanmış PNG diyagramları."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.png"/>
+        <meta name="description" content="Graphify, kod tabanınızdan bir Bilgi Grafiği (Knowledge Graph) çıkarır. Gradle PlantUML eklentisi ise bu grafiği deterministik PlantUML diyagramlarına dönüştürür. Tam işlem hattı: `pip install graphify` → `graphify . --no-viz` → `./gradlew generateKnowledgeGraphDiagram` → Git&#39;te versiyonlanmış PNG diyagramları."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Akışı" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    <meta name="robots" content="noindex, follow"/>
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Gezinmeyi aç/kapat">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Anasayfa</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Uzmanlıklar</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">İletişim</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Arayüz temasını seç">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Açık</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Açık
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Koyu
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Yüksek kontrast
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Dil seçin">
+                        <span class="me-1">🇹🇷</span>
+                        <span class="ms-1">TR</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0105_integrer_graphify_workflow_gradle_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html"},
+                      "headline": "Graphify'\u0131 bir Gradle i\u015F ak\u0131\u015F\u0131na entegre etmek: tek bir komutla Knowledge Graph'tan PlantUML diyagram\u0131na",
+                      "description": "Kod taban\u0131n\u0131z\u0131n Knowledge Graph'\u0131ndan otomatik olarak PlantUML diyagramlar\u0131 olu\u015Fturmak i\u00E7in Graphify bir Gradle pipeline'\u0131na nas\u0131l entegre edilir. Deterministik pipeline, s\u0131f\u0131r LLM, versiyonlanm\u0131\u015F diyagramlar.",
+                      "datePublished": "2026-04-19",
+                      "dateModified": "2026-04-19",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Graphify'\u0131 bir Gradle i\u015F ak\u0131\u015F\u0131na entegre etmek: tek bir komutla Knowledge Graph'tan PlantUML diyagram\u0131na", "item": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Graphify&#39;ı bir Gradle iş akışına entegre etmek: tek bir komutla Knowledge Graph&#39;tan PlantUML diyagramına</h1>
+                <p class="lead">
+                    <em>Yayınlandı: 19 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">İçindekiler</div>
+<ul class="sectlevel1">
+<li><a href="#_sorun_kodun_her_zaman_gerisinde_kalan_diyagramlar">Sorun: kodun her zaman gerisinde kalan diyagramlar</a></li>
+<li><a href="#_çözüm_deterministik_bir_knowledge_graph_plantuml_hattı">Çözüm: deterministik bir Knowledge Graph → PlantUML hattı</a></li>
+<li><a href="#_adım_1_graphifyı_yükleyin_ve_knowledge_graphı_dışa_aktarın">Adım 1: Graphify&#8217;ı yükleyin ve Knowledge Graph&#8217;ı dışa aktarın</a>
+<ul class="sectlevel2">
+<li><a href="#_kurulum">Kurulum</a></li>
+<li><a href="#_hariç_tutmaları_yapılandır">Hariç tutmaları yapılandır</a></li>
+<li><a href="#_knowledge_graphu_çıkart">Knowledge Graph&#8217;u Çıkart</a></li>
+</ul>
+</li>
+<li><a href="#_adım_2_gradle_eklentisi_bilgi_grafiğini_knowledge_graph_plantumle_dönüştürür">Adım 2: Gradle eklentisi Bilgi Grafiğini (Knowledge Graph) PlantUML&#8217;e dönüştürür</a>
+<ul class="sectlevel2">
+<li><a href="#_boru_hattı_mimarisi">Boru hattı mimarisi</a></li>
+<li><a href="#_dahili_bileşenler">Dahili bileşenler</a></li>
+<li><a href="#_i̇şleme_kuralları">İşleme kuralları</a></li>
+</ul>
+</li>
+<li><a href="#_adım_3_günlük_kullanım">Adım 3: Günlük Kullanım</a>
+<ul class="sectlevel2">
+<li><a href="#_tam_diyagram">Tam diyagram</a></li>
+<li><a href="#_topluluğa_göre_filtrele">Topluluğa göre filtrele</a></li>
+<li><a href="#_kenar_tipine_göre_filtrele">Kenar tipine göre filtrele</a></li>
+<li><a href="#_düğüm_türüne_ve_güvene_göre_filtrele">Düğüm türüne ve güvene göre filtrele</a></li>
+<li><a href="#_özel_çıktı_dizini">Özel çıktı dizini</a></li>
+<li><a href="#_özelliklerin_tam_referansı">Özelliklerin tam referansı</a></li>
+</ul>
+</li>
+<li><a href="#_bir_gradle_iş_akışındaki_eksiksiz_pipeline">Bir Gradle iş akışındaki eksiksiz pipeline</a>
+<ul class="sectlevel2">
+<li><a href="#_i̇ş_akışı_türü">İş akışı türü</a></li>
+<li><a href="#_geliştirme_döngüsüne_entegrasyon">Geliştirme döngüsüne entegrasyon</a></li>
+<li><a href="#_artımlı_güncelleme">Artımlı güncelleme</a></li>
+</ul>
+</li>
+<li><a href="#_dogfooding_eklenti_kendi_kendini_belgelendiriyor">Dogfooding: eklenti kendi kendini belgelendiriyor</a></li>
+<li><a href="#_neden_deterministiktir_ve_neden_önemlidir">Neden deterministiktir (ve neden önemlidir)</a></li>
+<li><a href="#_pipelineın_kendi_diyagramları">Pipeline&#8217;ın kendi diyagramları</a></li>
+<li><a href="#_proje_yönetişimine_entegrasyon">Proje yönetişimine entegrasyon</a></li>
+<li><a href="#_hazırlık_5_dakikalık_kontrol_listesi">Hazırlık: 5 dakikalık kontrol listesi</a></li>
+<li><a href="#_tuzaklar_ve_hafifletmeler">Tuzaklar ve hafifletmeler</a></li>
+<li><a href="#_sonuçta_elde_ettiğimiz_şey">Sonuçta elde ettiğimiz şey</a></li>
+<li><a href="#_bağlantılar">Bağlantılar</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">okuma süresi: 12 minutes</div>
+<p>Kod tabanınız büyüyor. Modüller arasındaki bağımlılıklar artıyor. Mimari dokümantasyon, daha yazılmadan güncelliğini yitiriyor. Ya Gradle build işleminiz, kodun gerçek yapısından yola çıkarak <em>otomatik olarak</em> güncel diyagramlar oluşturabilseydi? Graphify + PlantUML Gradle Plugin hattının yaptığı tam olarak budur:`graphify . --no-viz`Knowledge Graph&#8217;ı çıkarır,`./gradlew generateKnowledgeGraphDiagram`onu PlantUML diyagramlarına dönüştürür. Sıfır LLM, sıfır manuel, %100 deterministik.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">içindekiler</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+<!-- toc disabled -->
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sorun_kodun_her_zaman_gerisinde_kalan_diyagramlar">Sorun: kodun her zaman gerisinde kalan diyagramlar</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Birkaç bin satırı aşan her proje bu sendromu yaşar:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Projenin başında bir mimari diyagram çizilir</p>
+</li>
+<li>
+<p>Kod gelişir, bağımlılıklar değişir</p>
+</li>
+<li>
+<p>Diyagram dekoratif bir yalana dönüşüyor</p>
+</li>
+<li>
+<p>Kimse güncellemiyor çünkü çok zahmetli</p>
+</li>
+<li>
+<p>Yeni gelenler buna dayanıyor ve hatalar yapıyorlar</p>
+</li>
+</ol>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/probleme-diagrammes-obsoletes.svg" alt="probleme diagrammes obsoletes" width="893" height="418">
+</div>
+</div>
+<div class="paragraph">
+<p>Soru <em>diyagramlara gerek var mı?</em> değil — herkes bunun cevabının evet olduğunu biliyor. Soru şu:<strong>onları güncel tutan kim?</strong></p>
+</div>
+<div class="paragraph">
+<p>Cevap: hiç kimse. Otomatik değilse.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_çözüm_deterministik_bir_knowledge_graph_plantuml_hattı">Çözüm: deterministik bir Knowledge Graph → PlantUML hattı</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Prensip basit: diyagramları elle çizmek yerine, onları<strong>kodun gerçek yapısından oluşturulur</strong>Lütfen çevrilecek metni sağlayın.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/pipeline-complet.svg" alt="pipeline complet" width="1265" height="434">
+</div>
+</div>
+<div class="paragraph">
+<p>İki komut. Hepsi bu.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Étape 1 : extraire le Knowledge Graph
+graphify . --no-viz
+
+# Étape 2 : générer les diagrammes PlantUML
+./gradlew generateKnowledgeGraphDiagram</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Sonuç mu? Dosyalar`.puml` et <code>.png`içinde`diagrams/knowledge-graph/</code>, Git&#8217;de versiyonlanmış ve her zaman kodla güncel.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_adım_1_graphifyı_yükleyin_ve_knowledge_graphı_dışa_aktarın">Adım 1: Graphify&#8217;ı yükleyin ve Knowledge Graph&#8217;ı dışa aktarın</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_kurulum">Kurulum</h3>
+<div class="paragraph">
+<p>Graphify, kod tabanınızı analiz eden ve yapılandırılmış bir bilgi grafiği oluşturan bir Python aracıdır:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Méthode recommandée
+uv tool install graphifyy &amp;&amp; graphify install --platform opencode
+
+# Alternative avec pip
+pip install graphifyy &amp;&amp; graphify install --platform opencode</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hariç_tutmaları_yapılandır">Hariç tutmaları yapılandır</h3>
+<div class="paragraph">
+<p>Bir dosya oluşturun`.graphifyignore`iş mantığının bir parçası olmayan dosyaları hariç tutmak için proje kökünde:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gitignore hljs" data-lang="gitignore"># Secrets — JAMAIS dans le graphe
+*-context.yml
+*.env
+
+# Fichiers générés
+build/
+.gradle/
+
+# Tests fonctionnels
+src/functionalTest/</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_knowledge_graphu_çıkart">Knowledge Graph&#8217;u Çıkart</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">graphify . --no-viz</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Bayrak`--no-viz`HTML oluşturma adımını atlar (Gradle hattında gereksizdir). Sonuç bir dosyadır`graphify-out/graph.json`içeren:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Düğümler</strong>: sınıflar, fonksiyonlar, dosyalar — türleri ve topluluklarıyla birlikte</p>
+</li>
+<li>
+<p><strong>Kenarlar</strong>: düğümler arası ilişkiler (koddan ÇIKARILMIŞ, LLM tarafından ÇIKARIMSAL olarak belirlenmiş)</p>
+</li>
+<li>
+<p><strong>Topluluklar</strong>: bağlı düğümlerin otomatik gruplandırılması</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Yapı örneği`graph.json`</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "nodes": [
+    {"id": "0", "label": "LlmService", "file_type": "code", "community": 0},
+    {"id": "1", "label": "ApiKeyPool", "file_type": "code", "community": 0},
+    {"id": "2", "label": "PlantumlService", "file_type": "code", "community": 1}
+  ],
+  "links": [
+    {"source": "1", "target": "0", "relation": "uses", "confidence": "EXTRACTED", "weight": 0.9},
+    {"source": "0", "target": "2", "relation": "calls", "confidence": "INFERRED", "weight": 0.7}
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Kaynak kodu (<code>.kt</code>, <code>.java</code>) tree-sitter tarafından yerel olarak analiz edilir,<strong>kesin LLM</strong>. Yalnızca dokümantasyon dosyaları (<code>.adoc</code>, <code>.md</code>) anlamsal çıkarım için bir LLM çağrısı gerektirir. Bu nedenle`--update`Kotlin kodu üzerinde neredeyse anlıktır.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_adım_2_gradle_eklentisi_bilgi_grafiğini_knowledge_graph_plantumle_dönüştürür">Adım 2: Gradle eklentisi Bilgi Grafiğini (Knowledge Graph) PlantUML&#8217;e dönüştürür</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_boru_hattı_mimarisi">Boru hattı mimarisi</h3>
+<div class="paragraph">
+<p>Eklenti`com.cheroliv.plantuml`bir görev entegre eder`generateKnowledgeGraphDiagram`dönüştüren`graph.json`PlantUML diyagramlarına şu şekilde<strong>tamamen deterministik</strong>Lütfen çevrilecek metni girin.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/architecture-pipeline-kg.svg" alt="architecture pipeline kg" width="1109" height="450">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dahili_bileşenler">Dahili bileşenler</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Bileşen</th>
+<th class="tableblock halign-left valign-top">Rol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>KnowledgeGraphParser</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ayrıştır`graph.json`— 3 formatı destekler: yerel graphify (<code>nodes</code>+<code>links</code>), eski (<code>communities</code>), flat. Sayısal ID&#8217;leri etiketlere çözer.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>KnowledgeGraphRenderer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deterministik olarak bir &#8230;&#8203;'ya dönüştürür`KnowledgeGraph`PlantUML kodunda. Türe göre gruplandırılmış, paketler halinde topluluklar ve otomatik lejant.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GenerateKnowledgeGraphDiagramTask</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Orkestrasyon yapan Gradle görevi: parse → render → validate → PNG. Gradle özellikleri aracılığıyla yapılandırılabilir.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>kgmodels.kt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Veri modelleri:`KnowledgeGraph`, <code>KnowledgeGraphNode</code>, <code>KnowledgeGraphEdge</code>, <code>KnowledgeGraphCommunity</code>, `EdgeType`Lütfen çevrilecek metni sağlayın.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PlantumlService</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sözdizimi doğrulaması + PNG çıktısı (eklentinin tüm görevleri tarafından yeniden kullanılır).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_i̇şleme_kuralları">İşleme kuralları</h3>
+<div class="paragraph">
+<p>İşleyici belirleyici görsel kurallar uygular:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Kenar tipi</th>
+<th class="tableblock halign-left valign-top">PlantUML Notasyonu</th>
+<th class="tableblock halign-left valign-top">Anlam</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ÇIKARILMIŞ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>-&#8594;</code>(düz çizgi, siyah)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kaynak koddan çıkarılan ilişki (kesinlik)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ÇIKARILMIŞ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>..&gt;</code>(kesikli çizgi)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LLM tarafından çıkarılan ilişki (güven puanı)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BELİRSİZ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--x</code>(kırmızı noktalı çizgi)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Belirsiz ilişki (kontrol edilmeli)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Topluluklar, otomatik bir renk paleti ile PlantUML paketleri olarak döndürülür.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_adım_3_günlük_kullanım">Adım 3: Günlük Kullanım</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_tam_diyagram">Tam diyagram</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Générer le diagramme du Knowledge Graph complet
+./gradlew generateKnowledgeGraphDiagram</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Çıktı:`diagrams/knowledge-graph/knowledge-graph-full.puml`+<code>.png</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_topluluğa_göre_filtrele">Topluluğa göre filtrele</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Une seule communauté
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.community=community_0
+
+# Limiter le nombre de noeuds (lisibilité)
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.community=community_0 \
+  -Pplantuml.kg.maxNodes=15</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_kenar_tipine_göre_filtrele">Kenar tipine göre filtrele</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Uniquement les relations certaines (EXTRACTED)
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.edgeTypes=EXTRACTED
+
+# Relations certaines + inférées
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.edgeTypes=EXTRACTED,INFERRED</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_düğüm_türüne_ve_güvene_göre_filtrele">Düğüm türüne ve güvene göre filtrele</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Uniquement les classes de code
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.nodeTypes=code
+
+# Seuil de confiance minimum (pour les INFERRED)
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.minConfidence=0.7</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_özel_çıktı_dizini">Özel çıktı dizini</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.outputDir=docs/architecture</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_özelliklerin_tam_referansı">Özelliklerin tam referansı</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mülkiyet</th>
+<th class="tableblock halign-left valign-top">Hata</th>
+<th class="tableblock halign-left valign-top">Açıklama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.community</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(tümü)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toplulukları isme göre filtrele (alt dize eşleşmesi)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.edgeTypes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(tümü)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Virgülle ayrılmış kenar türleri:`EXTRACTED`, <code>INFERRED</code>, <code>AMBIGUOUS</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.minConfidence</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kenarlar için minimum güven eşiği</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.maxNodes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(sınırsız)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Görüntülenecek maksimum düğüm sayısı</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.nodeTypes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(tümü)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Virgülle ayrılmış düğüm türleri (örn.<code>class</code>, <code>code</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.outputDir</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagrams/knowledge-graph</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dosyalar için çıktı dizini`.puml` et <code>.png</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bir_gradle_iş_akışındaki_eksiksiz_pipeline">Bir Gradle iş akışındaki eksiksiz pipeline</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_i̇ş_akışı_türü">İş akışı türü</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/workflow-complet.svg" alt="workflow complet" width="618" height="714">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_geliştirme_döngüsüne_entegrasyon">Geliştirme döngüsüne entegrasyon</h3>
+<div class="paragraph">
+<p>Pipeline, geliştirmenin temel aşamalarına doğal olarak entegre olur:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/cycle-developpement.svg" alt="cycle developpement" width="743" height="454">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_artımlı_güncelleme">Artımlı güncelleme</h3>
+<div class="paragraph">
+<p>Kod değiştiğinde, tüm grafik sıfırdan yeniden oluşturulmaz:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Mise à jour incrémentale (fichiers modifiés uniquement)
+graphify . --update
+
+# Puis régénérer les diagrammes
+./gradlew generateKnowledgeGraphDiagram</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><code>--update`yalnızca değiştirilen dosyaları yeniden çıkarır (SHA256 ile tespit edilenler içindeki`graphify-out/cache/</code>). Kotlin kodunda, tree-sitter LLM çağrısı yapmadan yerel olarak çalıştığı için bu işlem neredeyse anlıktır.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dogfooding_eklenti_kendi_kendini_belgelendiriyor">Dogfooding: eklenti kendi kendini belgelendiriyor</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>PlantUML eklentisi, istemleri diyagramlara dönüştürmek için mevcuttur. Ayrıca kendi kod tabanının Bilgi Grafiğini (Knowledge Graph) dokümantasyon diyagramlarına dönüştürebilir. Bu bir <em>dogfooding</em> örneğidir: eklenti kendi hizmetini tüketmektedir.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/dogfooding-pipeline.svg" alt="dogfooding pipeline" width="1022" height="533">
+</div>
+</div>
+<div class="paragraph">
+<p>İlişkili Gradle görevleri:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Görev</th>
+<th class="tableblock halign-left valign-top">LLM ?</th>
+<th class="tableblock halign-left valign-top">Açıklama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateKnowledgeGraphDiagram</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hayır</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dönüştür`graph.json`PlantUML ile (deterministik)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateDiagramDocs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Evet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Oluşturun`.prompt`grafikten, bunları LLM aracılığıyla işler (dogfooding)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Documentation déterministe (rapide, pas de LLM)
+./gradlew generateKnowledgeGraphDiagram
+
+# Documentation LLM (plus riche, consomme des tokens)
+./gradlew generateDiagramDocs</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_neden_deterministiktir_ve_neden_önemlidir">Neden deterministiktir (ve neden önemlidir)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Pipeline&#8217;ın kilit noktası`generateKnowledgeGraphDiagram`Lütfen çevrilecek metni sağlayın.<strong>hiçbir LLM çağırmaz</strong>. Dönüşüm`graph.json`→ PlantUML saf bir fonksiyondur.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/determinisme-vs-llm.svg" alt="determinisme vs llm" width="927" height="405">
+</div>
+</div>
+<div class="paragraph">
+<p>Somut avantajlar:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Avantaj</th>
+<th class="tableblock halign-left valign-top">Etki</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tekrarlanabilirlik</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hatta`graph.json`→ aynı diyagram. Kesinlikle. Her seferinde.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sıfır maliyet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LLM çağrısı yok = token yok = API faturası yok.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sıfır gecikme</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Parse + render ~100ms sürer, 1-5 saniye değil.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uyumlu CI</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">API anahtarı gerekli değil. Değişken bir LLM yanıtından kaynaklanan tutarsız (flaky) test yok.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Versiyonlanabilir</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Le <code>.puml`üretilen metindir. Onu`diff</code>, PR inceleyen kişiyi, Git ile versiyonlamayı.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pipelineın_kendi_diyagramları">Pipeline&#8217;ın kendi diyagramları</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Döngüyü tamamlamak için, eklenti tarafından oluşturulacağı şekliyle pipeline diyagramı şöyledir:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/pipeline-sequence.svg" alt="pipeline sequence" width="1682" height="554">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_proje_yönetişimine_entegrasyon">Proje yönetişimine entegrasyon</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Projemizde, bu pipeline, yapay zeka ajanı için bir EAGER/LAZY bağlam yönetim stratejisine entegre olmaktadır. Knowledge Graph, manuel mimari dokümantasyonun yerini yapılandırılmış, sorgulanabilir ve otomatik olarak güncellenen bir grafik ile almaktadır.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/strategie-hybride.svg" alt="strategie hybride" width="2037" height="240">
+</div>
+</div>
+<div class="paragraph">
+<p>İki sistemin evliliği tamamlayıcıdır:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Strateji NE ZAMAN ve NASIL sorularını yönetir</strong>— yönetişim, iş akışı, arşivleme</p>
+</li>
+<li>
+<p><strong>Graphify, NEYİ ve NEREYİ yönetir</strong>— kod yapısı, ilişkiler, hedeflenmiş sorgular</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Lütfen çevrilecek metni sağlayın. Oturum stratejisi şunları yönetir:<strong>NE ZAMAN</strong> et le <strong>YORUM</strong>(yönetişim, iş akışı, eşikler), Graphify şunları yönetir:<strong>NE</strong> et le <strong>NEREDE</strong>(kod yapısı, ilişkiler, hedeflenmiş sorgular). PlantUML hattı şunu yönetir:<strong>NE İLE</strong>(deterministik, versiyonlanmış ve her zaman güncel diyagramlar). Lütfen çevrilecek metni sağlayın.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hazırlık_5_dakikalık_kontrol_listesi">Hazırlık: 5 dakikalık kontrol listesi</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Profesyonel bir çevirmensin. Fransızcadan Türkçeye çevir.
+Tüm ters tırnaklı kod alanlarını (<code>&#8230;&#8203;</code>) olduğu gibi koru; ters tırnak içeriğini, boşluklarını veya konumunu asla değiştirme.
+Bu metin daha büyük bir cümlenin parçası olabilir; bağlam istemeden parçayı çevir.
+Yalnızca çevrilmiş metni çıktıla; açıklama, yorum, giriş, alternatifler veya seçenekler ekleme.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Adım</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sipariş</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graphify&#8217;ı Kurun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>uv tool install graphifyy</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">İstisnaları yapılandır</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Oluştur`.graphifyignore`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Knowledge Graph&#8217;u ayıkla</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>graphify . --no-viz</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Diyagramları oluştur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>./gradlew generateKnowledgeGraphDiagram</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sonuçları commit et</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>git add diagrams/knowledge-graph/</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Script complet en 5 commandes
+uv tool install graphifyy
+cat &gt; .graphifyignore &lt;&lt; 'EOF'
+*-context.yml
+*.env
+build/
+.gradle/
+EOF
+graphify . --no-viz
+./gradlew generateKnowledgeGraphDiagram
+git add graphify-out/GRAPH_REPORT.adoc graphify-out/graph.json diagrams/knowledge-graph/</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tuzaklar_ve_hafifletmeler">Tuzaklar ve hafifletmeler</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tuzak</th>
+<th class="tableblock halign-left valign-top">Açıklama</th>
+<th class="tableblock halign-left valign-top">Hafifletme</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Grafik çok yoğun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Büyük bir proje, okunamaz yüzlerce düğüm oluşturur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kullanmak`-Pplantuml.kg.maxNodes=30`ve topluluğa göre filtrele</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Çok geniş kapsamlı istisnalar</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">şuradaki dosya sayısı çok fazla`.graphifyignore`graf değerini azaltır</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sadece <code>credentials</code> ve <code>build</code> klasörlerini hariç tutarak başlayın</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ok yönleri</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INFERRED kenarlar belirsiz bir yöne sahip olabilir</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Şuna göre filtrele:`-Pplantuml.kg.edgeTypes=EXTRACTED`yalnızca kesin ilişkiler için</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kullanımdan kaldırılmış grafem</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kod değişiyor ancak grafik yeniden oluşturulmuyor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kullanmak`graphify . --update`düzenli olarak veya <code>git</code> hook&#8217;u`graphify hook install`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Güncellenmiş maliyet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Artımlı güncellemeler neredeyse ücretsizdir (tree-sitter local)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sadece dokümanlar (<code>.adoc</code>) LLM tokenleri tüketir</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sonuçta_elde_ettiğimiz_şey">Sonuçta elde ettiğimiz şey</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="./images/recap-visuel.svg" alt="recap visuel" width="346" height="258">
+</div>
+</div>
+<div class="paragraph">
+<p>Somut faydalar:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Kâr</th>
+<th class="tableblock halign-left valign-top">Detay</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Her zaman güncel dokümantasyon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Diyagramlar manuel bir anlık görüntüyü değil, mevcut kodu yansıtır</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sıfır bakım çabası</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Diyagramlar her build işleminde yeniden oluşturulur</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Teknik borcun azaltılması</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Diyagramları elle tutmaya gerek kalmadı</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yeni gelenler için görsel bağlam</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yeni bir geliştirici, diyagramlara bakarak mimariyi anlar</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Potansiyel ince ayar</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(alt-grafik → diyagram) çiftleri, yapay zeka eğitim örnekleridir</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Otomatik doğrulama</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`PlantumlService.validateSyntax()`oluşturulan her diyagramı kontrol et</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hızlı onboarding</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 diyagram = mimarinin tam görünümü</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Lütfen çevrilecek metni sağlayın. Bir <em>nedeni</em> olan, her türlü _nasıl_a katlanabilir. Lütfen çevrilecek metni sağlayın.</p>
+</div>
+<div class="paragraph">
+<p><em>Neden</em>: her zaman güncel diyagramlar. <em>Nasıl</em>: bir Gradle hattında (pipeline) iki komut.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bağlantılar">Bağlantılar</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/nicholasgasior/graphify">Graphify GitHub&#8217;da</a></p>
+</li>
+<li>
+<p><a href="https://github.com/cheroliv/plantuml-gradle">PlantUML Gradle Eklentisi</a></p>
+</li>
+<li>
+<p><a href="/blog/2026/0104_fg_command_super_tips_post.html">fg` komutunun süper ipucu</a>— terminal iş akışı hakkındaki önceki makale</p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">İlgili Makaleler</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: AsciiDoc&#39;u MP4 Videoya Dönüştürün</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">LLM Tüketim Denetimim: SQLite, OpenCode, Ollama Cloud ve Pro Aboneliğimin Neden Küresel Pazarı Altüst Ettiği</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Bağımsız Eklenti + Tüketici Kökü » Mimarisi: Gradle Build&#39;larım Neden Çiftleniyor</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Öneri motoru olarak Knowledge Graph: Kronolojik «ilgili makaleler» özelliğini nasıl öldürdüm</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Lütfen JavaScript'i etkinleştirin чтобы şunları görebilmek için:
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqus tarafından desteklenen yorumlar</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Pedagojik tasarım alanında uzmanlaşmış eğitmen geliştirici.
+                        Öğrenmeyi dönüştürmek için yenilikçi e-öğrenme çözümleri tasarımı.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Akışı">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="İletişim">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navigasyon</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Karşılama</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Kaynaklar</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Arşivler</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slaytlar</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> eğitimler</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> açılabilir anahtar</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Lokalizasyon</h6>
+                    <p class="mb-3">Paris bölgesinde yerleşik, Fransa genelinde ve uzaktan müdahaleler mümkündür.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Fransa</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Uzaktan çalışma imkanı mevcut</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Fransa'da ulaşım</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

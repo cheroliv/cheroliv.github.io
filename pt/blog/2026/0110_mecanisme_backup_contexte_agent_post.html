@@ -1,0 +1,1474 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sliding Window e Vague Froide: Quando o Contexto do Agente Explode e é Preciso Arquivar sem Perder — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/pt/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Sliding Window e Vague Froide: Quando o Contexto do Agente Explode e é Preciso Arquivar sem Perder — Cheroliv"/>
+        <meta property="og:description" content="Após meses de sessões Opencode, os arquivos de governança estão explodindo. 5200 linhas carregadas automaticamente. Estou conceptualizando um mecanismo de sliding window e de &quot;vague froide identique&quot; para manter um contexto ativo leve sem perder nada."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/pt/blog/2026/0110_mecanisme_backup_contexte_agent_post.html"/>
+        <meta property="og:locale" content="pt_PT"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0110_mecanisme_backup_contexte_agent_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Sliding Window e Vague Froide: Quando o Contexto do Agente Explode e é Preciso Arquivar sem Perder — Cheroliv"/>
+        <meta name="twitter:description" content="Após meses de sessões Opencode, os arquivos de governança estão explodindo. 5200 linhas carregadas automaticamente. Estou conceptualizando um mecanismo de sliding window e de &quot;vague froide identique&quot; para manter um contexto ativo leve sem perder nada."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0110_mecanisme_backup_contexte_agent_post.png"/>
+        <meta name="description" content="Após meses de sessões Opencode, os arquivos de governança estão explodindo. 5200 linhas carregadas automaticamente. Estou conceptualizando um mecanismo de sliding window e de &quot;vague froide identique&quot; para manter um contexto ativo leve sem perder nada."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — Feed RSS" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Alternar navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Início</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Especialidades</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Contato</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Selecionar tema da interface">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Claro</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Claro
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Escuro
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Alto contraste
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Selecionar idioma">
+                        <span class="me-1">🇵🇹</span>
+                        <span class="ms-1">PT</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0110_mecanisme_backup_contexte_agent_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0110_mecanisme_backup_contexte_agent_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html"},
+                      "headline": "Sliding Window e Vague Froide: Quando o Contexto do Agente Explode e \u00E9 Preciso Arquivar sem Perder",
+                      "description": "Continua\u00E7\u00E3o da minha estrat\u00E9gia de governan\u00E7a de agentes. Quando mais de 150 sess\u00F5es fazem explodir o contexto, conceptualizo um mecanismo de backup baseado no pattern Hot\/Warm\/Cold Storage \u2014 sem perder nada, sem desnaturar o dataset.",
+                      "datePublished": "2026-04-26",
+                      "dateModified": "2026-04-26",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Sliding Window e Vague Froide: Quando o Contexto do Agente Explode e \u00E9 Preciso Arquivar sem Perder", "item": "https:\/\/cheroliv.com\/blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Sliding Window e Vague Froide: Quando o Contexto do Agente Explode e é Preciso Arquivar sem Perder</h1>
+                <p class="lead">
+                    <em>Publicado em 26 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div class="sect1">
+<h2 id="_resumo">Resumo</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Após 48 sessões em um único projeto e 150+ no total, o sistema de governança Eager/Lazy que eu tinha construído com cuidado começou a se sufocar. Os arquivos de agentes, que deveriam ser leves, pesavam 5200 linhas acumuladas. O contexto auto-carregado aumentava mais rápido do que minha capacidade de controlá-lo. Este artigo conta como eu conceptualizei um mecanismo de backup — entre sliding window e uma onda fria idêntica — para manter um contexto ativo leve sem jamais perder nada.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_o_sinal_5200_linhas">O Sinal : 5200 linhas</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Estou no meio da sessão 048 sobre`magic-stick`, meu projeto de build de ISO Linux live. Opencode me observa. Como sempre, ele carregou automaticamente meus arquivos Eager no início da sessão —<code>AGENT.adoc</code>, <code>PROMPT_REPRISE.adoc</code>, <code>.agents/INDEX.adoc</code>. Nada de anormal.</p>
+</div>
+<div class="paragraph">
+<p>Exceto que algo está errado. As respostas são mais lentas. O raciocínio está mais diluído. O agente esquece detalhes que tinha diante dos olhos há duas mensagens.</p>
+</div>
+<div class="paragraph">
+<p>Abro um terminal e digito:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">wc -l .agents/INDEX.adoc .agents/SESSIONS_HISTORY.adoc \
+  .agents/archives/COMPLETED_TASKS_ARCHIVE_2026-04.adoc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>260 linhas para INDEX. 55 para SESSIONS_HISTORY.<strong>1756 para COMPLETED_TASKS_ARCHIVE</strong>.</p>
+</div>
+<div class="paragraph">
+<p>A pasta`sessions/`acrescenta mais ~3200 linhas. Total:<strong>5200 linhas</strong>de contexto que são carregados, de alguma forma, no cérebro temporário do agente.</p>
+</div>
+<div class="paragraph">
+<p>A estratégia Eager/Lazy que eu tinha teorizado no artigo anterior funciona — mas ela tem um defeito de nascimento que eu não tinha antecipado : ela não tem<strong>sem mecanismo de envelhecimento</strong>. Cada sessão adiciona uma linha a <code>INDEX</code>, um parágrafo a <code>COMPLETED_TASKS</code>, um ficheiro em <code>sessions/</code>. Nada sai nunca. O contexto é uma bola de neve que aumenta a cada nova sessão.</p>
+</div>
+<div id="diag-growth" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-ad840106c1673afe3c1b848e3f8b46df.svg" alt="Courbe de croissance des fichiers agents — de la session 1 à 48" width="468" height="591">
+</div>
+</div>
+<div class="paragraph">
+<p>Não é um bug, é uma consequência direta do procedimento de fim de sessão que arquiva meticulosamente cada detalhe. O sistema é vítima do seu próprio sucesso.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_o_diagnóstico_tríplice_redundância">O Diagnóstico : Tríplice Redundância</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Peço ao agente que diagnostique o problema. Sua resposta é imediata e cirúrgica.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+<col style="width: 5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arquivo</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linhas</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">papel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Problema</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.agents/INDEX.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">260+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EAGER (carregado automático)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tabela de todas as sessões desde a 001 —<strong>+1 linha por sessão</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.agents/SESSIONS_HISTORY.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">55</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EAGER</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tabela resumida —<strong>redundância com INDEX</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>COMPLETED_TASKS_ARCHIVE_2026-04.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1756</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ansioso (implícito)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detalhes completos de todas as sessões de abril</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>.agents/sessions/*.adoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~5200 total</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LAZY (suposto)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arquivos individuais, mas<strong>não utilizadas</strong>parce que tudo já está em COMPLETED_TASKS</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>O agente identifica quatro causas raízes :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>COMPLETED_TASKS_ARCHIVE absorve tudo</strong>— Em vez de apontar para os arquivos`.sessions/`, ele copia integralmente cada sessão.</p>
+</li>
+<li>
+<p><strong>INDEX.adoc serve como histórico completo</strong>— A tabela "Sessões Recentes" contém 30+ entradas.</p>
+</li>
+<li>
+<p><strong>SESSIONS_HISTORY.adoc redundante</strong>— Mesma informação que INDEX, formato diferente.</p>
+</li>
+<li>
+<p><strong>A regra LAZY não é respeitada</strong>— COMPLETED_TASKS é implicitamente EAGER porque contém tudo.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Sua proposta é radical : limitar INDEX a 10 sessões, limpar COMPLETED_TASKS, mover SESSIONS_HISTORY para LAZY puro. Ganho imediato :<strong>~1900 linhas economizadas</strong>.</p>
+</div>
+<div class="paragraph">
+<p>É limpo, eficiente e lógico. Mas tenho um problema com esta abordagem.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_por_que_eu_rejeitei_a_solução_óbvia">Por que eu rejeitei a solução óbvia</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A solução do agente é a de um engenheiro que otimiza um cache. Limitar. Truncar. Remover as redundâncias.</p>
+</div>
+<div class="paragraph">
+<p>Mas essas "redundâncias" não são. Cada arquivo de governança captura un<strong>ângulo diferente</strong>na mesma realidade :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>ÍNDICE</strong>visão macro, dashboard executivo</p>
+</li>
+<li>
+<p><strong>SESSIONS_HISTORY</strong>= tabela cronológica linear, pontuada</p>
+</li>
+<li>
+<p><strong>COMPLETED_TASKS_ARCHIVE</strong>= narrativa detalhada com métricas</p>
+</li>
+<li>
+<p>sessions/*.adoc = arquivos individuais, contexto completo</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Não é duplicação boba. É<strong>perspectiva múltipla estruturada</strong>. É exatamente isso que precisamos para destilar — para que mais tarde, um humano (ou um LLM futuro melhor treinado) possa cruzar os ângulos e extrair padrões.</p>
+</div>
+<div class="paragraph">
+<p>Imagine um cientista de dados dizendo a você: « Vamos remover 3 das 6 colunas, elas estão correlacionadas. » O que você responde a ele? Que a correlação não é redundância quando cada coluna captura uma dimensão diferente do mesmo fenômeno. Que é precisamente essa riqueza dimensional que torna o conjunto de dados utilizável.</p>
+</div>
+<div class="paragraph">
+<p>É a minha intuição. E eu a defendo contra a racionalidade fria do agente.</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ Não vejo uma caixa de tudo silenciosa na minha ideia. Não enfiamos tudo, deslocamos o resultado estruturado do procedimento de fim de sessão — cada arquivo com seu ângulo, suas redundâncias que na verdade são um enriquecimento. É esse material multidimensional que será melhor para a destilação. </em>_</em></p>
+</div>
+<div class="paragraph">
+<p>O agente leva o golpe. E se corrige.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_a_proposição_onda_fria_idêntica">A Proposição: Onda Fria Idêntica</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>O agente então propõe um mecanismo mais fino, que respeita minha intuição de conjunto de dados rico, ao mesmo tempo em que resolve o problema técnico do contexto que explode.</p>
+</div>
+<div class="paragraph">
+<p>O princípio é simples e inspira-se diretamente do pattern<strong>Quente/Morno/Frio Armazenamento</strong>aplicado à gestão de arquivos:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Quente (EAGER)</strong>= as 10 últimas sessões em INDEX, PROMPT_REPRISE da sessão N+1, os 2 últimos arquivos de sessão</p>
+</li>
+<li>
+<p><strong>Quente (LAZY)</strong>= SESSIONS_HISTORY recente, SCRIPT_VERIFICATION, toda a documentação de referência</p>
+</li>
+<li>
+<p><strong>Frio (backup/)</strong>= tudo o mais, deslocado<strong>intacto</strong>, sem transformação, sem reindexação</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>----
+----
+----
+.agents/
+├── INDEX.adoc                         → Sessions N-9 à N (10 dernières)
+├── SESSIONS_HISTORY.adoc              → Sessions N-9 à N
+├── SCRIPT_VERIFICATION.adoc           → Dernière vérif (pas d'historique)
+├── PROMPT_REPRISE.adoc                → Session N+1 uniquement
+├── sessions/                          → Sessions N-1 à N uniquement
+└── backup/
+    └── Y2026-sessions-001-039/          ← Vague froide, COPIE INTÉGRALE
+        ├── INDEX.adoc                  → Sessions 001 à 039 (complet)
+        ├── SESSIONS_HISTORY.adoc       → Sessions 001 à 039 (complet)
+        ├── COMPLETED_TASKS_ARCHIVE.adoc → Sessions 001 à 039 (complet)
+        └── sessions/                   → 001.adoc, 002.adoc...
+----
+
+A chave do mecanismo :**O backup não é um índice central, é uma cópia fiel da onda passada.**. Quando ultrapassamos o horizonte das 10 sessões ativas, não excluímos nada. Não reindexamos nada. Não fundimos nada. Pegamos o pacote de arquivos de agentes tal como estava na sessão N-10 e o movemos para`backup/`.
+
+Os arquivos ativos, eles, são truncados :
+
+* INDEX : apenas as 10 últimas linhas (sliding window)
+* SESSIONS_HISTORY : idem
+* COMPLETED_TASKS_ARCHIVE : novo arquivo para o período atual
+* sessions/ : apenas as 2 últimas sessões
+
+[plantuml, format=svg, id=diag-hot-warm-cold, alt="Architecture Hot/Warm/Cold du contexte agent — EAGER/LAZY/backup"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+
+title Arquitetura Quente / Morno / Fria do Contexto do Agente
+package "HOT (EAGER)\nCarregado automaticamente\n~300 linhas" as HOT #FFCDD2 {
+  file "INDEX.adoc\n(10 sessões)" as IDX_HOT
+  file "PROMPT_REPRISE\n(sessão N+1)" as PRO_HOT
+  file "AGENT.adoc\n(regras absolutas)" as AG_HOT
+}
+
+package "WARM (LAZY)\nCarregado sob demanda\n~500 linhas" as WARM #FFF9C4 {
+  file "SESSIONS_HISTORY\n(10 últimas)" as HIS_WARM
+  file "SCRIPT_VERIFICATION\n(última)" as VER_WARM
+  file "PROCEDURES.adoc\n(modelos)" as PRO_WARM
+  file "*_REFERENCE.adoc\n(documento técnico)" as REF_WARM
+}
+
+package "COLD (backup/)\nNunca carregado\nLeitura apenas humana" as COLD #BBDEFB {
+  folder "Y2026-001-039/" as WAVE {
+    file "ÍNDICE (completo)" as IDX_COLD
+    file "SESSIONS_HISTORY\n(completo)" as HIS_COLD
+    file "COMPLETED_TASKS\n(concluído)" as ARCH_COLD
+    folder "sessões/ (001-039)" as SESS_COLD
+  }
+  folder "Y2026-040-???\n(futuro)" as FUTURE
+}
+
+HOT --&gt; WARM : "agente sobe\nse necessário"
+WARM --&gt; COLD : "Nunca automático\nO ser humano vai lá sozinho"
+
+note bottom of COLD
+  Règle : COPIE INTÉGRALE
+  Pas de transformation
+  Pas de réindexation
+  Read-only après archivage
+end note
+
+@enduml
+----
+
+O ganho imediato é massivo: o contexto EAGER passa de**~5200 linhas a ~300 linhas**. Uma divisão por 17. Sem ter perdido uma única linha de dados históricos.
+
+== Por que isso não é uma bolsa de tudo
+
+O agente, em sua primeira iteração, temia que`backup/`Torne-se uma caixa-preta — uma pasta onde se jogam arquivos que nunca serão relidos. É um medo legítimo. Mas ela se baseia numa confusão.
+
+Um saco de tudo é quando se lançam arquivos**sem estrutura, sem convenção, sem lógica de agrupamento**. Aqui, o backup é estruturado por período (Y2026-001-039), e cada pasta de backup contém**a mesma estrutura**que o arquivo`.agents/`ativo : INDEX, SESSIONS_HISTORY, COMPLETED_TASKS_ARCHIVE, sessions/.
+
+Não é um saco de tudo. É um**instantâneo horodatado**. Se poderia até dizer que é um mecanismo de versionamento simplificado — à exceção de que ele não versiona os arquivos individualmente, mas o pacote completo da governança em um instante T.
+
+Quando você quiser encontrar uma informação antiga, não precisa de um índice central. Você tem duas opções:
+
+1. **grep` direcionado**(blank)`grep -r "zsh" backup/Y2026-001-039/`— e você encontra tudo o que menciona zsh no período, independentemente do ângulo (INDEX, SESSIONS_HISTORY, arquivo de sessão).
+2. **Reintegração manual**: você copia temporariamente a pasta de backup no contexto ativo e pede ao agente para analisar este período específico.
+
+O índice é implícito. Ele está na estrutura mesmo dos arquivos — cada um já sendo um índice a partir do seu próprio ângulo.
+
+== A Metáfora das Estantes
+
+Para tornar o mecanismo intuitivo, eu o concebi em três prateleiras:
+
+* **Prateleira 1 (EAGER)**— o plano de trabalho. O que eu preciso *agora*. ÍNDICE recente, PROMPT_REPRISE, regras absolutas. Leve, imediato, crítico.
+* **Prateleira 2 (LAZY)**— biblioteca de consulta. O que posso ir buscar a pedido. Referências técnicas, histórico recente, procedimentos. Mais volumoso, mas não carregado na memória.
+* **Porão (backup/)**— os arquivos frios. Tudo o que passou mas que eu não quero descartar. O agente nunca entra lá. O humano desce lá quando quiser destilar.
+
+O agente propôs inicialmente uma quarta prateleira — um`index-backup.adoc`que seria LAZY e conteria um sumário de todo o backup. Eu recusei. Seria uma redundância a mais em um sistema que já sofre de crescimento linear. A estrutura dos arquivos arquivados já é um índice.
+
+== O sensor de dois gatilhos
+
+A conceptualização era sólida, mas ainda havia um ponto cego:**Quando exatamente acionar a rotação ?**O artigo inicial o identificava como uma questão aberta. Dois dias depois, a resposta está codificada nos arquivos de governança de seis projetos: um sensor com dois gatilhos.
+
+=== O Gatilho Automático — `N % 10 == 0
+
+O primeiro gatilho é matemático. Quando o número da sessão é múltiplo de 10 — sessão 10, 20, 30, 40 — a rotação de backup é executada automaticamente dentro do procedimento de fim de sessão, logo após a etapa 6.
+
+Por que 10? É o compromisso entre duas forças opostas: uma janela muito curta (5 sessões) perde o contexto necessário à continuidade; uma janela muito longa (20 sessões) não resolve o problema de inchaço do contexto. Dez sessões, em um ritmo de uma a duas sessões por dia, cobrem aproximadamente uma semana de trabalho — suficiente para que o agente lembre das decisões recentes, mas não suficiente para que o contexto exploda.
+
+=== O Gatilho por Limiar — 500 Linhas EAGER
+
+O segundo gatilho é dinâmico. Independentemente do número da sessão, se os arquivos EAGER acumulados ultrapassarem**500 linhas**, a rotação se dispara.
+
+Este limiar protege contra o cenário em que as sessões são excepcionalmente produtivas — muito conteúdo escrito em poucas sessões. Uma sessão que produz 120 linhas de conteúdo editorial faz aumentar COMPLETED_TASKS_ARCHIVE muito mais rápido do que uma sessão de depuração que corrige duas linhas. O limiar de 500 linhas, medido via`wc -l .agents/INDEX.adoc .agents/archives/COMPLETED_TASKS_ARCHIVE_*.adoc PROMPT_REPRISE.adoc`, captura essa assimetria.
+
+=== O Gatilho Manual — "rotação de backup
+
+Finalmente, o ser humano permanece no controle. As palavras-chave`rotation backup`, `backup rotation` ou `lance la rotation backup`Disparam o procedimento mediante solicitação, independentemente do fim da sessão. Útil quando se sente que o contexto está ficando pesado, mas ainda não se está em um múltiplo de 10, ou quando se quer arquivar uma fase de trabalho antes de iniciar uma nova.
+
+[plantuml, format=svg, id=diag-capteur-trigger, alt="Les trois déclencheurs du capteur de rotation backup — automatique, seuil, manuel"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+
+title Sensor de Rotação de Backup — Os Três Gatilhos
+start
+
+:Procédure de fin de session;
+note right: Mots-clés "fim da sessão"\nou "paramos aqui"
+
+:Étapes 1 à 6\n(archivage standard);
+note right
+  1. Archive sessions/N.adoc
+  2. MAJ PROMPT_REPRISE
+  3. MAJ SESSIONS_HISTORY
+  4. MAJ INDEX.adoc
+  5. MAJ TEST_COVERAGE
+  6. MAJ COMPLETED_TASKS
+end note
+
+if (N % 10 == 0\nOU\nEAGER cumulé &gt; 500 lignes ?) then (oui)
+  :⚙️ Rotation Backup\n(étape 7);
+  note right
+    1. Créer backup/Y20XX-sessions-X-Y/
+    2. Copier intégrale INDEX + HISTORY
+       + COMPLETED_TASKS + sessions/
+    3. Tronquer actifs à 10 sessions
+    4. Ajouter _Localisation active_
+  end note
+else (non)
+  :Pas de rotation;
+endif
+
+:Checklist [✅] x 7\n(si applicable);
+
+stop
+
+@enduml
+----
+
+Este diagrama mostra a inserção exata do sensor no procedimento de fim da sessão. A etapa 7 é opcional — ela só será executada se uma das duas condições for verdadeira — mas é sistematicamente *verificada*. A lista de verificação final inclui`[✅] 7. Backup roté (si applicable)`.
+
+=== O Laço Fechado
+
+Este sensor fecha o laço aberto pelo artigo anterior. A governança Eager/Lazy havia resolvido o problema da memória do agente entre duas sessões. O mecanismo Hot/Warm/Cold resolveu o problema da memória que cresce. O sensor com dois gatilhos resolve o problema do *quand* — removendo ao ser humano a carga mental de monitorar o tamanho do contexto.
+
+[plantuml, format=svg, id=diag-boucle-fermee, alt="Les trois couches de la gouvernance agent — Eager/Lazy, Hot/Warm/Cold, Capteur"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title Os Três Camadas da Governança Agente
+left to right direction
+
+package "Camada 1 — Memória\n(Artigo 0108)" as C1 #E8F5E9 {
+  rectangle "**EAGER**\nPainel de controle\nCarregado automaticamente" as EAG
+  rectangle "**LAZY**\nManual proprietário\nCarregado sob demanda" as LAZ
+  EAG -[hidden]right-&gt; LAZ
+}
+
+package "Camada 2 — Envelhecimento\n(Artigo 0110)" as C2 #FFF9C4 {
+  rectangle "**HOT**\n10 sessões ativas\n~300 linhas" as HOT
+  rectangle "**WARM**  \nReferências\nProcedimentos" as WRM
+  rectangle "**COLD**\nbackup/\nOnda de frio" as CLD
+  HOT -[hidden]right-&gt; WRM
+  WRM -[hidden]right-&gt; CLD
+}
+
+package "Camada 3 — Gatilho\n(Hoje)" as C3 #BBDEFB {
+  rectangle "**Auto**\nN % 10 == 0" as AUTO
+  rectangle "**Limiar**\n&gt; 500 linhas" as SEUIL
+  rectangle "**Manuel**\nrotação de backup" as MAN
+  AUTO -[hidden]right-&gt; SEUIL
+  SEUIL -[hidden]right-&gt; MAN
+}
+
+C1 --&gt; C2 : "A memória cresce\n→ é necessário um mecanismo\nde envelhecimento"
+C2 --&gt; C3 : "O envelhecimento\n→ é preciso um desencadeador\npara executá-lo"
+
+note bottom of C3
+  ✅ Déployé sur 6 projets
+  magic-stick · bakery-gradle
+  plantuml-gradle · cheroliv.com
+  jhipster-gradle-plugins
+  quizz-benchmark-gradle
+end note
+
+@enduml
+----
+
+As três camadas se empilham logicamente. A primeira dá uma memória ao agente. A segunda impede que essa memória sufogue o agente. A terceira automatiza a manutenção dessa memória para que o humano não tenha que pensar nisso.
+
+=== A Migração Efetiva no cheroliv.com
+
+O mecanismo não permaneceu teórico. Sobre`cheroliv.com`, a primeira rotação de backup foi executada em 29 de abril de 2026 — as sessões de -6 a 2 migraram para`.agents/backup/Y2026-sessions-neg6-a-002/` :
+
+|===
+|Arquivo |Antes da rotação |Após rotação |ganho |`.agents/INDEX.adoc` |19 sessões listadas |10 sessões (3-12) |-9 entradas |`.agents/SESSIONS_HISTORY.adoc` |18 sessões |10 sessões |-8 entradas |`COMPLETED_TASKS_ARCHIVE` |161 linhas (sessões 1-12) |135 linhas (sessões 3-12) |-26 linhas |`sessions/` |20 arquivos |10 ficheiros |-10 arquivos |**cópia de segurança/** |Inexistente |1 onda fria (10 sessões arquivadas) |+1 pacote frio
+|===
+
+O ganho em linhas foi modesto — o projeto é jovem, 12 sessões — mas o importante é que o**mecanismo está em posição**. A próxima rotação automática será acionada na sessão 20, ou mais cedo se as 500 linhas EAGER forem atingidas.
+
+== A Lição Humano-Agente
+
+Esta sessão 048 me ensinou algo fundamental sobre a colaboração com um agente de IA.
+
+O agente tem um viés natural : ele tenta**otimizar**, à **simplificar**, à **eliminar as redundâncias**. Este é o viés de um sistema treinado para produzir respostas limpas e concisas. Diante de um conjunto de dados rico e multidimensional, o primeiro reflexo dele é reduzi-lo à sua forma mais simples.
+
+O ser humano, ele, tem uma intuição diferente: ele sente que a redundância estruturada é um**trunfo**, não é um defeito. Que a diversidade dos ângulos sobre uma mesma realidade é precisamente o que permitirá, mais tarde, uma destilação de qualidade.
+
+Não é que o agente está errado. É que o seu 'óptimo' não é o meu. O agente otimiza para o**presente**— o contexto imediato, a resposta rápida à pergunta feita. O ser humano otimiza para o**futuro**— a capacidade de encontrar, cruzar, destilar em três meses ou três anos.
+
+____ O que eu quero é o material bruto. Suas reflexões, suas hesitações, suas respostas às minhas perguntas. Não a sua síntese. A síntese, eu sei fazer melhor que você. Eu quero a matéria‑prima. ____
+
+Esta frase que eu lhe disse no final da sessão resume tudo. O agente é uma ferramenta de produção. O humano é a ferramenta de destilação. A governança não foi feita para que o agente entenda tudo sozinho — foi feita para que o humano possa, mais tarde, trabalhar o material produzido.
+
+A onda fria idêntica é a tradução arquitetônica desta filosofia: não se joga nada, não se funde nada, não se reindexa nada. Move-se o pacote intacto. A destilação virá mais tarde, à mão, pelo humano.
+
+== Suquência Lógica do Artigo Anterior
+
+Se você leulink:/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[o artigo sobre a estratégia Eager/Lazy], você reconhecerá a progressão natural:
+
+1. **Artigo 0108**— A governança Eager/Lazy : *comment* estruturar o contexto do agente em dois níveis de disponibilidade
+2. **Este artigo 0110**— O mecanismo de backup: *comment* como envelhecer este contexto sem perdê-lo quando ficar muito grande
+
+O primeiro artigo respondia à pergunta: « O agente não se lembra de nada entre duas sessões, como lhe dar uma memória?
+
+Ele responde à pergunta que decorre inevitavelmente da primeira: « A memória aumenta a cada sessão, como impedir que ela suffoque o agente sem apagá‑la ?
+
+A resposta está em um padrão:**Quente/Morno/Frio**, aplicado aos arquivos de governança. E em um princípio :**nunca perder nada, sempre realocar tudo**.
+
+== Links
+
+* Artigo anterior:link:/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[Governar um agente IA com AsciiDoc]
+* Meu site : https://cheroliv.com
+* O projeto`magic-stick`: https://github.com/cheroliv/magic-stick
+
+---
+
+*Um bom sistema de governança nunca apaga dados. Ele os organiza.*
+----
+----
+
+A chave do mecanismo:**o backup não é um índice central, é uma cópia fiel da onda passada**. Quando ultrapassamos o horizonte de 10 sessões ativas, não apagamos nada. Não reindexamos nada. Não fundimos nada. Pegamos no pacote de ficheiros de agentes tal como estava na sessão N-10, e movemo-lo para`backup/`Por favor, forneça o texto em francês que deseja traduzir.
+
+Os arquivos ativos, por sua vez, são truncados:
+
+* ÍNDICE: apenas as 10 últimas linhas (sliding window)
+* SESSIONS_HISTORY : idem
+* COMPLETED_TASKS_ARCHIVE : novo arquivo para o período atual
+* sessions/ : apenas as 2 últimas sessões
+
+[plantuml, format=svg, id=diag-hot-warm-cold, alt="Architecture Hot/Warm/Cold du contexte agent — EAGER/LAZY/backup"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+
+title Arquitetura Hot / Warm / Cold do Contexto do Agente
+package "HOT (EAGER)\nCarregado automaticamente\n~300 linhas" as HOT #FFCDD2 {
+  file "INDEX.adoc\n(10 sessões)" as IDX_HOT
+  file "PROMPT_REPRISE\n(sessão N+1)" as PRO_HOT
+  file "AGENT.adoc\n(regras absolutas)" as AG_HOT
+}
+
+package "WARM (LAZY)\nCarregado sob demanda\n~500 linhas" as WARM #FFF9C4 {
+  file "SESSIONS_HISTORY\n(10 últimas)" as HIS_WARM
+  file "SCRIPT_VERIFICATION\n(última)" as VER_WARM
+  file "PROCEDURES.adoc\n(templates)" as PRO_WARM
+  file "*_REFERENCE.adoc\n(doc técnica)" as REF_WARM
+}
+
+package "COLD (backup/)\nNunca carregado\nLeitura humana apenas" as COLD #BBDEFB {
+  folder "Y2026-001-039/" as WAVE {
+    file "INDEX (completo)" as IDX_COLD
+    file "SESSIONS_HISTORY\n(completo)" as HIS_COLD
+    file "COMPLETED_TASKS\n(completo)" as ARCH_COLD
+    folder "sessions/ (001-039)" as SESS_COLD
+  }
+  folder "Y2026-040-???\n(futura)" as FUTURE
+}
+
+HOT --&gt; WARM : "Agente recupera\nse necessário"
+WARM --&gt; COLD : "Nunca automático\nO humano vai sozinho"
+
+note bottom of COLD
+Regra: CÓPIA INTEGRAL
+Sem transformação
+Sem reindexação
+Read-only após arquivamento
+end note
+
+@enduml
+----
+
+O ganho imediato é massivo: o contexto EAGER passa de**~5200 linhas para ~300 linhas**. Uma divisão por 17. Sem ter perdido uma única linha de dados históricos.
+
+== Por Que Não É um "Saco Sem Fundo
+
+O agente, em sua primeira iteração, temia que`backup/`se torne uma caixa preta — uma pasta onde se jogam arquivos que nunca serão relidos. É um medo legítimo. Mas baseia-se em uma confusão.
+
+Um "catch-all" é quando jogamos arquivos**sem estrutura, sem convenção, sem lógica de agrupamento**. Aqui, o backup é estruturado por período (`Y2026-001-039`), e cada pasta de backup contém**a mesma estrutura**que a pasta`.agents/`ativo: INDEX, SESSIONS_HISTORY, COMPLETED_TASKS_ARCHIVE, sessions/.
+
+Não é um "faz-tudo". É um**snapshot com carimbo de data/hora**Poder-se-ia até dizer que é um mecanismo de versionamento simplificado — com a ressalva de que não versiona os ficheiros individualmente, mas sim o pacote completo da governação num determinado momento T.
+
+Quando quiser recuperar uma informação antiga, não precisará de um índice central. Você tem duas opções:
+
+1. **grep` direcionado**Please provide the text you would like me to translate.`grep -r "zsh" backup/Y2026-001-039/`— e você encontra tudo o que menciona `zsh` no período, independentemente do ângulo (INDEX, SESSIONS_HISTORY, arquivo de sessão).
+2. **Reintegração manual**: você copia temporariamente a pasta de backup para o contexto ativo e solicita que o agente analise esse período específico.
+
+O índice é implícito. Está na própria estrutura dos ficheiros — sendo cada um já um índice a partir do seu próprio ângulo.
+
+== A Metáfora das Prateleiras
+
+Para tornar o mecanismo intuitivo, eu o conceptualizei em três prateleiras:
+
+* **Prateleira 1 (EAGER)**— o plano de trabalho. Do que eu preciso *agora*. INDEX recente, PROMPT_REPRISE, regras absolutas. Leve, imediato, crítico.
+* **Prateleira 2 (LAZY)**— a biblioteca de consulta. O que posso buscar sob demanda. Referências técnicas, histórico recente, procedimentos. Mais volumoso, mas não carregado na memória.
+* **Cave (backup/)**— os arquivos frios. Tudo o que passou, mas que eu não quero jogar fora. O agente nunca entra lá. O humano desce quando quer destilar.
+
+O agente propôs inicialmente uma quarta prateleira — um`index-backup.adoc`que seria LAZY e conteria um índice de todo o backup. Eu recusei. Seria mais uma redundância em um sistema que já sofre de crescimento linear. A estrutura dos arquivos arquivados já é um índice.
+
+== O Sensor de Dois Gatilhos
+
+A conceptualização era sólida, mas restava um ponto cego:**quando exatamente acionar a rotação?**O artigo inicial identificava-a como uma questão aberta. Dois dias depois, a resposta está codificada nos ficheiros de governação de seis projetos: um sensor com dois gatilhos.
+
+=== O Gatilho Automático — `N % 10 == 0
+
+O primeiro gatilho é matemático. Quando o número da sessão é um múltiplo de 10 — sessão 10, 20, 30, 40 — a rotação de backup é executada automaticamente dentro do procedimento de fim de sessão, logo após a etapa 6.
+
+Por que 10? É o compromisso entre duas forças contrárias: uma janela curta demais (5 sessões) perde o contexto necessário para a continuidade; uma janela longa demais (20 sessões) não resolve o problema da obesidade do contexto. Dez sessões, em um ritmo de uma a duas sessões por dia, cobrem aproximadamente uma semana de trabalho — o suficiente para que o agente se lembre das decisões recentes, mas não o suficiente para que o contexto exploda.
+
+=== O Gatilho por Limiar — 500 Linhas EAGER
+
+O segundo gatilho é dinâmico. Independentemente do número da sessão, se os arquivos EAGER acumulados excederem**500 linhas**, a rotação é acionada.
+
+Este limite protege contra o cenário em que as sessões são excepcionalmente produtivas — muito conteúdo escrito em poucas sessões. Uma sessão que produz 120 linhas de conteúdo editorial faz crescer o `COMPLETED_TASKS_ARCHIVE` muito mais rápido do que uma sessão de debug que corrige duas linhas. O limite de 500 linhas, medido via`wc -l .agents/INDEX.adoc .agents/archives/COMPLETED_TASKS_ARCHIVE_*.adoc PROMPT_REPRISE.adoc`, capta essa assimetria.
+
+=== O Gatilho Manual — "rotation backup
+
+Finalmente, o humano mantém o controle. As palavras-chave`rotation backup`, `backup rotation` ou `lance la rotation backup`acionam o procedimento sob demanda, independentemente do fim da sessão. Útil quando se sente que o contexto está a ficar pesado, mas ainda não se chegou a um múltiplo de 10, ou quando se quer arquivar uma fase de trabalho antes de começar uma nova.
+
+[plantuml, format=svg, id=diag-capteur-trigger, alt="Les trois déclencheurs du capteur de rotation backup — automatique, seuil, manuel"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+
+title Sensor de Rotação Backup — Os Três Gatilhos
+start
+
+:Procédure de fin de session;
+note right: Mots-clés "fim de sessão"\nou "paramos por aqui"
+
+:Étapes 1 à 6\n(archivage standard);
+note right
+1. Arquivar sessões/N.adoc
+2. ATUALIZAR PROMPT_REPRISE
+3. ATUALIZAR SESSIONS_HISTORY
+4. ATUALIZAR INDEX.adoc
+5. ATUALIZAR TEST_COVERAGE
+6. ATUALIZAR COMPLETED_TASKS
+end note
+
+if (N % 10 == 0\nOU\nEAGER cumulé &gt; 500 lignes ?) then (oui)
+  :⚙️ Rotation Backup\n(étape 7);
+  note right
+1. Criar backup/Y20XX-sessions-X-Y/
+2. Copiar integralmente INDEX + HISTORY
++ COMPLETED_TASKS + sessions/
+3. Truncar ativos para 10 sessões
+4. Adicionar _Localização ativa_
+  end note
+else (non)
+  :Pas de rotation;
+endif
+
+:Checklist [✅] x 7\n(si applicable);
+
+stop
+
+@enduml
+----
+
+Este diagrama mostra a inserção exata do sensor no procedimento de fim de sessão. A etapa 7 é opcional — ela só é executada se uma das duas condições for verdadeira — mas é sistematicamente *verificada*. A checklist final inclui`[✅] 7. Backup roté (si applicable)`Please provide the French text you would like me to translate into Portuguese.
+
+=== O Loop Fechado
+
+Este sensor fecha o loop aberto pelo artigo anterior. A governança Eager/Lazy resolveu o problema da memória do agente entre duas sessões. O mecanismo Hot/Warm/Cold resolveu o problema da memória que cresce. O sensor de dois gatilhos resolve o problema do *quando* — retirando do humano a carga mental de monitorar o tamanho do contexto.
+
+[plantuml, format=svg, id=diag-boucle-fermee, alt="Les trois couches de la gouvernance agent — Eager/Lazy, Hot/Warm/Cold, Capteur"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title As Três Camadas da Governança do Agente
+left to right direction
+
+package "Camada 1 — Memória\n(Artigo 0108)" as C1 #E8F5E9 {
+  rectangle "**EAGER**\nPainel de controle\nCarregamento automático" as EAG
+  rectangle "**LAZY**\nManual do proprietário\nCarregado sob demanda" as LAZ
+  EAG -[hidden]right-&gt; LAZ
+}
+
+package "Camada 2 — Envelhecimento\n(Artigo 0110)" as C2 #FFF9C4 {
+  rectangle "**HOT**\n10 sessões ativas\n~300 linhas" as HOT
+  rectangle "**WARM**\nReferências\nProcedimentos" as WRM
+  rectangle "**COLD**\nbackup/\nOnda fria" as CLD
+  HOT -[hidden]right-&gt; WRM
+  WRM -[hidden]right-&gt; CLD
+}
+
+package "Camada 3 — Gatilho\n(Hoje)" as C3 #BBDEFB {
+  rectangle "**Auto**\nN % 10 == 0" as AUTO
+  rectangle "**Limite**\n&gt; 500 linhas" as SEUIL
+  rectangle "**Manual**\nrotação de backup" as MAN
+  AUTO -[hidden]right-&gt; SEUIL
+  SEUIL -[hidden]right-&gt; MAN
+}
+
+C1 --&gt; C2 : "A memória cresce\n→ é necessário um mecanismo\nde envelhecimento"
+C2 --&gt; C3 : "O envelhecimento\n→ é necessário um gatilho\npara executá-lo"
+
+note bottom of C3
+✅ Implantado em 6 projetos
+magic-stick · bakery-gradle
+plantuml-gradle · cheroliv.com
+jhipster-gradle-plugins
+quizz-benchmark-gradle
+end note
+
+@enduml
+----
+
+As três camadas empilham-se logicamente. A primeira dá memória ao agente. A segunda impede que esta memória sufoque o agente. A terceira automatiza a manutenção desta memória para que o humano não tenha de pensar nisso.
+
+=== A Migração Efetiva em cheroliv.com
+
+O mecanismo não permaneceu teórico. Sur`cheroliv.com`, a primeira rotação de backup foi executada em 29 de abril de 2026 — as sessões -6 a 2 migraram para`.agents/backup/Y2026-sessions-neg6-a-002/`Please provide the text you would like me to translate.
+
+|===
+|Arquivo |Antes da rotação |Após rotação |Ganho |`.agents/INDEX.adoc` |19 sessões listadas |10 sessões (3-12) |-9 entradas |`.agents/SESSIONS_HISTORY.adoc` |18 sessões |10 sessões |-8 entradas |`COMPLETED_TASKS_ARCHIVE` |161 linhas (sessões 1-12) |135 linhas (sessões 3-12) |-26 linhas |`sessions/` |20 arquivos |10 ficheiros |-10 arquivos |**backup/** |Inexistente |1 onda fria (10 sessões arquivadas) |+1 pacote frio
+|===
+
+O ganho em linhas foi modesto — o projeto é jovem, 12 sessões — mas o importante é que o**mecanismo está implementado**. A próxima rotação automática será acionada na sessão 20, ou antes, se as 500 linhas EAGER forem atingidas.
+
+== A Lição Humano-Agente
+
+Esta sessão 048 ensinou-me algo fundamental sobre a colaboração com um agente de IA.
+
+O agente tem um viés natural: ele busca**otimizar**, à **simplificar**, à **eliminar as redundâncias**. É o viés de um sistema treinado para produzir respostas limpas e concisas. Diante de um dataset rico e multidimensional, seu primeiro reflexo é reduzi-lo à sua expressão mais simples.
+
+O ser humano, por sua vez, tem uma intuição diferente: ele pressente que a redundância estruturada é um**trunfo**, não um defeito. Que a diversidade de ângulos sobre uma mesma realidade é precisamente o que permitirá, mais tarde, uma destilação de qualidade.
+
+Não é que o agente esteja errado. É que o seu "optimum" não é o meu. O agente otimiza para o**presente**— o contexto imediato, a resposta rápida à pergunta colocada. O humano otimiza para o**futuro**— a capacidade de reencontrar, cruzar, destilar em três meses ou três anos.
+
+Please provide the text you would like me to translate. O que eu quero é o material bruto. As tuas reflexões, as tuas hesitações, as tuas respostas às minhas perguntas. Não a tua síntese. A síntese, eu sei fazer melhor que tu. Eu quero a matéria-prima. Please provide the text you would like me to translate.
+
+Esta frase que lhe disse ao final da sessão resume tudo. O agente é uma ferramenta de produção. O humano é a ferramenta de destilação. A governança não serve para que o agente compreenda tudo sozinho — serve para que o humano possa, mais tarde, trabalhar o material produzido.
+
+A onda fria idêntica é a tradução arquitetural desta filosofia: não se descarta nada, não se funde nada, não se reindexa nada. Move-se o pacote intacto. A destilação virá mais tarde, manualmente, por meio do humano.
+
+== A Sequência Lógica do Artigo Anterior
+
+Se você leulink:/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[o artigo sobre a estratégia Eager/Lazy], você reconhecerá a progressão natural:
+
+1. **Artigo 0108**— A governança Eager/Lazy: *como* estruturar o contexto do agente em dois níveis de disponibilidade
+2. **Este artigo 0110**— O mecanismo de backup: *como* envelhecer este contexto sem o perder quando ele se torna volumoso demais
+
+O primeiro artigo respondia à pergunta: « O agente não se lembra de nada entre duas sessões, como dar-lhe uma memória?
+
+Este responde à pergunta que decorre inevitavelmente da primeira: « A memória cresce a cada sessão, como impedi-la de sufocar o agente sem a apagar?
+
+A resposta resume-se a um pattern:**Quente/Morno/Frio**, aplicado aos arquivos de governança. E em um princípio:**nunca perder nada, sempre relocalizar tudo**Please provide the text you would like me to translate.
+
+== Links
+
+* Artigo anterior:link:/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html[Governar um Agente de IA com AsciiDoc]
+* Meu site: https://cheroliv.com
+* O projeto`magic-stick`: https://github.com/cheroliv/magic-stick
+
+---
+
+Um bom sistema de governança nunca exclui dados. Ele os arquiva.</code></pre>
+</div>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Artigos relacionados</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : Transformar AsciiDoc em Vídeo MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Auditoria do meu Consumo de LLM: SQLite, OpenCode, Ollama Cloud e Por Que Minha Assinatura Pro Está Quebrando o Mercado Global</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">A Arquitetura « Plugin Independente + Raiz do Consumidor » : Por que meus Builds Gradle se duplicam</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">O Knowledge Graph como motor de recomendação: como eu matei os « artigos relacionados » cronológicos</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0110_mecanisme_backup_contexte_agent_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Por favor, ative o JavaScript para ver os
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">comentários fornecidos por Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Desenvolvedor formador especializado em engenharia pedagógica.
+                        Concepção de soluções de e-learning inovadoras para transformar a aprendizagem.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="Feed RSS">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Contato">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Navegação</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Início</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Recursos</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>Arquivos</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> slides</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> formações</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> chave inicializável</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Localização</h6>
+                    <p class="mb-3">Baseado na região de Paris, intervenções possíveis na França e à distância.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, França</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Teletrabalho disponível</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Deslocamentos na França</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,1272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kotlin Arrow: Làm chủ khả năng điều hướng trong monad Either — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/vi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="Kotlin Arrow: Làm chủ khả năng điều hướng trong monad Either — Cheroliv"/>
+        <meta property="og:description" content="Khám phá các kỹ thuật nâng cao để điều hướng hiệu quả trong các phía `right` và `left` của monad Either với thư viện Kotlin Arrow."/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/vi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html"/>
+        <meta property="og:locale" content="vi_VN"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="Kotlin Arrow: Làm chủ khả năng điều hướng trong monad Either — Cheroliv"/>
+        <meta name="twitter:description" content="Khám phá các kỹ thuật nâng cao để điều hướng hiệu quả trong các phía `right` và `left` của monad Either với thư viện Kotlin Arrow."/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.png"/>
+        <meta name="description" content="Khám phá các kỹ thuật nâng cao để điều hướng hiệu quả trong các phía `right` và `left` của monad Either với thư viện Kotlin Arrow."/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Bật/tắt điều hướng">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">Trang chủ</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">Chuyên môn</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">Blog</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">Liên hệ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Chọn giao diện chủ đề">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">Rõ ràng</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>Sáng
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>Tối
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>Độ tương phản cao
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Chọn ngôn ngữ">
+                        <span class="me-1">🇻🇳</span>
+                        <span class="ms-1">VI</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2024/0075_kotlin_arrow-traverse_right_and_left_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html"},
+                      "headline": "Kotlin Arrow: L\u00E0m ch\u1EE7 kh\u1EA3 n\u0103ng \u0111i\u1EC1u h\u01B0\u1EDBng trong monad Either",
+                      "description": "Kh\u00E1m ph\u00E1 c\u00E1c k\u1EF9 thu\u1EADt n\u00E2ng cao \u0111\u1EC3 \u0111i\u1EC1u h\u01B0\u1EDBng hi\u1EC7u qu\u1EA3 trong c\u00E1c ph\u00EDa `right` v\u00E0 `left` c\u1EE7a monad Either v\u1EDBi th\u01B0 vi\u1EC7n Kotlin Arrow.",
+                      "datePublished": "2024-09-24",
+                      "dateModified": "2024-09-24",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "Kotlin Arrow: L\u00E0m ch\u1EE7 kh\u1EA3 n\u0103ng \u0111i\u1EC1u h\u01B0\u1EDBng trong monad Either", "item": "https:\/\/cheroliv.com\/blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">Kotlin Arrow: Làm chủ khả năng điều hướng trong monad Either</h1>
+                <p class="lead">
+                    <em>Đăng ngày 24 September 2024</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">Mục lục</div>
+<ul class="sectlevel1">
+<li><a href="#_giới_thiệu">Giới thiệu</a></li>
+<li><a href="#_monad_either_là_gì">Monad Either là gì?</a>
+<ul class="sectlevel2">
+<li><a href="#_tại_sao_nên_sử_dụng_either">Tại sao nên sử dụng Either?</a></li>
+</ul>
+</li>
+<li><a href="#_bối_cảnh">Bối cảnh</a></li>
+<li><a href="#_các_phương_pháp_tiếp_cận_khác_nhau">Các phương pháp tiếp cận khác nhau</a>
+<ul class="sectlevel2">
+<li><a href="#_cách_tiếp_cận_cổ_điển_với_when">Cách tiếp cận cổ điển với `when</a></li>
+<li><a href="#_sử_dụng_fold_để_có_cách_tiếp_cận_ngắn_gọn_hơn">Sử dụng <code>fold</code> để có cách tiếp cận ngắn gọn hơn</a></li>
+<li><a href="#_biến_đổi_với_map_và_mapleft">Biến đổi với <code>map</code> và `mapLeft</a></li>
+<li><a href="#_xử_lý_lỗi_với_getorelse">Xử lý lỗi với `getOrElse</a></li>
+<li><a href="#_các_tác_vụ_bên_cạnh_với_onleft_và_onright">Các tác vụ bên cạnh với <code>onLeft</code> và `onRight</a></li>
+<li><a href="#_chuỗi_các_thao_tác_với_flatmap">Chuỗi các thao tác với `flatMap</a></li>
+<li><a href="#_biến_đổi_hai_chiều_với_bimap">Biến đổi hai chiều với `bimap</a></li>
+<li><a href="#_đảo_ngược_các_phía_với_swap">Đảo ngược các phía với `swap</a></li>
+<li><a href="#_sử_dụng_tap_và_tapleft">Sử dụng <code>tap</code> và <code>tapLeft</code>:</a></li>
+<li><a href="#_sử_dụng_recover">Sử dụng <code>recover</code>:</a></li>
+</ul>
+</li>
+<li><a href="#_các_trường_hợp_sử_dụng_thực_tế">Các trường hợp sử dụng thực tế</a></li>
+<li><a href="#_kết_luận">Kết luận</a></li>
+<li><a href="#_để_tìm_hiểu_thêm">Để tìm hiểu thêm</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_giới_thiệu">Giới thiệu</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title"><em>Đối tượng mục tiêu :</em> Các nhà phát triển Kotlin trình độ trung cấp đến cao cấp.</div>
+<p>Trong thế giới lập trình hàm với Kotlin, thư viện Arrow cung cấp các công cụ mạnh mẽ để quản lý lỗi và các trường hợp thay thế. Trong số các công cụ này, monad`Either`nổi bật với khả năng đại diện cho hai trạng thái có thể xảy ra: thành công (<code>Right</code>) hoặc thất bại (<code>Left</code>). Nhưng làm thế nào để điều hướng hiệu quả giữa hai trạng thái này? Đó là điều chúng ta sẽ khám phá trong bài viết này.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_monad_either_là_gì">Monad Either là gì?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Monad`Either`là một cấu trúc dữ liệu đại diện cho hai khả năng loại trừ lẫn nhau. Trong Kotlin với Arrow, nó thường được sử dụng để quản lý các trường hợp thành công và thất bại của một thao tác, cung cấp một giải pháp thay thế trang nhã cho các ngoại lệ truyền thống.</p>
+</div>
+<div class="sect2">
+<h3 id="_tại_sao_nên_sử_dụng_either">Tại sao nên sử dụng Either?</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Quản lý lỗi tường minh: Buộc nhà phát triển phải xem xét các trường hợp thất bại.</p>
+</li>
+<li>
+<p>Composition hàm: Tạo điều kiện thuận lợi cho việc chuỗi các thao tác có thể thất bại.</p>
+</li>
+<li>
+<p>Type-safety: Các lỗi được định kiểu, giúp quản lý chúng một cách chính xác hơn.</p>
+</li>
+<li>
+<p>Không có ngoại lệ: Tránh các tác dụng phụ và sự gián đoạn không mong muốn của luồng thực thi.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bối_cảnh">Bối cảnh</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hãy tưởng tượng bạn đang phát triển một API REST vớihttps://spring.io/projects/spring-boot/[Spring Boot,windows=read-later] et <a href="https://kotlinlang.org/">Kotlin</a>, bằng cách sử dụng thư việnhttps://arrow-kt.io/[Arrow,windows=read-later]. Bạn có một hàm`findOneUserByEmail`mà trả về một`Either&lt;Throwable, User&gt;`. Làm thế nào bạn có thể xử lý kết quả này một cách thanh thoát và hiệu quả?</p>
+</div>
+<div class="paragraph">
+<p>Chúng ta có một lớp <code>User</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">@file:Suppress(
+    "RemoveRedundantQualifierName",
+    "MemberVisibilityCanBePrivate",
+    "SqlNoDataSourceInspection"
+)
+
+package webapp.users
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
+import org.springframework.beans.factory.getBean
+import org.springframework.context.ApplicationContext
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
+import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.awaitOne
+import org.springframework.r2dbc.core.awaitRowsUpdated
+import webapp.core.property.ANONYMOUS_USER
+import webapp.core.property.EMPTY_STRING
+import webapp.core.utils.AppUtils.cleanField
+import webapp.users.EntityModel.Companion.ID_MEMBER
+import webapp.users.User.UserDao.Attributes.EMAIL_ATTR
+import webapp.users.User.UserDao.Attributes.ID_ATTR
+import webapp.users.User.UserDao.Attributes.LANG_KEY_ATTR
+import webapp.users.User.UserDao.Attributes.LOGIN_ATTR
+import webapp.users.User.UserDao.Attributes.PASSWORD_ATTR
+import webapp.users.User.UserDao.Attributes.VERSION_ATTR
+import webapp.users.User.UserDao.Constraints.LOGIN_REGEX
+import webapp.users.User.UserDao.Fields.EMAIL_FIELD
+import webapp.users.User.UserDao.Fields.ID_FIELD
+import webapp.users.User.UserDao.Fields.LANG_KEY_FIELD
+import webapp.users.User.UserDao.Fields.LOGIN_FIELD
+import webapp.users.User.UserDao.Fields.PASSWORD_FIELD
+import webapp.users.User.UserDao.Fields.VERSION_FIELD
+import webapp.users.User.UserDao.Relations.INSERT
+import webapp.users.security.Role
+import webapp.users.security.Role.RoleDao
+import webapp.users.security.UserRole.UserRoleDao
+import java.util.*
+import jakarta.validation.constraints.Email as EmailConstraint
+
+data class User(
+    override val id: UUID? = null,
+
+    @field:NotNull
+    @field:Pattern(regexp = LOGIN_REGEX)
+    @field:Size(min = 1, max = 50)
+    val login: String,
+
+    @JsonIgnore
+    @field:NotNull
+    @field:Size(min = 60, max = 60)
+    val password: String = EMPTY_STRING,
+
+    @field:EmailConstraint
+    @field:Size(min = 5, max = 254)
+    val email: String = EMPTY_STRING,
+
+    @JsonIgnore
+    val roles: MutableSet&lt;Role&gt; = mutableSetOf(Role(ANONYMOUS_USER)),
+
+    @field:Size(min = 2, max = 10)
+    val langKey: String = EMPTY_STRING,
+
+    @JsonIgnore
+    val version: Long = -1,
+) : EntityModel&lt;UUID&gt;() {
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array&lt;String&gt;) = println(UserDao.Relations.sqlScript)
+    }
+
+    object UserDao {
+        object Constraints {
+            // Regex for acceptable logins
+            const val LOGIN_REGEX =
+                "^(?&gt;[a-zA-Z0-9!$&amp;*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?&gt;[_.@A-Za-z0-9-]+)$"
+            const val PASSWORD_MIN: Int = 4
+            const val PASSWORD_MAX: Int = 16
+            const val IMAGE_URL_DEFAULT = "https://placehold.it/50x50"
+            const val PHONE_REGEX = "^(\\+|00)?[1-9]\\d{0,49}\$"
+        }
+
+        object Members {
+            const val PASSWORD_MEMBER = "password"
+            const val ROLES_MEMBER = "roles"
+        }
+
+        object Fields {
+            const val ID_FIELD = "`id`"
+            const val LOGIN_FIELD = "`login`"
+            const val PASSWORD_FIELD = "`password`"
+            const val EMAIL_FIELD = "`email`"
+            const val LANG_KEY_FIELD = "`lang_key`"
+            const val VERSION_FIELD = "`version`"
+        }
+
+        object Attributes {
+            val ID_ATTR = ID_FIELD.cleanField()
+            val LOGIN_ATTR = LOGIN_FIELD.cleanField()
+            val PASSWORD_ATTR = PASSWORD_FIELD.cleanField()
+            val EMAIL_ATTR = EMAIL_FIELD.cleanField()
+            const val LANG_KEY_ATTR = "langKey"
+            val VERSION_ATTR = VERSION_FIELD.cleanField()
+        }
+
+        object Relations {
+            const val TABLE_NAME = "`user`"
+            const val SQL_SCRIPT = """
+            CREATE TABLE IF NOT EXISTS $TABLE_NAME (
+                $ID_FIELD                     UUID default random_uuid() PRIMARY KEY,
+                $LOGIN_FIELD                  VARCHAR,
+                $PASSWORD_FIELD               VARCHAR,
+                $EMAIL_FIELD                  VARCHAR,
+                $LANG_KEY_FIELD               VARCHAR,
+                $VERSION_FIELD                bigint
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS `uniq_idx_user_login`
+            ON $TABLE_NAME ($LOGIN_FIELD);
+            CREATE UNIQUE INDEX IF NOT EXISTS `uniq_idx_user_email`
+            ON $TABLE_NAME ($EMAIL_FIELD);
+"""
+
+            @Suppress("SqlDialectInspection")
+            const val INSERT = """
+            insert into $TABLE_NAME (
+                $LOGIN_FIELD, $EMAIL_FIELD,
+                $PASSWORD_FIELD, $LANG_KEY_FIELD,
+                $VERSION_FIELD
+            ) values ( :login, :email, :password, :langKey, :version)"""
+
+            @JvmStatic
+            val sqlScript: String
+                get() = setOf(
+                    UserDao.Relations.SQL_SCRIPT,
+                    RoleDao.Relations.SQL_SCRIPT,
+                    UserRoleDao.Relations.SQL_SCRIPT
+                ).joinToString("")
+                    .trimMargin()
+        }
+
+        object Dao {
+            val Pair&lt;User, ApplicationContext&gt;.toJson: String
+                get() = second.getBean&lt;ObjectMapper&gt;().writeValueAsString(first)
+
+            suspend fun Pair&lt;User, ApplicationContext&gt;.save(): Either&lt;Throwable, Long&gt; = try {
+                second.getBean&lt;R2dbcEntityTemplate&gt;()
+                    .databaseClient
+                    .sql(INSERT)
+                    .bind(LOGIN_ATTR, first.login)
+                    .bind(EMAIL_ATTR, first.email)
+                    .bind(PASSWORD_ATTR, first.password)
+                    .bind(LANG_KEY_ATTR, first.langKey)
+                    .bind(VERSION_ATTR, first.version)
+                    .fetch()
+                    .awaitRowsUpdated()
+                    .right()
+            } catch (e: Throwable) {
+                e.left()
+            }
+
+
+            suspend fun ApplicationContext.findOneUserByEmail(
+                email: String
+            ): Either&lt;Throwable, User&gt; = try {
+                getBean&lt;DatabaseClient&gt;()
+                    .sql("SELECT * FROM `user` WHERE LOWER(email) = LOWER(:email)")
+                    .bind("email", email)
+                    .fetch()
+                    .awaitOne()
+                    .let { row -&gt;
+                        User(
+                            id = row[ID_ATTR] as UUID?,
+                            login = row[LOGIN_ATTR] as String,
+                            password = row[PASSWORD_ATTR] as String,
+                            email = row[EMAIL_ATTR] as String,
+                            langKey = row[LANG_KEY_ATTR] as String,
+                            version = row[VERSION_ATTR] as Long
+                        )
+                    }.right()
+            } catch (e: Throwable) {
+                e.left()
+            }
+        }
+    }
+
+    /** Account REST API URIs */
+    object UserRestApis {
+        const val API_AUTHORITY = "/api/authorities"
+        const val API_USERS = "/api/users"
+        const val API_SIGNUP = "/signup"
+        const val API_SIGNUP_PATH = "$API_USERS$API_SIGNUP"
+        const val API_ACTIVATE = "/activate"
+        const val API_ACTIVATE_PATH = "$API_USERS$API_ACTIVATE?key="
+        const val API_ACTIVATE_PARAM = "{activationKey}"
+        const val API_ACTIVATE_KEY = "key"
+        const val API_RESET_INIT = "/reset-password/init"
+        const val API_RESET_FINISH = "/reset-password/finish"
+        const val API_CHANGE = "/change-password"
+        const val API_CHANGE_PATH = "$API_USERS$API_CHANGE"
+    }
+}
+
+// Abstract entity model with Generic ID, which can be of any type
+abstract class EntityModel&lt;T&gt;(
+    open val id: T? = null
+) {
+    companion object {
+        const val ID_MEMBER = "id"
+    }
+}
+
+// Generic extension function that allows the ID to be applied to any EntityModel type
+inline fun &lt;reified T : EntityModel&lt;ID&gt;, ID&gt; T.withId(id: ID): T {
+    // Use reflection to create a copy with the passed ID
+    return this::class.constructors.first { it.parameters.any { param -&gt; param.name == ID_MEMBER } }
+        .call(id, *this::class.constructors.first().parameters.drop(1).map { param -&gt;
+            this::class.members.first { member -&gt; member.name == param.name }.call(this)
+        }.toTypedArray())
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_các_phương_pháp_tiếp_cận_khác_nhau">Các phương pháp tiếp cận khác nhau</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_cách_tiếp_cận_cổ_điển_với_when">Cách tiếp cận cổ điển với `when</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val user: User by lazy { userFactory(USER) }
+
+val result: Either&lt;Throwable, User&gt; = context.findOneUserByEmail(user.email)
+
+when (result) {
+    is Either.Left -&gt; {
+        val error = result.value
+        println("Erreur : ${error.message}")
+    }
+    is Either.Right -&gt; {
+        val user = result.value
+        println("Utilisateur trouvé : ${user.login}")
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Phương pháp này, mặc dù đơn giản và dễ đọc, nhưng không tận dụng hết khả năng chức năng của Arrow.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sử_dụng_fold_để_có_cách_tiếp_cận_ngắn_gọn_hơn">Sử dụng <code>fold</code> để có cách tiếp cận ngắn gọn hơn</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">result.fold(
+{ error -&gt; println("Erreur : ${error.message}") },
+{ user -&gt; println("Utilisateur trouvé : ${user.login}") }
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`fold`cho phép định nghĩa các hành động cho cả hai trường hợp (Left và Right) một cách súc tích và trang nhã.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_biến_đổi_với_map_và_mapleft">Biến đổi với <code>map</code> và `mapLeft</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val processedResult = result
+    .map { user -&gt; "Utilisateur trouvé : ${user.login}" }
+    .mapLeft { error -&gt; "Erreur : ${error.message}" }
+
+println(processedResult.merge())</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Cách tiếp cận này cho phép chuyển đổi các giá trị chứa trong <code>Either</code> trong khi vẫn giữ nguyên cấu trúc của nó, lý tưởng cho các chuỗi xử lý phức tạp hơn.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_xử_lý_lỗi_với_getorelse">Xử lý lỗi với `getOrElse</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val user = result.getOrElse { error -&gt;
+    println("Erreur : ${error.message}")
+    User(login = "default", email = "default@example.com") // utilisateur par défaut
+}
+println("Login : ${user.login}")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`getOrElse`cung cấp khả năng quản lý lỗi tinh tế bằng cách cho phép cung cấp một giá trị mặc định.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_các_tác_vụ_bên_cạnh_với_onleft_và_onright">Các tác vụ bên cạnh với <code>onLeft</code> và `onRight</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">result.onLeft { error -&gt; println("Erreur : ${error.message}") }
+.onRight { user -&gt; println("Utilisateur trouvé : ${user.login}") }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Các phương thức này cho phép thực hiện các hành động trên mỗi phía mà không làm thay đổi <code>Either</code>, hoàn hảo cho việc logging hoặc các tác dụng phụ nhẹ.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_chuỗi_các_thao_tác_với_flatmap">Chuỗi các thao tác với `flatMap</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">fun findUser(email: String): Either&lt;Throwable, User&gt; = // ... implémentation
+
+fun getUserPermissions(user: User): Either&lt;Throwable, List&lt;String&gt;&gt; = // ... implémentation
+
+val userPermissions = findUser("user@example.com")
+    .flatMap { user -&gt; getUserPermissions(user) }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>flatMap`hữu ích để chuỗi các hoạt động mà bản thân chúng trả về các`Either</code>, từ đó tránh được các`Either`lồng nhau.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_biến_đổi_hai_chiều_với_bimap">Biến đổi hai chiều với `bimap</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val result: Either&lt;Throwable, User&gt; = // ... obtention du résultat
+val processedResult = result.bimap(
+    { error -&gt; "Erreur: ${error.message}" },
+    { user -&gt; "Utilisateur: ${user.login}" }
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`bimap`cho phép chuyển đổi cả bên trái và bên phải trong một thao tác duy nhất.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_đảo_ngược_các_phía_với_swap">Đảo ngược các phía với `swap</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val result: Either&lt;Throwable, User&gt; = // ... obtention du résultat
+val swapped = result.swap()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>swap`là hữu ích khi bạn muốn đảo ngược các cạnh của một`Either</code>, ví dụ như để điều chỉnh giao diện của một hàm này cho phù hợp với một hàm khác.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sử_dụng_tap_và_tapleft">Sử dụng <code>tap</code> và <code>tapLeft</code>:</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">result.tap { user -&gt; println("Utilisateur trouvé : ${user.login}") }
+.tapLeft { error -&gt; println("Erreur : ${error.message}") }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Tương tự như`onLeft` et <code>onRight</code>, nhưng các phương thức này trả về Either ban đầu, điều này hữu ích cho việc chuỗi các thao tác.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sử_dụng_recover">Sử dụng <code>recover</code>:</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">val recoveredUser = result.recover { error -&gt;
+    println("Erreur récupérée : ${error.message}")
+    User(login = "recovered", email = "recovered@example.com")
+}
+println("Login : ${recoveredUser.login}")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Phương pháp này cho phép chuyển đổi một <code>Either.Left</code> thành <code>Either.Right</code> bằng cách cung cấp một giá trị thay thế.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_các_trường_hợp_sử_dụng_thực_tế">Các trường hợp sử dụng thực tế</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Sử dụng`fold`cho các thao tác đơn giản yêu cầu xử lý cho từng trường hợp. - Ưu tiên`map` et <code>mapLeft`cho những chuyển đổi dữ liệu mà không làm thay đổi cấu trúc của`Either`Vui lòng cung cấp văn bản cần dịch. - Hãy chọn`flatMap`khi chuỗi các thao tác có thể thất bại. Sử dụng`recover`để cung cấp một giá trị mặc định trong trường hợp xảy ra lỗi. - Chọn`onLeft</code> et <code>onRight</code> (ou <code>tap</code> et <code>tapLeft</code>) cho các tác dụng phụ như logging. - Sử dụng`bimap`để chuyển đổi cả hai phía thành một thao tác duy nhất. - Áp dụng`swap`khi bạn cần điều chỉnh giao diện của một hàm để phù hợp với một hàm khác.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_kết_luận">Kết luận</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Mỗi cách tiếp cận này đều có những ưu điểm tùy theo ngữ cảnh sử dụng. Các phương pháp như`fold`, <code>map</code>/<code>mapLeft</code>, et `recover`đặc biệt hữu ích khi bạn muốn chuỗi nhiều thao tác hoặc biến đổi dữ liệu theo phong cách lập trình hàm.</p>
+</div>
+<div class="paragraph">
+<p>Monad`Either`của Arrow mang lại sự linh hoạt đáng kể để quản lý các trường hợp thành công và lỗi trong ứng dụng Kotlin của bạn. Bằng cách nắm vững các phương pháp tiếp cận khác nhau này, bạn có thể viết mã nguồn mạnh mẽ hơn, dễ đọc hơn và mang tính hàm hơn.</p>
+</div>
+<div class="paragraph">
+<p>Trong dự án tiếp theo của bạn, đừng ngần ngại khám phá những kỹ thuật này để tận dụng tối đa lập trình hàm với Kotlin và Arrow!</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_để_tìm_hiểu_thêm">Để tìm hiểu thêm</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Tài liệu chính thức của Arrow:https://arrow-kt.io/docs/apidocs/arrow-core/arrow.core/-either/[Arrow Either] Kotlin Coroutines với Arrow:https://arrow-kt.io/docs/fx/[Arrow Fx Coroutines]</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Đừng quên chia sẻ những trải nghiệm và kỹ thuật yêu thích của bạn khi làm việc với`Either`trong phần bình luận bên dưới!</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">Bài viết liên quan</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle: Chuyển đổi AsciiDoc thành Video MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">Kiểm toán Mức tiêu thụ LLM của tôi: SQLite, OpenCode, Ollama Cloud, và Tại sao Gói đăng ký Pro của tôi lại làm bùng nổ Thị trường Toàn cầu</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">Kiến trúc « Plugin độc lập + Root tiêu thụ »: Tại sao các bản build Gradle của tôi bị nhân đôi</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Knowledge Graph với vai trò là công cụ đề xuất: cách tôi đã loại bỏ các &quot;bài viết liên quan&quot; theo trình tự thời gian</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2024\/0075_kotlin_arrow-traverse_right_and_left_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    Vui lòng bật JavaScript để xem các
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">bình luận được cung cấp bởi Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        Nhà phát triển đào tạo chuyên về kỹ thuật sư phạm.
+                        Thiết kế các giải pháp e-learning sáng tạo để chuyển đổi việc học tập.
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="Nguồn cấp RSS">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="Liên hệ">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">Điều hướng</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>Trang chủ</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">tài nguyên</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>lưu trữ</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> trang chiếu</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> các buổi đào tạo</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> khóa khởi động</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">Vị trí</h6>
+                    <p class="mb-3">Có trụ sở tại vùng Paris, có thể can thiệp tại Pháp và từ xa.</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Île-de-France, Pháp</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>Có hỗ trợ làm việc từ xa</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>Di chuyển tại Pháp</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. Bảo lưu mọi quyền.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

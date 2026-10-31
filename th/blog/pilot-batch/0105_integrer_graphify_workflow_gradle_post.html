@@ -1,0 +1,1588 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="th">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>การผสาน Graphify เข้ากับเวิร์กโฟลว์ของ Gradle: จาก Knowledge Graph สู่ไดอะแกรม PlantUML ในคำสั่งเดียว — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/th/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="การผสาน Graphify เข้ากับเวิร์กโฟลว์ของ Gradle: จาก Knowledge Graph สู่ไดอะแกรม PlantUML ในคำสั่งเดียว — Cheroliv"/>
+        <meta property="og:description" content="Graphify จะดึง Knowledge Graph ออกมาจาก codebase ของคุณ จากนั้นปลั๊กอิน Gradle PlantUML จะเปลี่ยนกราฟนี้ให้เป็นแผนภาพ PlantUML แบบ deterministic โดยมีขั้นตอน Pipeline ทั้งหมดดังนี้: `pip install graphify` → `graphify . --no-viz` → `./gradlew generateKnowledgeGraphDiagram` → แผนภาพ PNG ที่ถูกจัดเก็บเวอร์ชันใน Git"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/th/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html"/>
+        <meta property="og:locale" content="th_TH"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="การผสาน Graphify เข้ากับเวิร์กโฟลว์ของ Gradle: จาก Knowledge Graph สู่ไดอะแกรม PlantUML ในคำสั่งเดียว — Cheroliv"/>
+        <meta name="twitter:description" content="Graphify จะดึง Knowledge Graph ออกมาจาก codebase ของคุณ จากนั้นปลั๊กอิน Gradle PlantUML จะเปลี่ยนกราฟนี้ให้เป็นแผนภาพ PlantUML แบบ deterministic โดยมีขั้นตอน Pipeline ทั้งหมดดังนี้: `pip install graphify` → `graphify . --no-viz` → `./gradlew generateKnowledgeGraphDiagram` → แผนภาพ PNG ที่ถูกจัดเก็บเวอร์ชันใน Git"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.png"/>
+        <meta name="description" content="Graphify จะดึง Knowledge Graph ออกมาจาก codebase ของคุณ จากนั้นปลั๊กอิน Gradle PlantUML จะเปลี่ยนกราฟนี้ให้เป็นแผนภาพ PlantUML แบบ deterministic โดยมีขั้นตอน Pipeline ทั้งหมดดังนี้: `pip install graphify` → `graphify . --no-viz` → `./gradlew generateKnowledgeGraphDiagram` → แผนภาพ PNG ที่ถูกจัดเก็บเวอร์ชันใน Git"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    <meta name="robots" content="noindex, follow"/>
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="สลับการนำทาง">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">หน้าหลัก</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">ความเชี่ยวชาญ</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">บล็อก</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">ติดต่อ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="เลือกธีมอินเทอร์เฟซ">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">ชัดเจน</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>สว่าง
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>มืด
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>คอนทราสต์สูง
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="เลือกภาษา">
+                        <span class="me-1">🇹🇭</span>
+                        <span class="ms-1">TH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0105_integrer_graphify_workflow_gradle_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/pilot-batch/0105_integrer_graphify_workflow_gradle_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html"},
+                      "headline": "\u0E01\u0E32\u0E23\u0E1C\u0E2A\u0E32\u0E19 Graphify \u0E40\u0E02\u0E49\u0E32\u0E01\u0E31\u0E1A\u0E40\u0E27\u0E34\u0E23\u0E4C\u0E01\u0E42\u0E1F\u0E25\u0E27\u0E4C\u0E02\u0E2D\u0E07 Gradle: \u0E08\u0E32\u0E01 Knowledge Graph \u0E2A\u0E39\u0E48\u0E44\u0E14\u0E2D\u0E30\u0E41\u0E01\u0E23\u0E21 PlantUML \u0E43\u0E19\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27",
+                      "description": "\u0E27\u0E34\u0E18\u0E35\u0E23\u0E27\u0E21 Graphify \u0E40\u0E02\u0E49\u0E32\u0E01\u0E31\u0E1A Gradle pipeline \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E44\u0E14\u0E2D\u0E30\u0E41\u0E01\u0E23\u0E21 PlantUML \u0E08\u0E32\u0E01 Knowledge Graph \u0E02\u0E2D\u0E07 codebase \u0E42\u0E14\u0E22\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34 Pipeline \u0E41\u0E1A\u0E1A deterministic, \u0E44\u0E21\u0E48\u0E43\u0E0A\u0E49 LLM \u0E41\u0E25\u0E30\u0E44\u0E14\u0E2D\u0E30\u0E41\u0E01\u0E23\u0E21\u0E21\u0E35\u0E01\u0E32\u0E23\u0E17\u0E33 versioning",
+                      "datePublished": "2026-04-19",
+                      "dateModified": "2026-04-19",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u0E01\u0E32\u0E23\u0E1C\u0E2A\u0E32\u0E19 Graphify \u0E40\u0E02\u0E49\u0E32\u0E01\u0E31\u0E1A\u0E40\u0E27\u0E34\u0E23\u0E4C\u0E01\u0E42\u0E1F\u0E25\u0E27\u0E4C\u0E02\u0E2D\u0E07 Gradle: \u0E08\u0E32\u0E01 Knowledge Graph \u0E2A\u0E39\u0E48\u0E44\u0E14\u0E2D\u0E30\u0E41\u0E01\u0E23\u0E21 PlantUML \u0E43\u0E19\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27", "item": "https:\/\/cheroliv.com\/blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">การผสาน Graphify เข้ากับเวิร์กโฟลว์ของ Gradle: จาก Knowledge Graph สู่ไดอะแกรม PlantUML ในคำสั่งเดียว</h1>
+                <p class="lead">
+                    <em>เผยแพร่เมื่อ 19 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div id="toc" class="toc">
+<div id="toctitle">สารบัญ</div>
+<ul class="sectlevel1">
+<li><a href="#_ปัญหาคือ_ไดอะแกรมล้าหลังกว่าโค้ดเสมอ">ปัญหาคือ: ไดอะแกรมล้าหลังกว่าโค้ดเสมอ</a></li>
+<li><a href="#_โซลูชัน_ไปป์ไลน์แบบดีเทอร์มินิสติก_deterministic_pipeline_จาก_knowledge_graph_plantuml">โซลูชัน: ไปป์ไลน์แบบดีเทอร์มินิสติก (deterministic pipeline) จาก Knowledge Graph → PlantUML</a></li>
+<li><a href="#_ขั้นตอนที่_1_ติดตั้ง_graphify_และดึง_knowledge_graph_ออกมา">ขั้นตอนที่ 1: ติดตั้ง Graphify และดึง Knowledge Graph ออกมา</a>
+<ul class="sectlevel2">
+<li><a href="#_การติดตั้ง">การติดตั้ง</a></li>
+<li><a href="#_ตั้งค่าการยกเว้น">ตั้งค่าการยกเว้น</a></li>
+<li><a href="#_ดึง_knowledge_graph_ออกมา">ดึง Knowledge Graph ออกมา</a></li>
+</ul>
+</li>
+<li><a href="#_ขั้นตอนที่_2_gradle_plugin_จะแปลง_knowledge_graph_ให้เป็น_plantuml">ขั้นตอนที่ 2: Gradle plugin จะแปลง Knowledge Graph ให้เป็น PlantUML</a>
+<ul class="sectlevel2">
+<li><a href="#_สถาปัตยกรรมของ_pipeline">สถาปัตยกรรมของ pipeline</a></li>
+<li><a href="#_ส่วนประกอบภายใน">ส่วนประกอบภายใน</a></li>
+<li><a href="#_กฎการแสดงผล">กฎการแสดงผล</a></li>
+</ul>
+</li>
+<li><a href="#_ขั้นตอนที่_3_การใช้งานในชีวิตประจำวัน">ขั้นตอนที่ 3: การใช้งานในชีวิตประจำวัน</a>
+<ul class="sectlevel2">
+<li><a href="#_แผนภาพฉบับสมบูรณ์">แผนภาพฉบับสมบูรณ์</a></li>
+<li><a href="#_กรองตามชุมชน">กรองตามชุมชน</a></li>
+<li><a href="#_กรองตามประเภทของขอบ">กรองตามประเภทของขอบ</a></li>
+<li><a href="#_กรองตามประเภทโหนดและความเชื่อมั่น">กรองตามประเภทโหนดและความเชื่อมั่น</a></li>
+<li><a href="#_ไดเรกทอรีเอาต์พุตที่กำหนดเอง">ไดเรกทอรีเอาต์พุตที่กำหนดเอง</a></li>
+<li><a href="#_ข้อมูลอ้างอิงคุณสมบัติแบบสมบูรณ์">ข้อมูลอ้างอิงคุณสมบัติแบบสมบูรณ์</a></li>
+</ul>
+</li>
+<li><a href="#_ไพป์ไลน์ที่สมบูรณ์ในเวิร์กโฟลว์_gradle">ไพป์ไลน์ที่สมบูรณ์ในเวิร์กโฟลว์ Gradle</a>
+<ul class="sectlevel2">
+<li><a href="#_ประเภทเวิร์กโฟลว์">ประเภทเวิร์กโฟลว์</a></li>
+<li><a href="#_การบูรณาการเข้ากับวงจรการพัฒนา">การบูรณาการเข้ากับวงจรการพัฒนา</a></li>
+<li><a href="#_การอัปเดตแบบส่วนเพิ่ม">การอัปเดตแบบส่วนเพิ่ม</a></li>
+</ul>
+</li>
+<li><a href="#_dogfooding_ปลั๊กอินที่สร้างเอกสารอธิบายการใช้งานด้วยตัวมันเอง">Dogfooding: ปลั๊กอินที่สร้างเอกสารอธิบายการใช้งานด้วยตัวมันเอง</a></li>
+<li><a href="#_ทำไมสิ่งนี้ถึงเป็นแบบกำหนดได้_และทำไมมันถึงสำคัญ">ทำไมสิ่งนี้ถึงเป็นแบบกำหนดได้ (และทำไมมันถึงสำคัญ)</a></li>
+<li><a href="#_แผนภูมิของตัว_pipeline_เอง">แผนภูมิของตัว pipeline เอง</a></li>
+<li><a href="#_การบูรณาการเข้ากับการกำกับดูแลโครงการ">การบูรณาการเข้ากับการกำกับดูแลโครงการ</a></li>
+<li><a href="#_การเตรียมการ_mise_en_place_รายการตรวจสอบใน_5_นาที">การเตรียมการ (Mise en place): รายการตรวจสอบใน 5 นาที</a></li>
+<li><a href="#_กับดักและการบรรเทาผลกระทบ">กับดักและการบรรเทาผลกระทบ</a></li>
+<li><a href="#_สิ่งที่เราได้รับในท้ายที่สุด">สิ่งที่เราได้รับในท้ายที่สุด</a></li>
+<li><a href="#_ลิงก์">ลิงก์</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>เวลาในการอ่าน: 12 minutes</p>
+</div>
+<div class="paragraph">
+<p>Codebase ของคุณกำลังเติบโตขึ้น ความสัมพันธ์ระหว่างโมดูลเพิ่มมากขึ้น เอกสารทางสถาปัตยกรรมกลายเป็นสิ่งที่ล้าสมัยก่อนที่จะเขียนเสร็จเสียอีก จะดีกว่าไหมถ้า build Gradle ของคุณสามารถสร้างไดอะแกรมที่ทันสมัยได้ <em>โดยอัตโนมัติ</em> จากโครงสร้างจริงของโค้ด? และนี่คือสิ่งที่ pipeline Graphify + PlantUML Gradle Plugin ทำได้:`graphify . --no-viz`สกัด Knowledge Graph,`./gradlew generateKnowledgeGraphDiagram`เปลี่ยนให้เป็นไดอะแกรม PlantUML ไม่ใช้ LLM ไม่ใช้การทำด้วยมือ และมีความแน่นอน 100%</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">สารบัญ</dt>
+<dd>
+<p>[]</p>
+</dd>
+</dl>
+</div>
+<!-- toc disabled -->
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ปัญหาคือ_ไดอะแกรมล้าหลังกว่าโค้ดเสมอ">ปัญหาคือ: ไดอะแกรมล้าหลังกว่าโค้ดเสมอ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ทุกโปรเจกต์ที่มีจำนวนบรรทัดเกินกว่าไม่กี่พันบรรทัดมักจะประสบกับอาการนี้:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>เราวาดแผนผังโครงสร้างสถาปัตยกรรมในช่วงเริ่มต้นของโครงการ</p>
+</li>
+<li>
+<p>โค้ดมีการพัฒนา สิ่งที่ต้องพึ่งพามีการเปลี่ยนแปลง</p>
+</li>
+<li>
+<p>แผนภาพกลายเป็นคำลวงที่ถูกตกแต่งให้สวยงาม</p>
+</li>
+<li>
+<p>ไม่มีใครอัปเดตมันเพราะว่ามันน่าเบื่อ</p>
+</li>
+<li>
+<p>ผู้มาใหม่ใช้สิ่งนี้เป็นเกณฑ์และทำผิดพลาด</p>
+</li>
+</ol>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/probleme-diagrammes-obsoletes.svg" alt="probleme diagrammes obsoletes" width="822" height="418">
+</div>
+</div>
+<div class="paragraph">
+<p>คำถามไม่ใช่ว่า <em>ต้องมีแผนภูมิหรือไม่?</em> — เพราะทุกคนรู้ดีว่าต้องมี คำถามคือ:<strong>ใครเป็นผู้ดูแลให้ข้อมูลเหล่านี้เป็นปัจจุบัน?</strong></p>
+</div>
+<div class="paragraph">
+<p>คำตอบคือ: ไม่มีใครเลย นอกจากว่าจะเป็นระบบอัตโนมัติ</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_โซลูชัน_ไปป์ไลน์แบบดีเทอร์มินิสติก_deterministic_pipeline_จาก_knowledge_graph_plantuml">โซลูชัน: ไปป์ไลน์แบบดีเทอร์มินิสติก (deterministic pipeline) จาก Knowledge Graph → PlantUML</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>หลักการนั้นง่ายมาก: แทนที่จะวาดไดอะแกรมด้วยมือ เราจะ&#8230;&#8203;<strong>สร้างขึ้นจากโครงสร้างจริงของโค้ด</strong>โปรดระบุข้อความที่ต้องการให้แปลครับ</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/pipeline-complet.svg" alt="pipeline complet" width="1333" height="434">
+</div>
+</div>
+<div class="paragraph">
+<p>คำสั่งสองคำสั่ง เท่านั้นเอง</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Étape 1 : extraire le Knowledge Graph
+graphify . --no-viz
+
+# Étape 2 : générer les diagrammes PlantUML
+./gradlew generateKnowledgeGraphDiagram</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ผลลัพธ์ที่ได้คืออะไร? ไฟล์ต่างๆ`.puml` et <code>.png`ใน`diagrams/knowledge-graph/</code>, ซึ่งมีการควบคุมเวอร์ชันด้วย Git และเป็นปัจจุบันตามโค้ดเสมอ</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ขั้นตอนที่_1_ติดตั้ง_graphify_และดึง_knowledge_graph_ออกมา">ขั้นตอนที่ 1: ติดตั้ง Graphify และดึง Knowledge Graph ออกมา</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_การติดตั้ง">การติดตั้ง</h3>
+<div class="paragraph">
+<p>Graphify คือเครื่องมือ Python ที่วิเคราะห์ codebase ของคุณและสร้างกราฟความรู้ที่มีโครงสร้าง:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Méthode recommandée
+uv tool install graphifyy &amp;&amp; graphify install --platform opencode
+
+# Alternative avec pip
+pip install graphifyy &amp;&amp; graphify install --platform opencode</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ตั้งค่าการยกเว้น">ตั้งค่าการยกเว้น</h3>
+<div class="paragraph">
+<p>สร้างไฟล์`.graphifyignore`ที่รากของโปรเจกต์ เพื่อยกเว้นไฟล์ที่ไม่ได้เป็นส่วนหนึ่งของ business logic:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gitignore hljs" data-lang="gitignore"># Secrets — JAMAIS dans le graphe
+*-context.yml
+*.env
+
+# Fichiers générés
+build/
+.gradle/
+
+# Tests fonctionnels
+src/functionalTest/</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ดึง_knowledge_graph_ออกมา">ดึง Knowledge Graph ออกมา</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">graphify . --no-viz</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>แฟล็ก`--no-viz`ข้ามการสร้าง HTML (ไม่จำเป็นใน pipeline ของ Gradle) ผลลัพธ์ที่ได้คือไฟล์`graphify-out/graph.json`ซึ่งประกอบด้วย :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>โหนด</strong>: คลาส, ฟังก์ชัน, ไฟล์ — พร้อมด้วยประเภทและคอมมูนิตี้</p>
+</li>
+<li>
+<p><strong>ขอบ</strong>: ความสัมพันธ์ระหว่างโหนด (<code>EXTRACTED</code> จากโค้ด, <code>INFERRED</code> โดย LLM)</p>
+</li>
+<li>
+<p><strong>ชุมชน</strong>: การจัดกลุ่มโหนดที่เชื่อมโยงกันโดยอัตโนมัติ</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">ตัวอย่างโครงสร้าง`graph.json`</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "nodes": [
+    {"id": "0", "label": "LlmService", "file_type": "code", "community": 0},
+    {"id": "1", "label": "ApiKeyPool", "file_type": "code", "community": 0},
+    {"id": "2", "label": "PlantumlService", "file_type": "code", "community": 1}
+  ],
+  "links": [
+    {"source": "1", "target": "0", "relation": "uses", "confidence": "EXTRACTED", "weight": 0.9},
+    {"source": "0", "target": "2", "relation": "calls", "confidence": "INFERRED", "weight": 0.7}
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>ซอร์สโค้ด (<code>.kt</code>, <code>.java</code>) ถูกวิเคราะห์ในระดับท้องถิ่นโดย tree-sitter,<strong>LLM แบบเบ็ดเสร็จเด็ดขาด</strong>. เฉพาะไฟล์เอกสาร (<code>.adoc</code>, <code>.md</code>) จำเป็นต้องมีการเรียกใช้ LLM เพื่อการสกัดความหมายทางภาษา (semantic extraction) ดังนั้น`--update`บนโค้ด Kotlin นั้นแทบจะทันทีทันใด</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ขั้นตอนที่_2_gradle_plugin_จะแปลง_knowledge_graph_ให้เป็น_plantuml">ขั้นตอนที่ 2: Gradle plugin จะแปลง Knowledge Graph ให้เป็น PlantUML</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_สถาปัตยกรรมของ_pipeline">สถาปัตยกรรมของ pipeline</h3>
+<div class="paragraph">
+<p>ปลั๊กอิน`com.cheroliv.plantuml`รวมงานหนึ่งงาน`generateKnowledgeGraphDiagram`ซึ่งแปลง`graph.json`เป็นไดอะแกรม PlantUML ในรูปแบบ<strong>กำหนดการแบบเด็ดขาดโดยสมบูรณ์</strong>โปรดระบุข้อความที่คุณต้องการให้แปลครับ</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/architecture-pipeline-kg.svg" alt="architecture pipeline kg" width="1109" height="450">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ส่วนประกอบภายใน">ส่วนประกอบภายใน</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ส่วนประกอบ</th>
+<th class="tableblock halign-left valign-top">บทบาท</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>KnowledgeGraphParser</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">วิเคราะห์ (Parse)<code>graph.json</code>— รองรับ 3 รูปแบบ: graphify แบบเนทีฟ (<code>nodes</code>+<code>links</code>), legacy (<code>communities</code>), flat แปลง ID ตัวเลขเป็นเลเบล</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>KnowledgeGraphRenderer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">แปลง&#8230;&#8203;อย่างกำหนดได้หนึ่ง`KnowledgeGraph`เป็นโค้ด PlantUML กลุ่มตามประเภท, ชุมชนใน packages, คำอธิบายสัญลักษณ์อัตโนมัติ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GenerateKnowledgeGraphDiagramTask</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gradle Task ที่ทำหน้าที่ประสานงาน: parse → render → validate → PNG สามารถกำหนดค่าได้ผ่าน Gradle properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>kgmodels.kt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">โมเดลข้อมูล:`KnowledgeGraph`, <code>KnowledgeGraphNode</code>, <code>KnowledgeGraphEdge</code>, <code>KnowledgeGraphCommunity</code>, `EdgeType`โปรดระบุข้อความที่ต้องการให้แปลครับ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PlantumlService</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">การตรวจสอบไวยากรณ์ + การเรนเดอร์ PNG (นำกลับมาใช้ใหม่โดยทุกงานของปลั๊กอิน)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_กฎการแสดงผล">กฎการแสดงผล</h3>
+<div class="paragraph">
+<p>ตัวเรนเดอร์ใช้ข้อกำหนดทางทัศนศิลป์แบบดีเทอร์มินิสติก (deterministic visual conventions):</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ประเภทของขอบ</th>
+<th class="tableblock halign-left valign-top">สัญลักษณ์ PlantUML</th>
+<th class="tableblock halign-left valign-top">ความหมาย</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สกัดแล้ว</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>-&#8594;</code>(เส้นทึบ, สีดำ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ความสัมพันธ์ที่สกัดจากซอร์สโค้ด (ความมั่นใจ)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">อนุมานได้</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>..&gt;</code>(เส้นประ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ความสัมพันธ์ที่อนุมานโดย LLM (คะแนนความเชื่อมั่น)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กำกวม</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--x</code>(เส้นประสีแดง)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ความสัมพันธ์คลุมเครือ (ต้องตรวจสอบ)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>คอมมูนิตี้จะถูกแสดงผลเป็นแพ็กเกจ PlantUML พร้อมจานสีอัตโนมัติ</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ขั้นตอนที่_3_การใช้งานในชีวิตประจำวัน">ขั้นตอนที่ 3: การใช้งานในชีวิตประจำวัน</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_แผนภาพฉบับสมบูรณ์">แผนภาพฉบับสมบูรณ์</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Générer le diagramme du Knowledge Graph complet
+./gradlew generateKnowledgeGraphDiagram</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>เอาต์พุต:`diagrams/knowledge-graph/knowledge-graph-full.puml`+<code>.png</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_กรองตามชุมชน">กรองตามชุมชน</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Une seule communauté
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.community=community_0
+
+# Limiter le nombre de noeuds (lisibilité)
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.community=community_0 \
+  -Pplantuml.kg.maxNodes=15</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_กรองตามประเภทของขอบ">กรองตามประเภทของขอบ</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Uniquement les relations certaines (EXTRACTED)
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.edgeTypes=EXTRACTED
+
+# Relations certaines + inférées
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.edgeTypes=EXTRACTED,INFERRED</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_กรองตามประเภทโหนดและความเชื่อมั่น">กรองตามประเภทโหนดและความเชื่อมั่น</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Uniquement les classes de code
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.nodeTypes=code
+
+# Seuil de confiance minimum (pour les INFERRED)
+./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.minConfidence=0.7</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ไดเรกทอรีเอาต์พุตที่กำหนดเอง">ไดเรกทอรีเอาต์พุตที่กำหนดเอง</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./gradlew generateKnowledgeGraphDiagram \
+  -Pplantuml.kg.outputDir=docs/architecture</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ข้อมูลอ้างอิงคุณสมบัติแบบสมบูรณ์">ข้อมูลอ้างอิงคุณสมบัติแบบสมบูรณ์</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">คุณสมบัติ</th>
+<th class="tableblock halign-left valign-top">ค่าเริ่มต้น</th>
+<th class="tableblock halign-left valign-top">คำอธิบาย</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.community</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(ทั้งหมด)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กรองชุมชนตามชื่อ (การจับคู่ส่วนย่อยของข้อความ)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.edgeTypes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(ทั้งหมด)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ประเภทของขอบที่คั่นด้วยเครื่องหมายจุลภาค:`EXTRACTED`, <code>INFERRED</code>, <code>AMBIGUOUS</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.minConfidence</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">เกณฑ์ความเชื่อมั่นขั้นต่ำสำหรับเส้นเชื่อม (edges)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.maxNodes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(ไม่จำกัด)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">จำนวนโหนดสูงสุดที่จะแสดง</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.nodeTypes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(ทั้งหมด)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ประเภทของโหนดคั่นด้วยเครื่องหมายจุลภาค (เช่น`class`, <code>code</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>plantuml.kg.outputDir</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagrams/knowledge-graph</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไดเรกทอรีเอาต์พุตสำหรับไฟล์`.puml` et <code>.png</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ไพป์ไลน์ที่สมบูรณ์ในเวิร์กโฟลว์_gradle">ไพป์ไลน์ที่สมบูรณ์ในเวิร์กโฟลว์ Gradle</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ประเภทเวิร์กโฟลว์">ประเภทเวิร์กโฟลว์</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/workflow-complet.svg" alt="workflow complet" width="715" height="714">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_การบูรณาการเข้ากับวงจรการพัฒนา">การบูรณาการเข้ากับวงจรการพัฒนา</h3>
+<div class="paragraph">
+<p>Pipeline นี้ผสมผสานเข้ากับขั้นตอนหลักของการพัฒนาได้อย่างลงตัว:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/cycle-developpement.svg" alt="cycle developpement" width="797" height="454">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_การอัปเดตแบบส่วนเพิ่ม">การอัปเดตแบบส่วนเพิ่ม</h3>
+<div class="paragraph">
+<p>เมื่อโค้ดเปลี่ยน เราจะไม่สร้างกราฟทั้งหมดขึ้นมาใหม่ตั้งแต่ศูนย์:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Mise à jour incrémentale (fichiers modifiés uniquement)
+graphify . --update
+
+# Puis régénérer les diagrammes
+./gradlew generateKnowledgeGraphDiagram</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><code>--update`สกัดเฉพาะไฟล์ที่ถูกแก้ไขอีกครั้ง (ตรวจพบโดย SHA256 ใน`graphify-out/cache/</code>). สำหรับโค้ด Kotlin จะเกือบจะทันทีทันใดเพราะ tree-sitter ทำงานในเครื่องโดยไม่มีการเรียกใช้ LLM</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dogfooding_ปลั๊กอินที่สร้างเอกสารอธิบายการใช้งานด้วยตัวมันเอง">Dogfooding: ปลั๊กอินที่สร้างเอกสารอธิบายการใช้งานด้วยตัวมันเอง</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>มีปลั๊กอิน PlantUML สำหรับเปลี่ยนพรอมต์ให้เป็นไดอะแกรม นอกจากนี้ยังสามารถเปลี่ยน Knowledge Graph ของ codebase ของ <em>ตัวมันเอง</em> ให้เป็นไดอะแกรมสำหรับเอกสารประกอบได้ ซึ่งถือเป็นการ <em>dogfooding</em> : ตัวปลั๊กอินใช้งานบริการของตัวเอง</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/dogfooding-pipeline.svg" alt="dogfooding pipeline" width="1082" height="533">
+</div>
+</div>
+<div class="paragraph">
+<p>งาน Gradle ที่เกี่ยวข้อง:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">งาน</th>
+<th class="tableblock halign-left valign-top">LLM ?</th>
+<th class="tableblock halign-left valign-top">คำอธิบาย</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateKnowledgeGraphDiagram</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่ใช่</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">แปลงค่า`graph.json`ใน PlantUML (แบบกำหนดผลลัพธ์ได้)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateDiagramDocs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ใช่</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สร้าง`.prompt`จากกราฟ แล้วนำไปประมวลผลผ่าน LLM (<code>dogfooding</code>)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Documentation déterministe (rapide, pas de LLM)
+./gradlew generateKnowledgeGraphDiagram
+
+# Documentation LLM (plus riche, consomme des tokens)
+./gradlew generateDiagramDocs</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ทำไมสิ่งนี้ถึงเป็นแบบกำหนดได้_และทำไมมันถึงสำคัญ">ทำไมสิ่งนี้ถึงเป็นแบบกำหนดได้ (และทำไมมันถึงสำคัญ)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>จุดสำคัญของ pipeline`generateKnowledgeGraphDiagram`โปรดระบุข้อความที่ต้องการแปลครับ<strong>มันไม่ได้เรียกใช้ LLM ใดๆ</strong>. การแปลงสภาพ`graph.json`→ PlantUML เป็นฟังก์ชันบริสุทธิ์ (pure function)</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/determinisme-vs-llm.svg" alt="determinisme vs llm" width="1181" height="405">
+</div>
+</div>
+<div class="paragraph">
+<p>ประโยชน์ที่เป็นรูปธรรม:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ข้อได้เปรียบ</th>
+<th class="tableblock halign-left valign-top">ผลกระทบ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ความสามารถในการทำซ้ำได้</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">แม้แต่`graph.json`→ ไดอะแกรมเดียวกัน เป๊ะเลย ทุกครั้ง</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่มีค่าใช้จ่าย</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่มีการเรียก LLM = ไม่มีโทเคน = ไม่มีใบแจ้งหนี้ API</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ความหน่วงเป็นศูนย์</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Parse + render ใช้เวลาประมาณ <code>~100ms</code> ไม่ใช่ <code>1-5</code> วินาที</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CI ที่เข้ากันได้</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่ต้องใช้ API key ไม่เกิด flaky test จากการตอบสนองของ LLM ที่ไม่แน่นอน</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สามารถกำหนดเวอร์ชันได้</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Le <code>.puml`ที่ถูกสร้างขึ้นคือข้อความ เราสามารถนำมันไป`diff</code>, ผู้รีวิวใน PR, และการทำเวอร์ชันใน Git</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_แผนภูมิของตัว_pipeline_เอง">แผนภูมิของตัว pipeline เอง</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>เพื่อให้ครบถ้วนสมบูรณ์ นี่คือแผนภาพของ pipeline ตามที่ปลั๊กอินจะสร้างขึ้น:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/pipeline-sequence.svg" alt="pipeline sequence" width="1683" height="554">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_การบูรณาการเข้ากับการกำกับดูแลโครงการ">การบูรณาการเข้ากับการกำกับดูแลโครงการ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ในโปรเจกต์ของเรา pipeline นี้จะรวมเข้ากับกลยุทธ์การจัดการบริบทแบบ EAGER/LAZY สำหรับเอเจนท์ AI โดย Knowledge Graph จะเข้ามาแทนที่เอกสารสถาปัตยกรรมแบบเขียนมือด้วยกราฟที่มีโครงสร้าง สามารถ query ได้ และอัปเดตตัวเองโดยอัตโนมัติ</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/strategie-hybride.svg" alt="strategie hybride" width="2015" height="240">
+</div>
+</div>
+<div class="paragraph">
+<p>การผสานกันของทั้งสองระบบนั้นส่งเสริมกันและกัน:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>กลยุทธ์จัดการเรื่อง เมื่อไหร่ และ อย่างไร</strong>— ธรรมาภิบาล, เวิร์กโฟลว์, การจัดเก็บเอกสาร</p>
+</li>
+<li>
+<p><strong>Graphify จัดการสิ่งที่ว่าคือ <code>QUOI</code> และอยู่ที่ `OÙ</strong>— โครงสร้างของโค้ด, ความสัมพันธ์, คำสั่งคิวรีที่เจาะจง</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>โปรดระบุข้อความภาษาฝรั่งเศสที่คุณต้องการให้แปลครับ กลยุทธ์ของเซสชันจะจัดการกับ<strong>เมื่อใด</strong> et le <strong>ความคิดเห็น</strong>(ธรรมาภิบาล, เวิร์กโฟลว์, เกณฑ์), Graphify จัดการการ<strong>อะไร</strong> et le <strong>ที่ไหน</strong>(โครงสร้างของโค้ด, ความสัมพันธ์, คำสั่งคิวรีที่เจาะจง) โดยที่ PlantUML pipeline จะจัดการกับ<strong>ด้วยอะไร</strong>(ไดอะแกรมแบบ deterministic, มีการกำหนดเวอร์ชัน และเป็นปัจจุบันเสมอ) โปรดระบุข้อความที่ต้องการให้แปลครับ</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_การเตรียมการ_mise_en_place_รายการตรวจสอบใน_5_นาที">การเตรียมการ (Mise en place): รายการตรวจสอบใน 5 นาที</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">#</th>
+<th class="tableblock halign-left valign-top">ขั้นตอน</th>
+<th class="tableblock halign-left valign-top">คำสั่ง</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ติดตั้ง Graphify</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>uv tool install graphifyy</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กำหนดค่าการยกเว้น</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สร้าง`.graphifyignore`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ดึงข้อมูล Knowledge Graph</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>graphify . --no-viz</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">สร้างไดอะแกรม</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>./gradlew generateKnowledgeGraphDiagram</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commit ผลลัพธ์</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>git add diagrams/knowledge-graph/</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Script complet en 5 commandes
+uv tool install graphifyy
+cat &gt; .graphifyignore &lt;&lt; 'EOF'
+*-context.yml
+*.env
+build/
+.gradle/
+EOF
+graphify . --no-viz
+./gradlew generateKnowledgeGraphDiagram
+git add graphify-out/GRAPH_REPORT.adoc graphify-out/graph.json diagrams/knowledge-graph/</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_กับดักและการบรรเทาผลกระทบ">กับดักและการบรรเทาผลกระทบ</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">กับดัก</th>
+<th class="tableblock halign-left valign-top">คำอธิบาย</th>
+<th class="tableblock halign-left valign-top">การบรรเทาผลกระทบ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กราฟหนาแน่นเกินไป</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">โปรเจกต์ขนาดใหญ่สร้างโหนดที่อ่านไม่ออกจำนวนหลายร้อยโหนด</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ใช้งาน`-Pplantuml.kg.maxNodes=30`และกรองตามชุมชน</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">การยกเว้นที่กว้างเกินไป</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">มีไฟล์มากเกินไปใน`.graphifyignore`ลดค่าของกราฟ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">เริ่มต้นด้วยการยกเว้นเฉพาะ <code>credentials</code> และ <code>build</code> เท่านั้น</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ทิศทางของลูกศร</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ขอบ INFERRED อาจมีทิศทางที่กำกวม</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กรองโดย`-Pplantuml.kg.edgeTypes=EXTRACTED`สำหรับความสัมพันธ์ที่แน่นอนเท่านั้น</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ตัวอักขระที่เลิกใช้แล้ว</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">โค้ดเปลี่ยนแต่กราฟไม่ได้ถูกสร้างใหม่</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ใช้งาน`graphify . --update`เป็นประจำ หรือ git hook`graphify hook install`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ราคาที่อัปเดตแล้ว</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">การอัปเดตแบบเพิ่มส่วน (incremental updates) แทบจะไม่มีค่าใช้จ่าย (tree-sitter local)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">เฉพาะเอกสาร (<code>.adoc</code>) ใช้โทเคน LLM</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_สิ่งที่เราได้รับในท้ายที่สุด">สิ่งที่เราได้รับในท้ายที่สุด</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="./images/recap-visuel.svg" alt="recap visuel" width="346" height="258">
+</div>
+</div>
+<div class="paragraph">
+<p>ประโยชน์ที่เป็นรูปธรรม:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">กำไร</th>
+<th class="tableblock halign-left valign-top">รายละเอียด</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">เอกสารที่ทันสมัยอยู่เสมอ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไดอะแกรมสะท้อนถึงโค้ดปัจจุบัน ไม่ใช่ snapshot ด้วยตนเอง</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่ต้องดูแลรักษาเลย</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไดอะแกรมจะถูกสร้างใหม่ทุกครั้งที่มีการ build</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">การลดหนี้ทางเทคนิค</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่ต้องคอยดูแลรักษาไดอะแกรมด้วยตนเองอีกต่อไป</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">บริบททางภาพสำหรับผู้เริ่มต้น</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">นักพัฒนาคนใหม่ทำความเข้าใจสถาปัตยกรรมได้โดยการดูไดอะแกรม</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ศักยภาพในการทำ Fine-tuning</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">คู่ (sub-graph → diagram) คือตัวอย่างสำหรับการฝึกสอน AI</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">การตรวจสอบความถูกต้องอัตโนมัติ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`PlantumlService.validateSyntax()`ตรวจสอบทุกไดอะแกรมที่สร้างขึ้น</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">การเริ่มต้นใช้งานอย่างรวดเร็ว</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 ไดอะแกรม = มุมมองสถาปัตยกรรมแบบครบถ้วน</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>โปรดระบุข้อความภาษาฝรั่งเศสที่คุณต้องการให้แปลครับ ผู้ที่มี <em>เหตุผลว่าทำไม</em> ย่อมสามารถทนต่อ <em>วิธีการอย่างไร</em> ได้ทุกรูปแบบ โปรดระบุข้อความที่คุณต้องการให้แปลครับ</p>
+</div>
+<div class="paragraph">
+<p>เหตุผล (le <em>pourquoi</em>) : เพื่อให้ไดอะแกรมเป็นปัจจุบันอยู่เสมอ วิธีการ (le <em>comment</em>) : คำสั่งสองคำสั่งใน Gradle pipeline</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ลิงก์">ลิงก์</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/nicholasgasior/graphify">Graphify บน GitHub</a></p>
+</li>
+<li>
+<p><a href="https://github.com/cheroliv/plantuml-gradle">PlantUML Gradle Plugin</a></p>
+</li>
+<li>
+<p><a href="/blog/2026/0104_fg_command_super_tips_post.html">เคล็ดลับสุดยอดของคำสั่ง `fg</a>— บทความก่อนหน้าเกี่ยวกับ workflow terminal</p>
+</li>
+</ul>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">บทความที่เกี่ยวข้อง</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : แปลง AsciiDoc เป็นวิดีโอ MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">การตรวจสอบการใช้งาน LLM ของฉัน: SQLite, OpenCode, Ollama Cloud และทำไมการสมัครสมาชิกแบบ Pro ของฉันถึงเขย่าตลาดโลก</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">สถาปัตยกรรม « Plugin อิสระ + Root ฝั่งผู้บริโภค » : ทำไม Gradle Builds ของฉันจึงซ้ำซ้อน</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Knowledge Graph ในฐานะเครื่องยนต์แนะนำ: ฉันกำจัด «บทความที่เกี่ยวข้อง» แบบเรียงตามลำดับเวลาได้อย่างไร</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/pilot-batch\/0105_integrer_graphify_workflow_gradle_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    กรุณาเปิดใช้งาน JavaScript เพื่อดู
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">ความคิดเห็นโดย Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        นักพัฒนาและวิทยากรผู้เชี่ยวชาญด้านวิศวกรรมการเรียนการสอน
+การออกแบบโซลูชัน e-learning นวัตกรรมใหม่เพื่อพลิกโฉมการเรียนรู้
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="ติดต่อ">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">การนำทาง</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>หน้าแรก</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>บล็อก</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">ทรัพยากร</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>คลังข้อมูล</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> สไลด์</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> ฝึกอบรม</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> ไดรฟ์ USB ที่บูตได้</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">การแปลเป็นท้องถิ่น</h6>
+                    <p class="mb-3">ตั้งอยู่ในเขตปารีส สามารถปฏิบัติงานได้ทั่วประเทศฝรั่งเศสและทางไกล</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>อีล-เดอ-ฟร็องส์, ฝรั่งเศส</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>สามารถทำงานจากที่บ้านได้</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>การเดินทางในฝรั่งเศส</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. สงวนลิขสิทธิ์ทุกประการ</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>

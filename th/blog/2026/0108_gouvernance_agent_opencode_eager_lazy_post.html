@@ -1,0 +1,1625 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="th">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ควบคุม AI Agent ด้วย AsciiDoc: กลยุทธ์ Eager/Lazy ของฉันสำหรับเซสชัน Opencode โดยไม่มีการรั่วไหลของบริบท (Context Leak) — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/th/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="ควบคุม AI Agent ด้วย AsciiDoc: กลยุทธ์ Eager/Lazy ของฉันสำหรับเซสชัน Opencode โดยไม่มีการรั่วไหลของบริบท (Context Leak) — Cheroliv"/>
+        <meta property="og:description" content="เพื่อรับมือกับปัญหาการสูญเสียบริบท (context leak) ระหว่างเซสชันของ AI agent ผมจึงได้พัฒนากลยุทธ์การกำกับดูแลแบบทำมือที่ใช้ไฟล์ AsciiDoc โดยมีหลักการคือ: แดชบอร์ดแบบ Eager ที่โหลดอัตโนมัติ, คู่มือผู้ใช้งานแบบ Lazy ตามคำขอ และขั้นตอนการสิ้นสุดเซสชันที่จำเป็นต้องทำ"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/th/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html"/>
+        <meta property="og:locale" content="th_TH"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="ควบคุม AI Agent ด้วย AsciiDoc: กลยุทธ์ Eager/Lazy ของฉันสำหรับเซสชัน Opencode โดยไม่มีการรั่วไหลของบริบท (Context Leak) — Cheroliv"/>
+        <meta name="twitter:description" content="เพื่อรับมือกับปัญหาการสูญเสียบริบท (context leak) ระหว่างเซสชันของ AI agent ผมจึงได้พัฒนากลยุทธ์การกำกับดูแลแบบทำมือที่ใช้ไฟล์ AsciiDoc โดยมีหลักการคือ: แดชบอร์ดแบบ Eager ที่โหลดอัตโนมัติ, คู่มือผู้ใช้งานแบบ Lazy ตามคำขอ และขั้นตอนการสิ้นสุดเซสชันที่จำเป็นต้องทำ"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.png"/>
+        <meta name="description" content="เพื่อรับมือกับปัญหาการสูญเสียบริบท (context leak) ระหว่างเซสชันของ AI agent ผมจึงได้พัฒนากลยุทธ์การกำกับดูแลแบบทำมือที่ใช้ไฟล์ AsciiDoc โดยมีหลักการคือ: แดชบอร์ดแบบ Eager ที่โหลดอัตโนมัติ, คู่มือผู้ใช้งานแบบ Lazy ตามคำขอ และขั้นตอนการสิ้นสุดเซสชันที่จำเป็นต้องทำ"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS Feed" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - Développeur Formateur | Ingénierie Pédagogique",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "Développeur Formateur | Ingénierie Pédagogique",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="สลับการนำทาง">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#home">หน้าหลัก</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#expertise">ความเชี่ยวชาญ</a>
+                    </li>
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">บล็อก</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">ติดต่อ</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="เลือกธีมอินเทอร์เฟซ">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">ชัดเจน</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>สว่าง
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>มืด
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>คอนทราสต์สูง
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="เลือกภาษา">
+                        <span class="me-1">🇹🇭</span>
+                        <span class="ms-1">TH</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../hi/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0108_gouvernance_agent_opencode_eager_lazy_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0108_gouvernance_agent_opencode_eager_lazy_post.html"},
+                      "headline": "\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21 AI Agent \u0E14\u0E49\u0E27\u0E22 AsciiDoc: \u0E01\u0E25\u0E22\u0E38\u0E17\u0E18\u0E4C Eager\/Lazy \u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E40\u0E0B\u0E2A\u0E0A\u0E31\u0E19 Opencode \u0E42\u0E14\u0E22\u0E44\u0E21\u0E48\u0E21\u0E35\u0E01\u0E32\u0E23\u0E23\u0E31\u0E48\u0E27\u0E44\u0E2B\u0E25\u0E02\u0E2D\u0E07\u0E1A\u0E23\u0E34\u0E1A\u0E17 (Context Leak)",
+                      "description": "\u0E27\u0E34\u0E18\u0E35\u0E17\u0E35\u0E48\u0E09\u0E31\u0E19\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E23\u0E30\u0E1A\u0E1A\u0E01\u0E32\u0E23\u0E01\u0E33\u0E01\u0E31\u0E1A\u0E14\u0E39\u0E41\u0E25\u0E41\u0E1A\u0E1A\u0E04\u0E07\u0E17\u0E19 (persistent governance system) \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E40\u0E0B\u0E2A\u0E0A\u0E31\u0E19\u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19\u0E01\u0E31\u0E1A\u0E40\u0E2D\u0E40\u0E08\u0E19\u0E15\u0E4C Opencode \u0E42\u0E14\u0E22\u0E43\u0E0A\u0E49\u0E01\u0E25\u0E22\u0E38\u0E17\u0E18\u0E4C Eager\/Lazy \u0E43\u0E19\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23\u0E1A\u0E23\u0E34\u0E1A\u0E17\u0E1C\u0E48\u0E32\u0E19\u0E44\u0E1F\u0E25\u0E4C AsciiDoc \u0E17\u0E35\u0E48\u0E21\u0E35\u0E01\u0E32\u0E23\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19",
+                      "datePublished": "2026-04-24",
+                      "dateModified": "2026-04-24",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0108_gouvernance_agent_opencode_eager_lazy_post.html",
+                      "inLanguage": "fr"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21 AI Agent \u0E14\u0E49\u0E27\u0E22 AsciiDoc: \u0E01\u0E25\u0E22\u0E38\u0E17\u0E18\u0E4C Eager\/Lazy \u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E40\u0E0B\u0E2A\u0E0A\u0E31\u0E19 Opencode \u0E42\u0E14\u0E22\u0E44\u0E21\u0E48\u0E21\u0E35\u0E01\u0E32\u0E23\u0E23\u0E31\u0E48\u0E27\u0E44\u0E2B\u0E25\u0E02\u0E2D\u0E07\u0E1A\u0E23\u0E34\u0E1A\u0E17 (Context Leak)", "item": "https:\/\/cheroliv.com\/blog\/2026\/0108_gouvernance_agent_opencode_eager_lazy_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">ควบคุม AI Agent ด้วย AsciiDoc: กลยุทธ์ Eager/Lazy ของฉันสำหรับเซสชัน Opencode โดยไม่มีการรั่วไหลของบริบท (Context Leak)</h1>
+                <p class="lead">
+                    <em>เผยแพร่เมื่อ 24 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content"><div class="sect1">
+<h2 id="_สรุป">สรุป</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>เมื่อทำงานกับเอเจนต์ AI อย่าง Opencode ในโปรเจกต์ที่ซับซ้อนซึ่งดำเนินไปหลายเซสชัน เราจะเผชิญกับปัญหาพื้นฐานประการหนึ่ง:<strong>การรั่วไหลของบริบท</strong>. เอเจนต์ไม่จดจำเซสชันก่อนหน้า ทุกสิ่งที่อธิบายให้เอเจนต์ฟัง&#8201;&#8212;&#8201;สถาปัตยกรรม ธรรมเนียมปฏิบัติ สถานะของแบ็กлог&#8201;&#8212;&#8201;ล้วนสูญหาย การสร้างบริบทนี้ขึ้นใหม่ในทุกเซสชันมีต้นทุนสูง ช้า และก่อให้เกิดข้อผิดพลาด</p>
+</div>
+<div class="paragraph">
+<p>บทความนี้นำเสนอกลยุทธ์แบบช่างฝีมือที่ฉันสร้างขึ้นเพื่อแก้ปัญหานี้: ระบบการกำกับดูแลที่คงอยู่ต่อเนื่องซึ่งอิงจากไฟล์ AsciiDoc พร้อมด้วยการแบ่งเป็นสองขั้ว<strong>แบบประเมินทันที/แบบประเมินเมื่อจำเป็น</strong>เพื่อเพิ่มประสิทธิภาพการใช้โทเค็นบริบท และ&#8230;&#8203;<strong>ขั้นตอนการสิ้นสุดเซสชันที่ต้องดำเนินการอย่างหลีกเลี่ยงไม่ได้</strong>เพื่อรับประกันความต่อเนื่อง</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ฉาก_วันจันทร์ที่_21_เมษายน_900_น">ฉาก: วันจันทร์ที่ 21 เมษายน 9:00 น.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ฉันเปิด Opencode ใหม่เพื่อทำปลั๊กอิน Gradle ของฉันต่อ`plantuml-plugin`เมื่อคืนนี้ ฉันใช้เวลาสามชั่วโมงพูดคุยกับเอเจนต์ด้านสถาปัตยกรรมของพูลคีย์ API&#8201;&#8212;&#8201;การหมุนเวียนแบบ round-robin การจัดการโควตา การสลับไปใช้ตัวสำรองอัตโนมัติ เช้านี้ เอเจนต์มองฉันด้วยดวงตาแบบปลาทอง</p>
+</div>
+<div class="paragraph">
+<p>Please provide the French text you&#8217;d like me to translate into Thai. สวัสดีครับ ผมเป็นผู้ช่วย Opencode ของคุณ วันนี้ผมสามารถช่วยคุณได้อย่างไร? <em>__</em></p>
+</div>
+<div class="paragraph">
+<p>ไม่ต้องมี&#8201;&#8212;&#8201;อ้อ ใช่ พูลคีย์ API เรามาถึงโครงสร้าง YAML แล้ว ไม่ต้องมี&#8201;&#8212;&#8201;ระวัง`PlantumlManager`เป็นออบเจ็กต์ Kotlin แบบซิงเกิลตัน ไม่ใช่คลาส ไม่มี&#8201;&#8212;&#8201;ไม่ เมื่อวานเราตัดสินใจว่า`SyntaxValidationResult`ยังคงมี sealed class แบบ nested อยู่ใน`PlantumlService`.</p>
+</div>
+<div class="paragraph">
+<p>ทุกอย่างต้องทำใหม่หมด หรือพูดให้ถูกคือ ทุกอย่างต้องอธิบายใหม่หมด ฉันจะต้องใช้ยี่สิบนาทีแรกของเซสชันเพื่อประกอบบริบทขึ้นมาใหม่ที่เอเจนต์เคยได้รับมาแล้วเมื่อวาน ยี่สิบนาทีที่โทเคนถูกเผาทิ้งไป ยี่สิบนาทีที่ฉันควรจะได้เขียนโค้ด แต่กลับต้องมาทำหน้าที่สอนแบบเลี่ยงไม่ได้</p>
+</div>
+<div class="paragraph">
+<p>นี่ไม่ใช่บั๊กของ Opencode นี่คือธรรมชาติของ LLM แบบสนทนาเอง: ระหว่างสองเซสชัน ความจำใช้งานคือ<strong>ถูกลบเลือนไปทั้งหมด</strong>. เอเจนต์ไม่จำภารกิจก่อนหน้า การตัดสินใจที่ได้ทำไป กับดักที่ระบุไว้ หรือโค้ดที่เราเขียนด้วยกัน</p>
+</div>
+<div class="paragraph">
+<p>ฉันเคยเจอเรื่องนี้มาหลายสิบครั้งแล้ว ในสี่โปรเจกต์ที่ทำพร้อมกัน ด้วยเซสชันที่ต่อเนื่องกันเป็นเวลาหลายสัปดาห์ ฉันคำนวณแล้วว่า โดยเฉลี่ยแล้ว<strong>30 ถึง 40% ของเวลาในเซสชัน</strong>ได้อุทิศให้กับการปรับบริบทใหม่ของเอเจนต์ ในเซสชันที่ 87 ของโครงการ`plantuml-plugin`, ฉันทนไม่ไหวแล้ว ฉันไม่สามารถปล่อยให้ตัวเองต้องอธิบายซ้ำเป็นครั้งที่สิบอีกต่อไปว่า`AttemptEntry`เป็น data class ระดับบนสุดใน`DiagramProcessor.kt`.</p>
+</div>
+<div class="paragraph">
+<p>ฉันต้องการระบบ ไม่ใช่แฮ็ก แต่เป็นการกำกับดูแลที่แท้จริง</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ปฐมบท_จากความโกลาหลสู่ระเบียบวิธี">ปฐมบท: จากความโกลาหลสู่ระเบียบวิธี</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_เซสชันแรก_ยุคแห่งความมืด">เซสชันแรก : ยุคแห่งความมืด</h3>
+<div class="paragraph">
+<p>โปรเจกต์แรกของฉันกับ Opencode,<code>plantuml-plugin</code>, เริ่มต้นขึ้นโดยไม่มีการกำกับดูแลใด ๆ ฉันถามคำถาม เอเจนต์ตอบ เราวนทำซ้ำ เซสชันจบลง และวันถัดไปก็เริ่มต้นใหม่จากศูนย์ นั่นคือเซสชัน 1 จากนั้น 2 แล้วก็ 3&#8230;&#8203; จนถึงเซสชัน 62 ที่ฉันตระหนักว่าฉันเสียเวลาสะสมหลายชั่วโมงไปกับการอธิบายสถาปัตยกรรมเดิมซ้ำแล้วซ้ำอีก</p>
+</div>
+<div class="paragraph">
+<p>ในเซสชันที่ 62 ตัวเลขอยู่ตรงนั้นแล้ว:<strong>การทดสอบหน่วย 198 รายการผ่าน</strong>, <strong>การทดสอบเชิงฟังก์ชัน 42 รายการผ่านการตรวจสอบแล้ว</strong>, ปลั๊กอินทำงานได้ แต่ต้นทุนทางปัญญาเกินรับไหว ทุกเซสชันใหม่เริ่มต้นด้วยบทพูดคนเดียวยี่สิบนาทีเกี่ยวกับโครงสร้างโปรเจกต์</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ตอนของ_site_yml_ที่ถูกทำลาย_เซสชัน_2_bakery_plugin">ตอนของ site.yml ที่ถูกทำลาย (เซสชัน 2, bakery-plugin)</h3>
+<div class="paragraph">
+<p>วิธีการนี้ก็เกิดขึ้นจากหายนะเช่นกัน ในโครงการ`bakery-gradle`, ในเซสชันที่ 2 ฉันขอให้เอเจนต์แก้ไขไฟล์`site.yml`. เอเจนต์ โดยไม่ตรวจสอบว่าไฟล์ได้รับการจัดเวอร์ชันหรือไม่ ทำการ`Write`ที่สมบูรณ์ซึ่งเขียนทับเนื้อหา ผลลัพธ์: โทเค็นจริง (คีย์ API Firebase, ข้อมูลลับสำหรับการดีพลอย) ถูกแทนที่ด้วยตัวยึดตำแหน่งปลอม ไฟล์นี้ไม่ได้อยู่ใน git&#8201;&#8212;&#8201;มันอยู่ใน`.gitignore`เพื่อปกป้องความลับ</p>
+</div>
+<div class="paragraph">
+<p>โดยไม่มีการสำรองข้อมูล โดยไม่`git restore`เป็นไปได้ ฉันติดขัด ฉันจำเป็นต้องสร้างไฟล์กำหนดค่าขึ้นใหม่ด้วยตนเอง ค้นหาโทเค็นในตัวจัดการรหัสผ่านของฉัน แล้วนำทุกอย่างกลับมาต่อกัน</p>
+</div>
+<div class="paragraph">
+<p>ความหงุดหงิดนี้เองที่เป็นจุดกำเนิดของ&#8230;&#8203;<strong>กฎสัมบูรณ์ 1b</strong>Please provide the French text you&#8217;d like me to translate — your message contains the instructions but no source text after the colon.</p>
+</div>
+<div class="paragraph">
+<p>Please provide the French text you&#8217;d like me to translate into Thai. <strong>ห้ามทับเด็ดขาด</strong>ไฟล์ config ที่มี`Write`สมบูรณ์เมื่อ`Edit`เพียงบางส่วนก็เพียงพอ<strong>ห้ามแทนที่โดยเด็ดขาด</strong>ค่าที่ละเอียดอ่อนด้วยค่าหลอก<strong>ตรวจสอบ <code>git check-ignore</code> และ `git ls-files</strong>ก่อนการแก้ไขใด ๆ <em>__</em></p>
+</div>
+<div class="paragraph">
+<p>กฎข้อนี้ ซึ่งปัจจุบันถูกจารึกไว้อย่างมั่นคงในไฟล์ทั้งหมดของฉัน`AGENT.adoc` et `INDEX.adoc`ในสี่โปรเจกต์ เกิดจากข้อผิดพลาดจริงที่ทำให้ฉันต้องเสียเวลาทำงานด้วยมือหนึ่งชั่วโมง</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_การย้าย_markdown_asciidoc_เซสชัน_1_cheroliv_com">การย้าย Markdown → AsciiDoc (เซสชัน 1, cheroliv.com)</h3>
+<div class="paragraph">
+<p>วันที่ 25 เมษายน 2026 บน`cheroliv.com`, ฉันตัดสินใจอย่างเด็ดขาด: แปลงการกำกับดูแลทั้งหมดจาก Markdown ไปเป็น AsciiDoc นี่ไม่ใช่เรื่องของความสวยงาม แต่เป็นเรื่องของการใช้งาน AsciiDoc มีโครงสร้างเชิงความหมายที่ LLM อ่านได้ดีกว่า: ส่วนแบบลำดับชั้น ตารางแบบมีชนิด คำเตือน (<code>NOTE</code>, <code>WARNING</code>, <code>CAUTION</code>), แอตทริบิวต์ของเอกสารที่เครื่องอ่านได้</p>
+</div>
+<div class="paragraph">
+<p>เซสชัน 1 ของ`cheroliv.com`ทำให้โครงสร้างเป็นทางการ:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>การแปลงของ`AGENTS.md` en <code>AGENT.adoc</code></p>
+</li>
+<li>
+<p>การสร้างเอเจนต์เฉพาะทาง:`CODER.adoc`, <code>SCRUM_MASTER.adoc</code>, <code>PLANTUML_DESIGNER.adoc</code></p>
+</li>
+<li>
+<p>การสร้างโครงสร้าง Eager/Lazy :`INDEX.adoc`, <code>SESSIONS_HISTORY.adoc</code>, <code>AGENT_SESSION_MANAGER.adoc</code>, <code>SESSION_CHECKLIST.adoc</code>, <code>PROCEDURES.adoc</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>คอมมิตเดียว:`90975e9 refactor: migrate agent governance from Markdown to AsciiDoc`. และเว็บไซต์ยังคงทำงานต่อไป</p>
+</div>
+<div id="diag-timeline" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-b9847a86b0679dd8f2e8101268c64b45.svg" alt="Timeline de croissance des sessions sur les 4 projets" width="2397" height="290">
+</div>
+</div>
+<div class="paragraph">
+<p>ไทม์ไลน์ข้างต้นแสดงให้เห็นความคืบหน้าจริง จุดพลิกผันคือเซสชันที่ 87: นั่นคือจุดที่ความหงุดหงิดจากการกำหนดบริบทใหม่ซ้ำ ๆ เกินเกณฑ์ความอดทน และวิธี Eager/Lazy เลิกเป็นเพียงแนวคิดแล้วกลายเป็นสิ่งที่ต้องทำ</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_กลยุทธ์_เจาะลึก_eagerlazy">กลยุทธ์: เจาะลึก Eager/Lazy</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ปรัชญา_แคชคอมพิวเตอร์ประยุกต์กับการรู้คิด">ปรัชญา: แคชคอมพิวเตอร์ประยุกต์กับการรู้คิด</h3>
+<div class="paragraph">
+<p>แนวทางของฉันได้รับแรงบันดาลใจโดยตรงจากการจัดการแคชคอมพิวเตอร์ ทุกสิ่งที่<strong>สำคัญและใช้บ่อย</strong>ต้องสามารถเข้าถึงได้ทันที (<strong>กระตือรือร้น</strong>). ทุกสิ่งที่เป็น<strong>ตามบริบทหรือมีขนาดใหญ่</strong>ต้องโหลดตามคำขอ (<strong>ขี้เกียจ</strong>).</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6666%;">
+<col style="width: 6.6676%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Eager (แดชบอร์ด)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lazy (คู่มือเจ้าของ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ขนาด</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">น้อยกว่า 100 บรรทัด, น้อยกว่า 10k โทเค็น</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ไม่จำกัด, ละเอียด</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>กำลังโหลด</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">อัตโนมัติ เมื่อเริ่มต้นเซสชัน</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ตามคำขอของตัวแทน</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>เนื้อหา</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">กฎเด็ดขาด, ภารกิจปัจจุบัน, สถานะวิกฤต</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">คลังเก็บเซสชัน ประวัติทั้งหมด ขั้นตอนโดยละเอียด เอกสารอ้างอิงทางเทคนิค</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>บทบาท</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ชี้นำตัวแทนทันที</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ตอบคำถามเกี่ยวกับบริบทเชิงลึก</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_ไฟล์_eager_แดชบอร์ด">ไฟล์ Eager: แดชบอร์ด</h3>
+<div class="paragraph">
+<p>ไฟล์เหล่านี้อยู่ที่รากของแต่ละโปรเจกต์ และถูกโหลดโดยอัตโนมัติโดยเอเจนต์เมื่อเริ่มต้นแต่ละเซสชัน พวกมันประกอบเป็น<strong>แดชบอร์ด</strong>-- ข้อมูลสำคัญที่เข้าถึงได้ทันที</p>
+</div>
+<div id="diag-eager-lazy" class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-5efdba7aa7ab693f5a5966783353d92b.svg" alt="Architecture Eager/Lazy des fichiers de gouvernance" width="2197" height="426">
+</div>
+</div>
+<div class="paragraph">
+<p><strong>AGENT.adoc</strong>-- ไฟล์หลัก บน`cheroliv.com`, มี 200 บรรทัดและประกอบด้วย:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>กฎเด็ดขาดของโปรเจกต์ (ห้ามคอมมิตโดยไม่ได้รับอนุญาต, ห้าม`rm`โดยไม่มีการยืนยัน)</p>
+</li>
+<li>
+<p>โครงสร้างโปรเจกต์และแนวปฏิบัติการเขียนโค้ด</p>
+</li>
+<li>
+<p>คำสั่งที่จำเป็น (<code>./gradlew serve</code>, <code>./gradlew test</code>)</p>
+</li>
+<li>
+<p>เอปิกและแบ็กлогผลิตภัณฑ์ (ยูสเซอร์สตอรีที่จัดลำดับความสำคัญแล้ว)</p>
+</li>
+<li>
+<p>เกณฑ์คุณภาพแบบข้ามสายงาน (การเข้าถึงได้ การรองรับขนาดหน้าจอ ความเข้ากันได้)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>บน`bakery-plugin`, กฎข้อ 0 นั้นแตกต่าง:<strong>./gradlew -q publishToMavenLocal` จำเป็นหลังจากแก้ไขซอร์สโค้ดทุกครั้ง</strong>. เพราะการทดสอบปลั๊กอินโดยไม่เผยแพร่ JAR โลคอลอีกครั้งทำให้ฉันเสียเวลาหนึ่งชั่วโมงไปกับการดีบั๊กโค้ดที่ยังไม่ได้แพ็กเกจ.</p>
+</div>
+<div class="paragraph">
+<p><strong>PROMPT_REPRISE.adoc</strong>-- ภารกิจของเซสชันปัจจุบัน อัปเดตทุกครั้งเมื่อสิ้นสุดเซสชัน โดยประกอบด้วย:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>หมายเลขเซสชันและภารกิจที่มีความสำคัญลำดับแรก</p>
+</li>
+<li>
+<p>บทสรุปของเซสชันก่อนหน้า (สิ่งที่ทำเสร็จแล้ว สิ่งที่ยังคงต้องทำ)</p>
+</li>
+<li>
+<p>เกณฑ์การยอมรับของเซสชันปัจจุบัน</p>
+</li>
+<li>
+<p>การเตือนความจำทางเทคนิคเฉพาะ</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>.agents/INDEX.adoc</strong>-- จุดเริ่มต้น มันสรุปกฎสัมบูรณ์ เซสชันล่าสุด และที่สำคัญที่สุด<strong>พอร์ตโฟลิโอโครงการ</strong>จัดการด้วยระเบียบวิธีเดียวกัน ณ วันนี้ มีห้าโครงการอยู่ในนั้น:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>----
+----
+| magic-stick    | Session 23 | SCRIPT_VERIFICATION.adoc | 2026-04-27 |
+| bakery-gradle  | Session 11 | TEST_COVERAGE_ANALYSIS   | 2026-04-27 |
+| cheroliv.com   | Session 9  | TEST_COVERAGE_ANALYSIS   | 2026-04-27 |
+| plantuml-gradle| Session 133| TEST_COVERAGE_ANALYSIS   | 2026-04-23 |
+| jhipster-gradle-plugins | Session 1 | TEST_COVERAGE_ANALYSIS | 2026-04-28 |
+----
+
+No source text was provided to translate. Please send the French text you would like translated into Thai.`*_ESSENTIALS.adoc`** -- การเพิ่มเติมล่าสุด (Session 109, plantuml-plugin) เพื่อเพิ่มประสิทธิภาพบริบทแบบ Eager ให้ดียิ่งขึ้น แทนที่จะโหลดบริบททางธุรกิจ 200 บรรทัดบนพูลคีย์ API ฉันโหลด 50 บรรทัดของส่วนสำคัญ และอีก 150 บรรทัดที่เหลือยังคงอยู่ในสถานะ LAZY ใน`*_REFERENCE.adoc`.
+
+ผลลัพธ์ที่วัดได้: การเปลี่ยนผ่านของ**~25k โทเคน EAGER ถึง ~10k โทเคน**(ประหยัดได้ 60%) เอเจนต์ไม่จำเป็นต้องใช้การแจ้งเตือนที่สิ้นเปลืองพลังงานอีกต่อไป
+
+==== จุดเชื่อมที่หายไป : `opencode.json
+
+ฉันต้องสารภาพกับคุณถึงเรื่องหนึ่งที่ฉันเกือบลืมบันทึกไว้ เหนือไฟล์ .adoc ทั้งหมดนี้ มีไฟล์ JSON ขนาดจิ๋วไฟล์หนึ่งซึ่งถ้าไม่มีมันแล้วทุกอย่างก็ไม่ทำงาน มันมีชื่อว่า`opencode.json`และมันมีหกบรรทัด ตามตัวอักษรคือหกบรรทัด
+
+[source,json]
+----
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENT.adoc"
+  ]
+}
+----
+
+ไฟล์นี้เป็นไฟล์ที่บอกกับ Opencode ว่า « เมื่อเริ่มต้น ให้โหลด`AGENT.adoc`โดยอัตโนมัติ. » หากไม่มีมัน เอเจนต์ก็เป็นหน้าว่างเปล่าตรงกับที่ฉันอธิบายไว้ตอนต้นบทความทุกประการ เมื่อมีมัน เอเจนต์ก็มีกฎเด็ดขาด สถาปัตยกรรมของโปรเจกต์ และคำสั่งสำคัญอยู่ในมือแล้ว — ก่อนที่ฉันจะพูดสวัสดีด้วยซ้ำ
+
+ฉันค้นพบความสำคัญของไฟล์นี้โดยบังเอิญ บน`bakery-plugin`, มันไม่มีอยู่จริง ฉันสงสัยว่าทำไมเอเจนต์จึงดู « หลงทาง » อย่างเป็นระบบในโปรเจกต์นี้มากกว่าโปรเจกต์อื่น กฎสัมบูรณ์นั้นอยู่ใน`AGENT.adoc`— แต่`AGENT.adoc`ไม่เคยถูกโหลด เอเจนต์อ่านเฉพาะสิ่งที่ฉันบอกให้อ่านด้วยตนเองในแต่ละเซสชัน นี่คือเซสชันที่ 11 ของ`bakery-plugin`เมื่อฉันตระหนักถึงการไม่มีอยู่ของ`opencode.json`. ฉันสร้างมันขึ้นมา — และเซสชันที่ 12 ก็เริ่มต้นเหมือนกับเซสชันอื่นๆ
+
+ไฟล์นี้ชัดเจนสำหรับฉันมากในตอนนี้จนฉันไม่คิดถึงมันอีกแล้ว ความผิดพลาดแบบคลาสสิกของนักพัฒนาที่รู้จักเครื่องมือของตัวเองดีเกินไป วันนี้ฉันสร้างมันเป็นประจำ *ก่อน*`AGENT.adoc`. นี่คือศิลาก้อนแรก
+
+==== ทวิภาพของ `INDEX.adoc
+
+ความละเอียดอ่อนอีกประการหนึ่งที่สมควรได้รับการอธิบายให้ชัดเจน:`INDEX.adoc`อาศัยอยู่ใน`.agents/`— โฟลเดอร์ที่ฉันนำเสนอว่าเป็น LAZY อย่างไรก็ตาม ฉันระบุโฟลเดอร์นี้เป็น EAGER ในตารางทั้งหมดของฉัน มีความขัดแย้งที่ดูเหมือนจะปรากฏอยู่ตรงนี้
+
+ความเป็นจริงภาคสนาม: ไฟล์`.agents/INDEX.adoc`ถูกโหลดโดยอัตโนมัติเรียบร้อยแล้วเมื่อเริ่มต้นเซสชัน เช่นเดียวกับ`AGENT.adoc` et `PROMPT_REPRISE.adoc`. พวกเขาอยู่ใน`.agents/`ด้วยเหตุผลด้านการจัดระเบียบ — ไม่ให้รุกล้ำราก — แต่พฤติกรรมของพวกมันเป็น EAGER
+
+บน`plantuml-plugin`, `INDEX.adoc`มี 200 บรรทัด และมีกฎเด็ดขาดที่*ครบถ้วน*พร้อมประวัติของกฎเหล่านั้น (บทเรียนจากเซสชันที่ผ่านมา) EPIC พร้อมคะแนน และพอร์ตโฟลิโอโครงการ นี่คือเอกสารที่เอเจนต์ใช้ตรวจดูเพื่อรู้ว่า « ตอนนี้เราอยู่ตรงไหน » บน`bakery-plugin`, มันมี 150 บรรทัดพร้อมด้วยโรดแมปและเซสชันล่าสุด
+
+ความซ้ำซ้อนโดยเจตนาระหว่าง`AGENT.adoc` et `INDEX.adoc`อาจทำให้ประหลาดใจได้ กฎเด็ดขาดมีอยู่ในทั้งสอง ทำไม? เพราะกฎเหล่านี้ทำหน้าที่สองบทบาทที่แตกต่างกัน: ใน`AGENT.adoc`, พวกมันเป็น *เชิงอธิบาย* (การเล่าเรื่องของกฎ บทเรียนที่ได้เรียนรู้) ; ใน`INDEX.adoc`, สิ่งเหล่านี้เป็น *เชิงปฏิบัติการ* (กฎเปล่า ๆ โดยไม่มีเหตุผลรองรับ สำหรับการอ้างอิงอย่างรวดเร็ว) เอเจนต์อ่าน`AGENT.adoc`ครั้งหนึ่งเพื่อ *ทำความเข้าใจ* ; เขาอ่านอีกครั้ง`INDEX.adoc`ในแต่ละเซสชันเพื่อ *นำไปใช้* สองการใช้งาน สองรูปแบบ
+
+[plantuml, format=svg, id=diag-dualite-agent-index, alt="Comparaison entre AGENT.adoc (narratif) et INDEX.adoc (exécutif)"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+title ความเป็นคู่ของ AGENT.adoc ←→ INDEX.adoc
+left to right direction
+
+rectangle "AGENT.adoc\n(ราก — EAGER)" as AGENT #E3F2FD {
+  rectangle "📖 **รูปแบบการเล่าเรื่อง**\nการเล่าเรื่องของกฎ\nบทเรียนที่ได้รับ, บริบท" as NARR
+  rectangle "🏗️ **สถาปัตยกรรมแบบสมบูรณ์**\nโครงสร้างโครงการ, องค์ประกอบ\nBacklog โดยละเอียดของ US" as ARCHI
+  rectangle "📋 **กฎเชิงอธิบาย**\nทำไมกฎจึงมีอยู่\nประวัติของเหตุการณ์" as EXPL
+}
+
+rectangle "INDEX.adoc\n(.agents/ — EAGER)" as INDEX #E8F5E9 {
+  rectangle "⚡ **รูปแบบสำหรับผู้บริหาร**\nกฎล้วน ๆ โดยไม่มีเหตุผลประกอบ\nการเปิดดูอย่างรวดเร็ว" as EXEC
+  rectangle "📊 **Roadmap &amp; EPICs**\nตารางสรุป\nความคืบหน้า, คะแนน, ลำดับความสำคัญ" as ROAD
+  rectangle "🌐 **พอร์ตโฟลิโอโครงการ**\nมุมมองข้ามโครงการ\n5 โครงการที่ซิงโครไนซ์แล้ว" as PORT
+}
+
+AGENT --&gt; INDEX : "เอเจนต์อ่าน AGENT.adoc\n1 ครั้งเพื่อ **เข้าใจ**"
+INDEX --&gt; AGENT : "เอเจนต์อ่าน INDEX.adoc ซ้ำ\nทุกเซสชันเพื่อ **นำไปใช้**"
+
+note bottom of AGENT
+ขนาดสูงสุด: 200 บรรทัด
+end note
+
+note bottom of INDEX
+ขนาดสูงสุด: 200 บรรทัด
+  Source de vérité en cas de divergence
+end note
+
+@enduml
+----
+
+ความซ้ำซ้อนที่ตั้งใจไว้นี้เป็นทางเลือกในการออกแบบ โดยใช้โทเคน EAGER เพิ่มขึ้นราว 50 บรรทัด — แต่ช่วยรับประกันว่าตัวแทนจะมีกฎอยู่ตรงหน้าอยู่เสมอ รวมถึงในรูปแบบกระชับซึ่งเอื้อต่อการปฏิบัติตามได้ทันที
+
+=== ไฟล์ LAZY: คู่มือเจ้าของ
+
+ไฟล์เหล่านี้อยู่ใน`.agents/`และจะถูกอ่านเฉพาะเมื่อเอเจนต์จำเป็นต้องใช้เท่านั้น พวกมันเป็นความมั่งคั่งที่แท้จริงของวิธีการนี้ เพราะพวกมันสะสมความรู้ของโครงการโดยไม่ปนเปื้อนบริบทปัจจุบัน
+
+[plantuml, format=svg, id=diag-agents-tree, alt="Arborescence complète du dossier .agents/"]
+----
+@startuml
+skinparam folderBackgroundColor #E3F2FD
+skinparam folderBorderColor #1565C0
+skinparam fileBackgroundColor #FFF3E0
+skinparam fileBorderColor #EF6C00
+
+folder ".agents/" as ROOT {
+  file "INDEX.adoc\n(EAGER -- 200 บรรทัด)" as IDX #E8F5E9
+  file "AGENT_SESSION_MANAGER.adoc\n(แม่แบบเซสชัน)" as ASM
+  file "SESSION_CHECKLIST.adoc\n(เมื่อใดควรเปลี่ยน)" as CHK
+  file "PROCEDURES.adoc\n(6 ขั้นตอน + LAZY/EAGER)" as PRO
+  file "SESSIONS_HISTORY.adoc\n(ทุกเซสชัน)" as HIS
+
+  folder "sessions/" as SESS {
+    file "1-chore-migration.adoc" as S1
+    file "109-formalisation-lazy.adoc" as S109 #FFECB3
+    file "133-epic11-article.adoc" as S133
+    file "... +130 รายการอื่น" as SMORE
+  }
+
+  folder "archives/" as ARCH {
+    file "COMPLETED_TASKS_2026-04.adoc" as CTA
+    file "SESSIONS_HISTORY_83-95.adoc" as SHIST
+    folder "sessions_summaries/" as SUM {
+      file "SESSION_64_SUMMARY.adoc" as SU64
+      file "SESSION_73_SUMMARY.adoc" as SU73
+      file "..." as SUMORE
+    }
+    folder "prompts_archive/" as PARCH {
+      file "PROMPT_REPRISE_S65.adoc" as PR65
+      file "PROMPT_REPRISE_S75.adoc" as PR75
+      file "..." as PMORE
+    }
+  }
+}
+
+IDX --&gt; SESS : "จัดทำดัชนี"
+IDX --&gt; HIS : "จัดทำดัชนี"
+IDX --&gt; ARCH : "อ้างอิง"
+
+note right of S109
+เซสชัน 109 =
+การทำให้กลยุทธ์เป็นทางการ
+LAZY/EAGER
+โทเคน : ~25k → ~10k
+end note
+
+@enduml
+----
+
+โครงสร้างแบบต้นไม้ด้านบนแสดงโครงสร้างจริงของโฟลเดอร์`.agents/`บน`plantuml-plugin`, โปรเจกต์ที่สมบูรณ์ที่สุด โปรดสังเกตความลึกแบบสามชั้น: ไฟล์ราก (เมทาดาทา), โฟลเดอร์`sessions/`(จดหมายเหตุตามลำดับเวลา) และแฟ้มเอกสาร`archives/`(การรวมและการสรุป) ความลึกนี้เองที่เปลี่ยนการกำกับดูแลของไฟล์ TODO ธรรมดาให้กลายเป็น**ความจำองค์กรที่สมบูรณ์**.
+
+**.agents/sessions/{N}-{titre}.adoc**-- ไฟล์เก็บถาวรโดยละเอียดของแต่ละเซสชัน ปัจจุบัน:
+
+* `plantuml-plugin`No source text was provided to translate. Please send the French text you'd like translated into Thai.**133 เซสชันที่ถูกเก็บถาวร**(ตั้งแต่เซสชันที่ 1 ถึง 133)
+* `bakery-plugin`(No French text was provided to translate — the message ends with " : " and no source text follows.)**11 เซสชัน**
+* `magic-stick`Please provide the French text you'd like me to translate into Thai.**23 เซสชัน**
+* `cheroliv.com`No text was provided to translate. Please send the French text you'd like translated into Thai.**9 เซสชันอย่างเป็นทางการ**+ เซสชันก่อนระบบ 7 ครั้งที่สร้างขึ้นย้อนหลัง
+
+ไฟล์เก็บถาวรแต่ละไฟล์มีบริบทที่สมบูรณ์ของเซสชัน การตัดสินใจที่ได้ทำ ปัญหาที่พบและวิธีแก้ไข คำสั่งที่รัน และเอาต์พุตของคำสั่งเหล่านั้น
+
+**.agents/SESSIONS_HISTORY.adoc**-- ตารางสรุปของทุกเซสชันพร้อมคะแนน ตัวอย่างบน`cheroliv.com`ไม่มีข้อความภาษาฝรั่งเศสให้แปลในข้อความของคุณ กรุณาส่งข้อความที่ต้องการแปล
+
+----
+
+| -6 | 2025-05 | chore | Initialisation projet Gradle/JBake | 7/10 |  1 | 2026-04-25 | chore | Migration gouvernance agent | 8/10 |  7 | 2026-04-27 | debug/fix | Correction publishSite | 9/10 |  8 | 2026-04-27 | analyse | Analyse article 0108 | 7/10
+
+**.agents/COMPLETED_TASKS_ARCHIVE_{mois}.adoc**-- งานที่เสร็จสิ้นแล้วจะถูกเก็บถาวรเป็นรายเดือน เพื่อไม่ให้ backlog ที่ใช้งานอยู่มีภาระมากเกินไป เมื่อ user story เสร็จสิ้นแล้ว จะถูกย้ายมาที่นี่ backlog ยังคงอ่านง่าย: มีรายการที่ใช้งานอยู่สูงสุด 10 รายการ
+
+**.agents/PROCEDURES.adoc**-- เทมเพลตโดยละเอียดของขั้นตอนการสิ้นสุดเซสชัน ยาว แต่เอเจนต์อ่านเพียงครั้งเดียวเมื่อเรียนรู้วิธีการ จากนั้นขั้นตอนจะกลายเป็นกลไกอัตโนมัติ
+
+**.agents/AGENT_MODUS_OPERANDI.adoc**-- เอกสารเชิงกลยุทธ์ฉบับสมบูรณ์ เกี่ยวกับ`plantuml-plugin`, ไฟล์นี้ทำ**900+ บรรทัด**และในความเป็นจริงมีชื่อว่า`AGENT_METHODOLOGIES.adoc`— ฉันเปลี่ยนชื่อระหว่างการเขียนบทความนี้กับการนำไปใช้จริง ความคลาดเคลื่อนในการตั้งชื่อแบบนี้เป็นเรื่องเลี่ยงไม่ได้ในระบบงานฝีมือที่พัฒนาอยู่ สิ่งสำคัญคือแบบแผนการตั้งชื่อ: หากไฟล์นั้นอธิบาย *วิธีการ* มันจะเริ่มต้นด้วย`AGENT_`หรือคำนำหน้าที่ชัดเจน มันจัดทำเอกสารวิธีการ Eager/Lazy แพตเทิร์นที่ควรปฏิบัติตาม และแอนติแพตเทิร์นที่ควรหลีกเลี่ยง มันเป็น LAZY เพราะเอเจนต์ไม่จำเป็นต้องอ่านกลยุทธ์ทั้งหมดซ้ำในทุกเซสชัน แต่เฉพาะเมื่อมีความกำกวมเท่านั้น
+
+No text was provided to translate. Please send the French text you'd like translated into Thai.`*_REFERENCE.adoc`** -- ข้อมูลอ้างอิงทางเทคนิคเฉพาะของโครงการ บน`magic-stick`, สองไฟล์ LAZY แบบหนาแน่น:
+
+* `AB_PARTITION_REFERENCE.adoc`(147 บรรทัด) -- สถาปัตยกรรมพาร์ทิชัน A/B GPT, สคริปต์`update-system.sh`, ขนาดที่ประมาณไว้, กลไกการย้อนกลับ
+* `BOOT_TEST_REFERENCE.adoc`(144 บรรทัด) -- ขั้นตอน QEMU + VNC สำหรับทดสอบการบูตของ ISO โดยไม่มีฮาร์ดแวร์จริง รายการตรวจสอบ BIOS/UEFI ข้อจำกัด CI/CD
+
+บน`plantuml-plugin`It looks like your message is missing the French text you'd like translated into Thai. Could you please provide the source text?
+
+* `ARCHITECTURE.adoc`(134 บรรทัด) -- โครงสร้างของ 11 data classes, จุดที่ควรระวัง (กับดักที่ควรหลีกเลี่ยง), คำสั่งทดสอบที่ปรับให้เหมาะสม
+* `API_KEY_POOL_REFERENCE.adoc`-- รายละเอียดทั้งหมดของพูลคีย์ (LAZY ขณะที่`ESSENTIALS`คือ EAGER)
+
+== เอเจนต์ผู้เชี่ยวชาญ: ทีมเสมือนจริง
+
+การกำกับดูแลไม่ได้จำกัดอยู่เพียงไฟล์แบบพาสซีฟ ฉันได้จัดทำอย่างเป็นทางการ...**บทบาทของเอเจนต์เฉพาะทาง**ในไฟล์ LAZY ที่จัดเตรียมไว้โดยเฉพาะ ซึ่งกำหนดเวิร์กโฟลว์ที่คาดหวังตามประเภทของงาน
+
+|===
+|Please provide the French text you'd like me to translate into Thai. |ไฟล์ |บทบาท |โครงการ |**เข้ารหัส** |`CODER.adoc` |การนำ FTL/CSS/JS ไปใช้, แท็กเชิงความหมาย, เกณฑ์การเข้าถึง |cheroliv.com |**สครัมมาสเตอร์** |`SCRUM_MASTER.adoc` |การวางแผน US, การแบ่งเป็นงานย่อย, การตรวจจับการพึ่งพา |cheroliv.com |**PlantUML Designer** |`PLANTUML_DESIGNER.adoc` |การสร้างไดอะแกรม, ไวยากรณ์ PUML, การผสานรวม JBake |cheroliv.com
+|===
+
+ไฟล์`CODER.adoc`บน`cheroliv.com`มีกฎเกณฑ์ที่เป็นรูปธรรม : _มีเพียงหนึ่ง`&lt;h1&gt;`ต่อหน้า_, _นำหน้าเส้นทางด้วย`${content.rootpath}`_, _ประกาศภาษา`&lt;html lang="${content.lang!"fr"}"&gt;`_. ข้อตกลงเหล่านี้ ซึ่งเขียนไว้เพียงครั้งเดียว ได้รับการปฏิบัติตามโดยอัตโนมัติโดยเอเจนต์ตั้งแต่เซสชันที่ 1
+
+ไฟล์`SCRUM_MASTER.adoc`กำหนดโครงสร้างของสิ่งที่ต้องส่งมอบ:**วัตถุประสงค์**, **งาน**(เรียงลำดับพร้อมการกำหนดค่า),**เกณฑ์การยอมรับ**, **ความเสี่ยง**. เมื่อฉันขอแผนปฏิบัติการ เอเจนต์สร้างโครงสร้างนี้โดยที่ฉันไม่ได้ขอ การกำกับดูแล**โปรแกรม**เจ้าหน้าที่
+
+==== เมื่อเอเจนต์เฉพาะทางกลายเป็นสิ่งที่ขาดไม่ได้
+
+การสร้างเอเจนต์เฉพาะทางเป็นไปตามเส้นโค้งตามธรรมชาติ ในช่วงเริ่มต้นของโครงการ คุณยังไม่จำเป็นต้องมีมัน —`AGENT.adoc`ก็เพียงพอแล้วอย่างมาก แต่เมื่อโปรเจกต์เติบโตขึ้น (สมมติว่าเกิน 20 เซสชัน) สัญญาณสองอย่างต้องเตือนคุณ :
+
+1. เอเจนต์ผสมปนธรรมเนียมปฏิบัติของสองโดเมนที่แตกต่างกัน (เช่น ไวยากรณ์ PlantUML และกฎ CSS)
+2. คุณใช้เวลามากขึ้นในการแก้ไขเอเจนต์เกี่ยวกับแนวปฏิบัติที่คุณอธิบายให้มันฟังไปแล้ว 5 ครั้ง
+
+บน`cheroliv.com`, มันเกิดขึ้นในเซสชัน... 1. ใช่ ตั้งแต่เริ่มแรก เพราะโปรเจกต์นี้เป็นเว็บไซต์ที่มีสามภาษา (FTL, CSS, JS) เนื้อหา AsciiDoc และไดอะแกรม PlantUML — สามโดเมนที่ไม่เกี่ยวข้องกันเลย เอเจนต์ CODER จำเป็นต้องรู้ขนาดฟอนต์และ media queries ; เอเจนต์ PLANTUML_DESIGNER จำเป็นต้องรู้ไวยากรณ์`@startuml`. หากไม่มีการแยกจากกัน เอเจนต์ CODER เสนอไดอะแกรมให้ฉัน และในทางกลับกัน ความวุ่นวาย
+
+บน`jhipster-gradle-plugins`, ฉันได้สร้างเอเจนต์เฉพาะทางสองตัวที่เหมาะสำหรับการพัฒนาplugin Gradle:`PLUGIN_DEVELOPER.adoc` et `BACKLOG_MANAGER.adoc`. ตัวแรกเข้ารหัสแบบแผน Kotlin/Gradle ทั้งหมด (ไม่มี`!!`, คลาสข้อมูลสำหรับโมเดล,`@TaskAction`สำหรับงาน) คนที่สองรู้ว่า`persistence`ต้องเสถียรก่อนที่`assistant`ไม่เริ่มการพัฒนาของตน — การพึ่งพาที่สำคัญในโมโนรีโป
+
+ข้อผิดพลาดที่ต้องไม่ทำ: การสร้างเอเจนต์มากเกินไปเร็วเกินไป`plantuml-plugin`ได้รอจนถึงเซสชัน 108 ก่อนที่จะจัดทำเป็นเอเจนต์เฉพาะทางสำหรับพูลคีย์ API ก่อนหน้านั้น บริบททางธุรกิจอยู่ภายใน`AGENT.adoc`. หลักการคร่าว ๆ: เอเจนต์เฉพาะทางมีความสมเหตุสมผลเมื่อโดเมนธุรกิจของมันมีเอกสารเกิน 100 บรรทัด
+
+==== ข้อกำหนดการตั้งชื่อเซสชัน
+
+รายละเอียดที่ดูเหมือนไม่สำคัญ แต่จะกลายเป็นเรื่องวิกฤตเมื่อถึง 100 เซสชัน จะตั้งชื่อไฟล์อาร์ไคฟ์อย่างไร?
+
+ฉันเรียนรู้จากประสบการณ์ตรงว่าจำเป็นต้องมีข้อตกลงร่วมกัน — ตอนแรกมีสี่โปรเจกต์ สี่รูปแบบที่แตกต่างกัน และฉันก็ตามไม่ทันอีกต่อไป ตอนนี้ ข้อตกลงที่ฉันทำให้ลงตัวแล้วคือ:</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>{N}-{type}-{sujet-kebab-case}.adoc</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ตัวอย่างที่เป็นรูปธรรม:
+
+* `1-chore-migration-gouvernance-agent.adoc`— เซสชัน 1 ประเภทงานบ้าน
+* `10-solidification-tests.adoc`— เซสชัน 10 โดยไม่มีชนิดที่ระบุชัดเจน (หัวข้อเพียงพอ)
+* `036-debug-graphify-symlink-epic9.adoc`— เซสชัน 36 พร้อมหมายเลข 3 หลักสำหรับการจัดเรียง
+
+หมายเลขเซสชันเป็นเกณฑ์การเรียงลำดับหลัก โปรเจกต์ที่ใช้หมายเลข 3 หลัก (001, 036, 133) จะหลีกเลี่ยงปัญหาการเรียงลำดับแบบพจนานุกรมเมื่อเกิน 99 นี่คือสิ่งที่ฉันใช้อยู่ตอนนี้บน`magic-stick`No French text was provided to translate.`001-init-projet.adoc`, `036-debug-graphify-symlink-epic9.adoc`.
+
+ประเภทเป็นทางเลือกและได้มาจากคีย์เวิร์ดของเซสชัน (debug, feature, refactor, docs, chore, test) หัวข้อในรูปแบบ kebab-case เป็นส่วนที่สำคัญที่สุด: ต้องทำให้สามารถค้นหาเซสชันได้โดยไม่ต้องเปิดไฟล์ หากคุณสงสัยว่า «นั่นคือเซสชันไหนที่เราแก้ไข timeout ของการทดสอบการรวมระบบ?» คำตอบคือ`124-fix-timeout-integration-test.adoc`.
+
+สำหรับเซสชันย้อนหลังที่สร้างขึ้นใหม่ (โปรเจกต์ที่เกิดก่อนการกำกับดูแล) ฉันใช้หมายเลขติดลบ บน`cheroliv.com`, เซสชัน -6 ถึง 0 ครอบคลุมประวัติศาสตร์ก่อนการกำกับดูแลของโครงการทั้งหมด และสำหรับเซสชัน « ที่ไม่ได้บันทึกเป็นเอกสาร » หรือที่สูญหาย ฉันสร้างรายการใน`SESSIONS_HISTORY.adoc`โดยไม่มีเอกสารเก็บถาวรที่สอดคล้องกัน โดยมีคะแนน`?`. ซึ่งซื่อสัตย์กว่าการแสร้งทำ
+
+[plantuml, format=svg, id=diag-naming-convention, alt="Arbre de décision pour le nommage des fichiers de session"]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200</p>
+</div>
+<div class="paragraph">
+<p>title หลักการตั้งชื่อเซสชัน
+start</p>
+</div>
+<div class="paragraph">
+<p>:Une session se termine;
+note right: Trigger "สิ้นสุดเซสชัน"</p>
+</div>
+<div class="paragraph">
+<p>if (Session antérieure\nà la gouvernance ?) then (oui)
+  :Numéro <strong>NÉGATIF</strong>\n-6, -5 &#8230;&#8203; 0;
+  note right: ประวัติ\nที่สร้างขึ้นใหม่
+  :Suffixe : reconstitution;
+else (non)
+  :Numéro <strong>POSITIF</strong>\nsur 3 chiffres si &gt; 99;
+  note right: 001, 036, 133\nสำหรับการเรียงลำดับตามพจนานุกรม</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>:Détecter le **TYPE**;
+if (Mots-clés trouvés ?) then (oui)
+  :debug / feature / refactor\ndocs / chore / test;
+else (non)
+  :Omettre le type\n(le sujet suffit);
+endif</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>  :Formuler le **SUJET** en kebab-case;
+  note right
+ตัวอย่าง: fix-timeout-integration-test
+ต้องทำให้สามารถค้นหาได้
+โดยไม่ต้องเปิดไฟล์
+  end note
+endif</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>note right
+  • 1-chore-migration-gouvernance.adoc
+  • 036-debug-graphify-symlink.adoc
+  • 124-fix-timeout-integration-test.adoc
+  • 133-epic11-article-blog-kg.adoc
+end note</p>
+</div>
+<div class="paragraph">
+<p>if (Session documentée ?) then (oui)
+  :Créer archive dans sessions/;
+  :Ajouter ligne SESSIONS_HISTORY\navec score X/10;
+else (non)
+  :Ajouter ligne SESSIONS_HISTORY\navec score <strong>?</strong>\n<strong>sans archive</strong>;
+  note right: ความซื่อสัตย์\nแทนที่จะเป็นความว่างเปล่า
+endif</p>
+</div>
+<div class="paragraph">
+<p>stop
+@enduml</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>==== TEST_COVERAGE_ANALYSIS.adoc` — ขั้นตอนที่ 5 แบบเจาะลึก
+
+ขั้นตอนที่ 5 ของกระบวนการสิ้นสุดเซสชันเป็นขั้นตอนที่ลึกลับที่สุด โดยกล่าวว่า « อัปเดต`TEST_COVERAGE_ANALYSIS.adoc`หากมีการเพิ่มหรือแก้ไขการทดสอบ » แต่ไฟล์นี้มีลักษณะอย่างไร?
+
+บน`plantuml-plugin`, มันพัฒนาจากไม่กี่บรรทัดไปเป็นโครงสร้างที่สมบูรณ์ นี่คือรูปแบบที่เสถียรแล้วของมัน:
+
+[source]</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<h1 id="_analyse_de_couverture_de_tests" class="sect0">Analyse de Couverture de Tests</h1>
+<div class="sect1">
+<h2 id="_suivi_des_tests">Suivi des Tests</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Classe de test</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tests</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Statut</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dernière MAJ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PlantumlServiceTest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unit</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">45/45</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ PASS</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2026-04-23</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ApiKeyPoolTest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">integration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15/15</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ PASS</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2026-04-20</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_historique_par_session">Historique par Session</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>| Session | Tests ajoutés | Tests modifiés | Couverture
+| 133     | 0             | 2              | 100%
+| 132     | 5             | 0              | 100%</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">----</p>
+<p class="tableblock">ประโยชน์ไม่ได้อยู่ที่ไฟล์เอง — แต่อยู่ที่ข้อบังคับในการ <strong>จดบันทึก</strong> สิ่งที่เปลี่ยนแปลง หากไม่มีขั้นตอนนี้ หลังจากผ่านไป 50 เซสชัน คุณจะไม่รู้อีกต่อไปว่าการทดสอบใดครอบคลุมอะไร เอเจนต์ก็เช่นกัน ไฟล์นี้กลายเป็นแหล่งความจริงเดียวเกี่ยวกับความครอบคลุมการทดสอบของโปรเจกต์</p>
+<p class="tableblock">สำหรับโปรเจกต์ที่ไม่มีテストแบบดั้งเดิม (เช่น`magic-stick`ที่ทดสอบสคริปต์ bash) ขั้นตอนที่ 5 ถูกแทนที่ด้วย`SCRIPT_VERIFICATION.adoc`. กลไกนั้นเหมือนกัน: ไฟล์ที่ติดตามสถานะการตรวจสอบความถูกต้องของสคริปต์ ปรับขั้นตอนที่ 5 ให้เข้ากับโปรเจกต์ของคุณ แต่ห้ามข้ามเด็ดขาด มันคือตาข่ายนิรภัยที่ป้องกันการถดถอยแบบเงียบ</p>
+<p class="tableblock">หากโปรเจกต์ของคุณไม่มีการทดสอบ <strong>ใด ๆ</strong> เลย — ไม่ว่าจะเป็นยูนิตเทสต์ การทดสอบเชิงฟังก์ชัน หรือสคริปต์ — ก็ให้สร้างไฟล์เปล่าที่มีส่วน « สิ่งที่ต้องทำ: กำหนดกลยุทธ์การทดสอบ » ขึ้นมาเช่นกัน มันเป็นที่คั่นหน้าที่จะคอยเตือนตัวคุณในอนาคตว่าหัวข้อนี้ยังไม่ได้รับการจัดการ</p>
+<p class="tableblock">[plantuml, format=svg, id=diag-session-flow, alt="Flux d&#8217;une session type avec Eager/Lazy et agents"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE</p>
+<p class="tableblock">start</p>
+<p class="tableblock">:Début session;
+note right: เอเจนต์เป็นหน้ากระดาษเปล่า</p>
+<p class="tableblock">:Chargement EAGER auto;
+note right
+* AGENT.adoc (กฎเด็ดขาด)
+* PROMPT_REPRISE.adoc (ภารกิจ N)
+* INDEX.adoc (สถานะโครงการ)
+end note</p>
+<p class="tableblock">if (Mission claire ?) then (oui)
+  :Exécution directe;
+else (non)
+  :Charge LAZY sur demande;
+  note right
+* SESSIONS_HISTORY.adoc (บริบทที่ผ่านมา)
+* sessions/{N-1}-<strong>.adoc (การตัดสินใจ)
+* *<em>REFERENCE.adoc (สถาปัตยกรรม)
+  end note
+endif</p>
+<p class="tableblock">:Délégation agent spécialisé ?;</p>
+<p class="tableblock">if (CODER ?) then (oui)
+  :Lit CODER.adoc;
+  :Suit conventions FTL/CSS;
+elseif (SCRUM Master ?) then (oui)
+  :Lit SCRUM_MASTER.adoc;
+  :Structure livrable imposée;
+elseif (PlantUML ?) then (oui)
+  :Lit PLANTUML_DESIGNER.adoc;
+  :Syntaxe PUML + intégration;
+else (non)
+endif</p>
+<p class="tableblock">:Travail de la session;</p>
+<p class="tableblock">:Fin de session (trigger utilisateur);</p>
+<p class="tableblock">:Procédure 6 étapes;
+note right
+1. เก็บถาวร sessions/N-</strong>.adoc
+2. อัปเดต PROMPT_REPRISE.adoc (N+1)
+3. อัปเดต SESSIONS_HISTORY.adoc
+4. อัปเดต INDEX.adoc
+5. อัปเดต TEST_COVERAGE (ถ้าเกี่ยวข้อง)
+6. อัปเดต COMPLETED_TASKS_ARCHIVE.adoc
+end note</p>
+<p class="tableblock">:Checklist [✅] x 6;</p>
+<p class="tableblock">stop
+@enduml
+----</p>
+<p class="tableblock">แผนภาพด้านบนแสดงวงจรชีวิตทั้งหมดของเซสชัน จุดสำคัญคือการแยกสองทางหลังจากโหลด EAGER: ไม่ว่าภารกิจจะชัดเจนพอที่จะดำเนินการโดยตรง (80% ของกรณี) หรือเอเจนต์จะโหลด LAZY เพื่อแก้ความกำกวม (20% ของกรณี) การแยกแยะนี้เองที่ช่วยประหยัดโทเค็น</p>
+<p class="tableblock">== ขั้นตอนการสิ้นสุดเซสชัน: กฎทอง</p>
+<p class="tableblock">=== ทำไมเธอจึงขาดไม่ได้</p>
+<p class="tableblock">หากไม่มีขั้นตอนนี้ กลยุทธ์ Eager/Lazy ก็ไม่มีประโยชน์เลย ขั้นตอนนี้เองที่เปลี่ยนงานของเซสชันให้เป็นข้อมูลที่คงอยู่ถาวร ขั้นตอนนี้ทำงาน<strong>ตามคำขอโดยชัดแจ้งของผู้ใช้</strong>(คำสำคัญ: "สิ้นสุดเซสชัน", "ฉันออก", ฯลฯ), และมันคือ<strong>จำเป็น</strong>ไม่มีข้อยกเว้นใด ๆ ไม่มีการละเว้นใด ๆ</p>
+<p class="tableblock">ไฟล์`SESSION_CHECKLIST.adoc`กำหนดตัวชี้วัดของเซสชันในอุดมคติ:</p>
+<p class="tableblock">* ระยะเวลา: 15-30 นาที
+* ไฟล์ที่แก้ไข: สูงสุด 1-3
+* การแลกเปลี่ยน LLM: 5-10 ข้อความ
+* บริบทโทเค็น: &lt; 50k</p>
+<p class="tableblock">และสัญญาณที่บ่งบอกว่าต้องเปลี่ยนเซสชัน: _LLM ทำซ้ำข้อผิดพลาดที่แก้ไขแล้ว</em>, <em>มีไฟล์ที่ถูกแก้ไขพร้อมกันมากกว่า 3 ไฟล์</em>, <em>บทสนทนามีมากกว่า 50 ข้อความ</em> กฎทอง:<strong>5 เซสชันละ 20 นาทีดีกว่าหนึ่งเซสชัน 2 ชั่วโมงที่มีการดีบักวุ่นวาย</strong></p>
+<p class="tableblock">=== ลำดับขั้นตอน 6 ขั้น (อย่างเงียบ ๆ)</p>
+<p class="tableblock">[plantuml, format=svg, id=diag-end-session-flow, alt="Flux de la procédure de fin de session"]
+----
+@startuml
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+skinparam activityBackgroundColor #E3F2FD</p>
+<p class="tableblock">start
+:L&#8217;utilisateur dit "สิ้นสุดเซสชัน";
+note right: คำสำคัญทริกเกอร์</p>
+<p class="tableblock">:Agent détecte le trigger;</p>
+<p class="tableblock">:Étape 1\nCréer archive\n`.agents/sessions/N-<strong>.adoc`;
+note right: บริบททั้งหมดของเซสชัน</p>
+<p class="tableblock">:Étape 2\nMettre à jour\n`PROMPT_REPRISE.adoc`;
+note right: ภารกิจ N + เกณฑ์การยอมรับ N+1</p>
+<p class="tableblock">:Étape 3\nMettre à jour\n`SESSIONS_HISTORY.adoc`;
+note right: บรรทัดสรุป: # / วันที่ / ประเภท / หัวข้อ / คะแนน</p>
+<p class="tableblock">:Étape 4\nMettre à jour\n`INDEX.adoc`;
+note right: สถานะปัจจุบัน, แผนงาน, ไฟล์ที่แก้ไข</p>
+<p class="tableblock">:Étape 5\nMettre à jour\n`TEST_COVERAGE_ANALYSIS.adoc`;
+note right: หากเพิ่มหรือแก้ไขการทดสอบ</p>
+<p class="tableblock">:Étape 6\nMettre à jour\n`COMPLETED_TASKS_ARCHIVE.adoc`;
+note right: เก็บถาวรงานที่เสร็จสิ้นแล้ว</p>
+<p class="tableblock">:Afficher la checklist de confirmation;
+note right: ตรวจสอบว่า [✅] แต่ละรายการสมควรได้รับหรือไม่</p>
+<p class="tableblock">stop
+@enduml
+----</p>
+<p class="tableblock">=== ผลลัพธ์จากกว่า 150 เซสชัน</p>
+<p class="tableblock">นี่คือผลลัพธ์ของกระบวนการนี้เมื่อนำไปใช้อย่างเป็นระบบกับสี่โครงการของฉัน:</p>
+<p class="tableblock"><strong>plantuml-plugin</strong>No source text was provided to translate. Please send the French text you&#8217;d like translated into Thai.</p>
+<p class="tableblock">* <strong>133 เซสชัน</strong>ตั้งแต่เริ่มต้นโครงการ
+* <strong>240/240 การทดสอบผ่าน</strong>(ครอบคลุม 100%)&#8201;&#8212;&#8201;EPIC 1-7 เสร็จสิ้นแล้ว
+* <strong>57 สถานการณ์ Cucumber BDD</strong>ผ่านการตรวจสอบแล้ว
+* กฎความปลอดภัยเกี่ยวกับไฟล์กำหนดค่าที่เกิดจากข้อผิดพลาดจริง (Session 2 bakery-plugin)</p>
+<p class="tableblock"><strong>ปลั๊กอินเบเกอรี</strong>The text to be translated is missing.</p>
+<p class="tableblock">* <strong>11 เซสชัน</strong>ภายในสองสัปดาห์
+* การโยกย้าย Supabase → Firebase เสร็จสิ้น (แก้ไขการทดสอบ 9 รายการ)
+* EPIC 6 (publishProfile) ใช้งานได้ในสภาพแวดล้อมการผลิต
+* กฎ 0 ถูกสร้างขึ้น:`publishToMavenLocal`บังคับหลังจากแก้ไขแต่ละครั้ง</p>
+<p class="tableblock"><strong>ไม้วิเศษ</strong>Please provide the French text you&#8217;d like me to translate into Thai.</p>
+<p class="tableblock">* <strong>23 เซสชัน</strong>เพื่อสร้างระบบไลฟ์ Xubuntu พร้อมพาร์ทิชัน A/B
+* ISO แรกที่สร้างขึ้นในเซสชัน 10
+* การทดสอบการบูต QEMU + VNC ที่จัดทำเป็นทางการ (เอกสาร LAZY จำนวน 144 บรรทัด)
+* CI/CD SourceForge ที่ใช้งานได้</p>
+<p class="tableblock"><strong>cheroliv.com</strong>Please provide the French text you&#8217;d like me to translate into Thai.</p>
+<p class="tableblock">* <strong>9 เซสชันอย่างเป็นทางการ</strong>+ การสร้างใหม่ของ 7 เซสชันก่อนระบบ
+* บทความ 0101 (OpenCode PATH) เผยแพร่แล้ว
+* บทความ 0108 (ฉบับนี้) ถูกเขียนใหม่หลังจากการวิเคราะห์ข้อบกพร่องของมัน
+* การกำกับดูแลที่สมบูรณ์ซึ่งย้ายจาก Markdown ไปยัง AsciiDoc</p>
+<p class="tableblock">=== เช็กลิสต์สุดท้าย</p>
+<p class="tableblock">หลังจากดำเนินการทั้ง 6 ขั้นตอนแบบเงียบแล้ว เอเจนต์ต้องแสดงรายการตรวจสอบการยืนยัน:</p>
+<p class="tableblock">----</p>
+<p class="tableblock">✅ Procédure de fin de session exécutée 📋 Checklist :</p>
+<p class="tableblock"><strong>กฎเด็ดขาด</strong>: ไม่สามารถทำเครื่องหมายขั้นตอนใดได้`[✅]<code>หากไฟล์ไม่ได้รับการแก้ไขและตรวจสอบจริง</p>
+<p class="tableblock">== คู่มือ Bootstrap: วันที่ 1 เซสชัน 0</p>
+<p class="tableblock">คุณมั่นใจในวิธีนี้แล้ว คุณต้องการนำไปใช้กับโครงการใหม่ ควรเริ่มจากตรงไหน?</p>
+<p class="tableblock">ฉันได้สัมผัสช่วงเวลานี้เมื่อวันที่ 28 เมษายน 2026 ฉันเปิด Opencode บน`jhipster-gradle-plugins</code>, โมโนรีโปของฉันที่มีปลั๊กอิน Gradle JHipster สองตัว นี่คือโปรเจกต์ที่มีอยู่แล้ว — โค้ดอยู่ตรงนั้น งาน Gradle ทำงานได้ แต่การกำกับดูแลเอเจนต์ล่ะ? ศูนย์. หน้าว่าง. ราวกับ`plantuml-plugin`ในเซสชันที่ 1 ของตน เมื่อหลายเดือนก่อน</p>
+<p class="tableblock">นี่คือขั้นตอนที่แน่นอนซึ่งฉันได้ปฏิบัติตาม และจะปฏิบัติตามสำหรับทุกโครงการใหม่ โปรดสังเกตลำดับให้ดี — มันสำคัญ</p>
+<p class="tableblock">[plantuml, format=svg, id=diag-bootstrap, alt="Flux de bootstrap en 6 étapes pour initialiser la gouvernance agent sur un nouveau projet"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam wrapWidth 250
+skinparam activityBackgroundColor #E8F5E9</p>
+<p class="tableblock">title ธรรมาภิบาลแบบ Bootstrap — วันที่ 1, เซสชัน 0
+start
+:Étape 0\nCréer <strong>opencode.json</strong>\n(6 lignes, instructions: AGENT.adoc);
+note right: บริดจ์ที่โหลด\nAGENT.adoc โดยอัตโนมัติ</p>
+<p class="tableblock">:Étape 1\nCréer les dossiers\n<strong>mkdir -p .agents/sessions/ .agents/archives/</strong>;
+note right: คอนเทนเนอร์เปล่า\nก่อนที่เอเจนต์จะเขียนลงไป</p>
+<p class="tableblock">:Étape 2\nCréer <strong>AGENT.adoc</strong>\n(200 lignes, règles absolues);
+note right: ไฟล์หลัก\nโครงสร้างขั้นต่ำ v1</p>
+<p class="tableblock">:Étape 3\nCréer <strong>PROMPT_REPRISE.adoc</strong>\nMission session 1 (max 70 lignes);
+note right: สิ่งที่ตัวแทนต้อง\nทำในเซสชันถัดไป</p>
+<p class="tableblock">:Étape 4\nCréer <strong>.agents/INDEX.adoc</strong>\nRègles exécutives + roadmap;
+note right: จุดเข้า EAGER\nในโฟลเดอร์ LAZY</p>
+<p class="tableblock">:Étape 5\nCréer les fichiers LAZY structurants\n6 fichiers : SESSIONS_HISTORY, CHECKLIST, etc.;
+note right
+• SESSIONS_HISTORY.adoc
+• SESSION_CHECKLIST.adoc
+• PROCEDURES.adoc
+• AGENT_SESSION_MANAGER.adoc
+• TEST_COVERAGE_ANALYSIS.adoc
+• เอเจนต์เฉพาะทาง (หากจำเป็น)
+end note</p>
+<p class="tableblock">:Étape 6\nAjouter le projet au Portefeuille\nMettre à jour TOUS les INDEX.adoc existants;
+note right: การบำรุงรักษาแบบข้ามสายงาน\nจำเป็นแต่น่าเบื่อ</p>
+<p class="tableblock">:✅ Bootstrap terminé\nSession 1 prête;
+note right: ลงทุน 20 นาที\nประหยัดได้หลายร้อย</p>
+<p class="tableblock">stop
+@enduml
+----</p>
+<p class="tableblock">=== ขั้นตอนที่ 0: สร้าง <code>opencode.json</p>
+<p class="tableblock">นี่คือไฟล์แรก ไม่`AGENT.adoc</code>, ไม่`INDEX.adoc`.<code>opencode.json`ก่อนอื่น ด้วยเหตุผลง่าย ๆ: หากคุณสร้าง`AGENT.adoc`อย่างแรก คุณจะลืมสร้างบริดจ์ที่โหลดมันโดยอัตโนมัติ ฉันทำมันบน`bakery-plugin</code>, ฉันรู้ว่าฉันพูดถึงอะไร</p>
+<p class="tableblock">=== ขั้นตอนที่ 1 : สร้างโฟลเดอร์</p>
+<p class="tableblock">[source,bash]
+----
+mkdir -p .agents/sessions .agents/archives
+----</p>
+<p class="tableblock">โฟลเดอร์ว่างสองโฟลเดอร์`sessions/<code>จะได้รับไฟล์เก็บถาวรของแต่ละเซสชัน`archives/`จะได้รับ COMPLETED_TASKS_ARCHIVE ประจำเดือน โฟลเดอร์เหล่านี้ต้องมีอยู่ *ก่อน</strong> ที่เอเจนต์จะจำเป็นต้องเขียนลงไป เอเจนต์ที่ต้องสร้างทั้งโฟลเดอร์และไฟล์ในเวลาเดียวกัน คือเอเจนต์ที่อาจล้มเหลวอย่างเงียบ ๆ</p>
+<p class="tableblock">=== ขั้นตอนที่ 2: สร้าง `AGENT.adoc</code> — ไฟล์หลัก</p>
+<p class="tableblock">โครงสร้างขั้นต่ำสำหรับเวอร์ชันแรก (มันจะเติบโตขึ้น):</p>
+<p class="tableblock">[source]
+----
+= {NOM_PROJET} — Directives Agent</p>
+<p class="tableblock">[CAUTION]
+----</p>
+<p class="tableblock"><strong>ต้องหยุด</strong>ก่อน rm, Write, การลบ :</p>
+<p class="tableblock">1. อ่านไฟล์ทั้งหมด
+2. ตรวจสอบ git ls-files
+3. ขอคำยืนยัน
+4. รอ "oui</p>
+<p class="tableblock">== โครงการ</p>
+<p class="tableblock"><strong>ชื่อ</strong>The source text to translate is missing — please provide the French text. <strong>สแต็ก</strong>: &#8230;&#8203; <strong>เอกสารประกอบ</strong>: AsciiDoc</p>
+<p class="tableblock">== กฎเด็ดขาด</p>
+<p class="tableblock">=== 0. สภาพแวดล้อมการพัฒนา</p>
+<p class="tableblock">คำสั่งที่จำเป็น&#8230;&#8203;</p>
+<p class="tableblock">=== 1. คอมมิต/GIT</p>
+<p class="tableblock">การห้ามอย่างเป็นทางการ&#8230;&#8203;</p>
+<p class="tableblock">=== 1b. ไฟล์การกำหนดค่า — กฎความปลอดภัยขั้นเด็ดขาด</p>
+<p class="tableblock">ห้ามเขียนทับ&#8230;&#8203;</p>
+<p class="tableblock">=== 2. การทดสอบเมื่อสิ้นสุดเซสชัน</p>
+<p class="tableblock">การห้ามอย่างเป็นทางการ&#8230;&#8203;</p>
+<p class="tableblock">=== 3. ขั้นตอนการสิ้นสุดเซสชัน</p>
+<p class="tableblock">6 ขั้นตอนบังคับ&#8230;&#8203;</p>
+<p class="tableblock">== การจัดการบริบท — LAZY/EAGER</p>
+<p class="tableblock">ไฟล์ EAGER / ไฟล์ LAZY&#8230;&#8203;</p>
+<p class="tableblock">เทมเพลตขั้นต่ำนี้ช่วยให้เอเจนต์เริ่มต้นได้ เวอร์ชันที่สมบูรณ์ — พร้อมด้วยโครงสร้างโปรเจกต์ องค์ประกอบสำคัญ EPIC ต่างๆ และแบ็กлог — จะมาในเซสชันที่ 1 เมื่อเอเจนต์มีกฎพื้นฐานหลักแล้วและสามารถช่วยคุณเพิ่มความสมบูรณ์ให้เอกสารได้</p>
+<p class="tableblock">=== ขั้นตอนที่ 3 : สร้าง <code>PROMPT_REPRISE.adoc</code> — ภารกิจเซสชันที่ 1</p>
+<p class="tableblock">ไฟล์ที่ระบุอย่างชัดเจนว่า « นี่คือเซสชัน 1 ภารกิจที่ต้องกำหนด » ไม่เกิน 70 บรรทัด โดยมีส่วน Session 0 (สรุปการบูตสแตรป) และส่วน Session 1 (ลำดับความสำคัญที่ต้องกำหนดร่วมกับผู้ใช้)</p>
+<p class="tableblock">=== ขั้นตอนที่ 4: สร้าง <code>.agents/INDEX.adoc</code> — จุดเริ่มต้น</p>
+<p class="tableblock">ไฟล์ที่จะบรรจุกฎสัมบูรณ์ (ฉบับผู้บริหาร) และตารางเซสชัน สำหรับการบูตสแตรป มันจะแสดงรายการกฎ 0 ถึง 3 ในรูปแบบกระชับ พอร์ตโฟลิโอโครงการ (รวมถึงโครงการใหม่พร้อมอีโมจิ 🆕) และโรดแมปว่างเปล่าที่พร้อมจะกรอก</p>
+<p class="tableblock">=== ขั้นตอนที่ 5: สร้างไฟล์ LAZY เชิงโครงสร้าง</p>
+<p class="tableblock">ตามลำดับ:</p>
+<p class="tableblock">1. <code>.agents/SESSIONS_HISTORY.adoc</code>— อาร์เรย์ที่มีเพียงเซสชัน 0
+2. <code>.agents/SESSION_CHECKLIST.adoc</code>— เทมเพลต «เมื่อใดควรเปลี่ยนเซสชัน
+3. <code>.agents/PROCEDURES.adoc</code>— ขั้นตอนทั้งหมด 6 ขั้นตอน + EAGER/LAZY
+4. <code>.agents/AGENT_SESSION_MANAGER.adoc</code>— เทมเพลตไฟล์เก็บถาวร
+5. <code>.agents/TEST_COVERAGE_ANALYSIS.adoc</code>— ตารางติดตามการทดสอบ ซึ่งว่างเปล่าในตอนเริ่มต้น</p>
+<p class="tableblock">หากโครงการของคุณมีโดเมนธุรกิจที่ซับซ้อน (เช่น`jhipster-gradle-plugins`ด้วยโมโนรีโป persistence/assistant ของมัน) สร้างเอเจนต์เฉพาะทางได้เลยตอนนี้:</p>
+<p class="tableblock">1. <code>.agents/PLUGIN_DEVELOPER.adoc</code>— แนวปฏิบัติการเขียนโค้ดและขอบเขตการพึ่งพา (หากเป็นปลั๊กอิน)
+2. <code>.agents/BACKLOG_MANAGER.adoc</code>— โครงสร้างการวางแผนและความเสี่ยงที่ระบุไว้</p>
+<p class="tableblock">อย่าสร้างเอเจนต์ที่คุณจะไม่ใช้งาน เอเจนต์ที่ไม่มีข้อกำหนดร่วมที่เป็นรูปธรรมให้เข้ารหัสนั้นเป็นไฟล์ที่ตายแล้วซึ่งก่อให้เกิดความปนเปื้อน`.agents/<code>.</p>
+<p class="tableblock">=== ขั้นตอนที่ 6: เพิ่มโครงการลงในพอร์ตโฟลิโอของโครงการทั้งหมด</p>
+<p class="tableblock">นี่คือขั้นตอนที่เรามักลืมกันเสมอ ทุก`INDEX.adoc`ของแต่ละโครงการมีตาราง « Portefeuille de Projets » ซึ่งแสดงรายการโครงการทั้งหมดด้วยระเบียบวิธีเดียวกัน เมื่อคุณสร้างโครงการใหม่ คุณต้อง:</p>
+<p class="tableblock">1. เพิ่มรายการในพอร์ตโฟลิโอของโครงการใหม่ (ตรรกะ)
+2. เพิ่มหนึ่งบรรทัดในพอร์ตโฟลิโอของโครงการที่มีอยู่ทั้งหมด — ใช่ ทั้งหมด</p>
+<p class="tableblock">ในสี่ (ตอนนี้ห้า) โปรเจกต์ของฉัน นั่นหมายถึงการเปิด`INDEX.adoc</code> de <code>magic-stick</code>, <code>bakery-gradle</code>, <code>cheroliv.com</code>, `plantuml-gradle`และเพิ่มบรรทัดนั้นเข้าไป`jhipster-gradle-plugins</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Session 1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2026-04-28 🆕<code>.</p>
+<p class="tableblock">มันน่าเบื่อ มันเป็นการทำด้วยมือ และยังเป็นวิธีเดียวที่จะรับประกันได้ว่า ไม่ว่าคุณจะทำงานกับโปรเจกต์ใดก็ตาม เอเจนต์จะรู้ว่ามีโปรเจกต์อื่นใดอยู่และมีสถานะอย่างไร ในเซสชัน 012 ของ`magic-stick</code>, เอเจนต์ตรวจพบความไม่สอดคล้องกันสองประการในพอร์ตโฟลิโอ —`bakery-gradle`มี COMPLETED_TASKS_ARCHIVE ของตนล่าช้า และ`plantuml-gradle`มีความคลาดเคลื่อนระหว่างเอกสารขั้นตอนการดำเนินงานของตน (5 ขั้นตอน) กับ INDEX ของตน (6 ขั้นตอน) หากไม่มีตารางเชื่อมโยงนี้ ความไม่สอดคล้องเหล่านี้ก็คงยังมองไม่เห็น</p>
+<p class="tableblock">[plantuml, format=svg, id=diag-portfolio-graph, alt="Graphe du portefeuille de projets — références croisées entre INDEX.adoc"]
+----
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+skinparam nodeBackgroundColor #E3F2FD</p>
+<p class="tableblock">title พอร์ตโฟลิโอโครงการ — การอ้างอิงข้าม INDEX.adoc
+node "<strong>magic-stick</strong>\nเซสชัน 037\nการตรวจสอบสคริปต์" as MS #E1BEE7
+node "<strong>bakery-gradle</strong>\nเซสชัน 11\nความครอบคลุมการทดสอบ" as BG #FFE0B2
+node "<strong>cheroliv.com</strong>\nเซสชัน 10\nความครอบคลุมการทดสอบ" as CH #C8E6C9
+node "<strong>plantuml-gradle</strong>\nเซสชัน 133\nความครอบคลุมการทดสอบ" as PG #BBDEFB
+node "<strong>jhipster-gradle</strong>\nเซสชัน 1 🆕\nความครอบคลุมการทดสอบ" as JG #FFCDD2</p>
+<p class="tableblock">MS -&#8594; BG : INDEX.adoc référence
+MS -&#8594; CH : INDEX.adoc référence
+MS -&#8594; PG : INDEX.adoc référence
+MS -&#8594; JG : INDEX.adoc référence 🆕</p>
+<p class="tableblock">BG -&#8594; MS : INDEX.adoc référence
+BG -&#8594; CH : INDEX.adoc référence
+BG -&#8594; PG : INDEX.adoc référence
+BG -&#8594; JG : INDEX.adoc référence 🆕</p>
+<p class="tableblock">CH -&#8594; MS : INDEX.adoc référence
+CH -&#8594; BG : INDEX.adoc référence
+CH -&#8594; PG : INDEX.adoc référence
+CH -&#8594; JG : INDEX.adoc référence 🆕</p>
+<p class="tableblock">PG -&#8594; MS : INDEX.adoc référence
+PG -&#8594; BG : INDEX.adoc référence
+PG -&#8594; CH : INDEX.adoc référence
+PG -&#8594; JG : INDEX.adoc référence 🆕</p>
+<p class="tableblock">JG -&#8594; MS : INDEX.adoc référence
+JG -&#8594; BG : INDEX.adoc référence
+JG -&#8594; CH : INDEX.adoc référence
+JG -&#8594; PG : INDEX.adoc référence</p>
+<p class="tableblock">note bottom of JG
+เมื่อเพิ่มโปรเจกต์:
+• ต้องอัปเดต INDEX.adoc 4 ไฟล์
+• 1 บรรทัดต่อพอร์ตโฟลิโอ
+• ใช้เวลา: 5 นาที
+end note</p>
+<p class="tableblock">legend bottom</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">= Couleur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">= Projet</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;#E1BEE7&gt;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">magic-stick — ISO Linux live</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;#FFE0B2&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bakery-gradle — Plugin JBake</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;#C8E6C9&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cheroliv.com — Site personnel</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;#BBDEFB&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">plantuml-gradle — Plugin IA</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;#FFCDD2&gt;</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">บทความที่เกี่ยวข้อง</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : แปลง AsciiDoc เป็นวิดีโอ MP4</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">การตรวจสอบการใช้งาน LLM ของฉัน: SQLite, OpenCode, Ollama Cloud และทำไมการสมัครสมาชิกแบบ Pro ของฉันถึงเขย่าตลาดโลก</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">สถาปัตยกรรม « Plugin อิสระ + Root ฝั่งผู้บริโภค » : ทำไม Gradle Builds ของฉันจึงซ้ำซ้อน</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">Knowledge Graph ในฐานะเครื่องยนต์แนะนำ: ฉันกำจัด «บทความที่เกี่ยวข้อง» แบบเรียงตามลำดับเวลาได้อย่างไร</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0108_gouvernance_agent_opencode_eager_lazy_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    กรุณาเปิดใช้งาน JavaScript เพื่อดู
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">ความคิดเห็นโดย Disqus</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        นักพัฒนาและวิทยากรผู้เชี่ยวชาญด้านวิศวกรรมการเรียนการสอน
+การออกแบบโซลูชัน e-learning นวัตกรรมใหม่เพื่อพลิกโฉมการเรียนรู้
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS Feed">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="ติดต่อ">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">การนำทาง</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>หน้าแรก</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>บล็อก</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">ทรัพยากร</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>คลังข้อมูล</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> สไลด์</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> ฝึกอบรม</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> ไดรฟ์ USB ที่บูตได้</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">การแปลเป็นท้องถิ่น</h6>
+                    <p class="mb-3">ตั้งอยู่ในเขตปารีส สามารถปฏิบัติงานได้ทั่วประเทศฝรั่งเศสและทางไกล</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>อีล-เดอ-ฟร็องส์, ฝรั่งเศส</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>สามารถทำงานจากที่บ้านได้</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>การเดินทางในฝรั่งเศส</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. สงวนลิขสิทธิ์ทุกประการ</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>
