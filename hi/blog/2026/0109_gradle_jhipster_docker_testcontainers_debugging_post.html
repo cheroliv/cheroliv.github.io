@@ -1,0 +1,1464 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="hi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>जब Gradle 9, Docker 29 और Testcontainers अपनी पूरी ताकत लगाते हैं : JHipster बिल्ड का debugging — Cheroliv</title>
+
+    
+        <link rel="canonical" href="https://cheroliv.com/hi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+
+        <!-- che-i18n:hreflang:start -->
+        
+            <link rel="alternate" hreflang="fr" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="en" href="https://cheroliv.com/en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="zh" href="https://cheroliv.com/zh/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="hi" href="https://cheroliv.com/hi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="es" href="https://cheroliv.com/es/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ar" href="https://cheroliv.com/ar/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="bn" href="https://cheroliv.com/bn/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="pt" href="https://cheroliv.com/pt/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ru" href="https://cheroliv.com/ru/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ur" href="https://cheroliv.com/ur/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="it" href="https://cheroliv.com/it/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="nl" href="https://cheroliv.com/nl/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="de" href="https://cheroliv.com/de/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="el" href="https://cheroliv.com/el/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="tr" href="https://cheroliv.com/tr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="vi" href="https://cheroliv.com/vi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="th" href="https://cheroliv.com/th/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="id" href="https://cheroliv.com/id/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ko" href="https://cheroliv.com/ko/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="ja" href="https://cheroliv.com/ja/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="sr" href="https://cheroliv.com/sr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="fa" href="https://cheroliv.com/fa/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+            <link rel="alternate" hreflang="x-default" href="https://cheroliv.com/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        
+        <!-- che-i18n:hreflang:end -->
+
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Cheroliv"/>
+        <meta property="og:title" content="जब Gradle 9, Docker 29 और Testcontainers अपनी पूरी ताकत लगाते हैं : JHipster बिल्ड का debugging — Cheroliv"/>
+        <meta property="og:description" content="एक `./gradlew build` जो ग्यारह लगातार त्रुटियों के कारण विफल होता है, अस्तित्व न रखने वाले चर `reportsDir` से लेकर Docker Engine 29 तक, जो docker-java क्लाइंट 1.32 को अस्वीकार करता है। यहाँ Gradle 9, Java 21 और Testcontainers 2.0.5 पर JHipster बिल्ड का पूर्ण डिबगिंग लॉग दिया गया है।"/>
+        <meta property="og:type" content="article"/>
+        <meta property="og:url" content="https://cheroliv.com/hi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"/>
+        <meta property="og:locale" content="hi_IN"/>
+        <meta property="og:image" content="https://cheroliv.com/og-images/fr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.png"/>
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="जब Gradle 9, Docker 29 और Testcontainers अपनी पूरी ताकत लगाते हैं : JHipster बिल्ड का debugging — Cheroliv"/>
+        <meta name="twitter:description" content="एक `./gradlew build` जो ग्यारह लगातार त्रुटियों के कारण विफल होता है, अस्तित्व न रखने वाले चर `reportsDir` से लेकर Docker Engine 29 तक, जो docker-java क्लाइंट 1.32 को अस्वीकार करता है। यहाँ Gradle 9, Java 21 और Testcontainers 2.0.5 पर JHipster बिल्ड का पूर्ण डिबगिंग लॉग दिया गया है।"/>
+        <meta name="twitter:image" content="https://cheroliv.com/og-images/fr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.png"/>
+        <meta name="description" content="एक `./gradlew build` जो ग्यारह लगातार त्रुटियों के कारण विफल होता है, अस्तित्व न रखने वाले चर `reportsDir` से लेकर Docker Engine 29 तक, जो docker-java क्लाइंट 1.32 को अस्वीकार करता है। यहाँ Gradle 9, Java 21 और Testcontainers 2.0.5 पर JHipster बिल्ड का पूर्ण डिबगिंग लॉग दिया गया है।"/>
+    
+
+    <!-- RSS feed autodiscovery -->
+    <link rel="alternate" type="application/rss+xml" title="Cheroliv — RSS फ़ीड" href="https://cheroliv.com/feed.xml"/>
+
+    <script>
+        // IIFE to avoid polluting global scope
+        (function() {
+          try {
+            const theme = localStorage.getItem('preferred-theme');
+            if (theme) {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+          } catch (e) {
+            // Reading from localStorage can fail in private browsing mode on some browsers
+            console.warn('Could not set theme from localStorage', e);
+          }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css" integrity="sha384-huckmaRY7yjByQizNg4/mcNFFWSCC1CCl6aFYN9cGKc7zuKh7+XNuoSpLwyEgCmk" crossorigin="anonymous">
+
+    <!-- highlight.js: theme will be managed dynamically by script.js -->
+    <link id="highlight-js-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" integrity="sha384-4Y0nObtF3CbKnh+lpzmAVdAMtQXl+ganWiiv73RcGVdRdfVIya8Cao1C8ZsVRRDz" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link href="../../css/styles.css?v=20261109-2" rel="stylesheet" />
+
+    <link href="../../css/asciidoctor.css" rel="stylesheet"/>
+
+
+
+    <!-- Favicon -->
+    <link rel="shortcut icon"
+          href="../../img/cheroliv_logo_icon.png"/>
+
+
+
+    <!-- Meta tags pour SEO -->
+    <meta name="author" content="Cheroliv"/>
+
+    <!-- Duplicate content mitigation: pilot-batch mirrors the main blog -->
+    
+
+    <!-- Structured data: WebSite + Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://cheroliv.com/#website",
+          "url": "https://cheroliv.com/",
+          "name": "Cheroliv - डेवलपर ट्रेनर | शैक्षणिक इंजीनियरिंग",
+          "inLanguage": "hi",
+          "publisher": { "@id": "https://cheroliv.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://cheroliv.com/#person",
+          "name": "Cheroliv",
+          "url": "https://cheroliv.com/",
+          "jobTitle": "डेवलपर ट्रेनर | शैक्षणिक इंजीनियरिंग",
+          "sameAs": [ "https://github.com/cheroliv" ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+<div class="main-content-wrapper">
+    <div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top" data-pagefind-ignore>
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../../index.html#home">
+                <i class="bi bi-code-slash me-2"></i>
+                Cheroliv
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="नेविगेशन टॉगल करें">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-start">
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#home' : content.rootpath + 'index.html#home'}">स्वागत</a> -->
+<!--                    </li> -->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#about' : content.rootpath + 'index.html#about'}">À propos</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#services' : content.rootpath + 'index.html#services'}">Services</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#expertises' : content.rootpath + 'index.html#expertise'}">विशेषज्ञताएँ</a> -->
+<!--                    </li> -->
+<!--                    <li class="nav-item"> -->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#formations' : content.rootpath + 'index.html#formations'}">Formations</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#portfolio' : content.rootpath + 'index.html#portfolio'}">Portfolio</a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../blog.html">ब्लॉग</a>
+                    </li>
+<!--                    <li class="nav-item dropdown">-->
+<!--                        <a class="nav-link dropdown-toggle"-->
+<!--                           href="#"-->
+<!--                           id="memosDropdown"-->
+<!--                           role="button"-->
+<!--                           data-bs-toggle="dropdown"-->
+<!--                           aria-expanded="false">-->
+<!--                            <i class="fa-duotone fa-memo"></i> Memos-->
+<!--                        </a>-->
+<!--                        <ul class="dropdown-menu" aria-labelledby="memosDropdown">-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0052_memo_jvm_post.html'}"><i class="fa-brands fa-java"></i> jvm</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0053_memo_kotlin_post.html'}"><i class="fa-brands fa-korvue"></i> kotlin</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0047_memo_gradle_post.html'}"><i class="fa-solid fa-industry"></i> gradle</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0060_memo_js_post.html'}"><i class="fa-brands fa-square-js"></i> javascript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0063_memo_ts_post.html'}"><i class="fa-brands fa-square-js"></i> typescript</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0062_memo_css_post.html'}"><i class="fa-brands fa-css3-alt"></i> css</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0061_memo_html_post.html'}"><i class="fa-brands fa-html5"></i> html</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2023/0066_memo_python_post.html'}"><i class="fa-brands fa-python"></i> python</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0021_memo_git_post.html'}"><i class="fa-brands fa-git-alt"></i> git</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2021/0030_memo_linux_post.html'}"><i class="fa-brands fa-linux"></i> linux</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0054_memo_cadrage_post.html'}"><i class="fa-solid fa-arrows-split-up-and-left"></i> cadrage</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2022/0031_memo_design_system_post.html'}"><i class="fa-solid fa-pencil"></i> design system</a></li>-->
+<!--                            <li><a class="dropdown-item" th:href="@{${content.rootpath} + 'blog/2020/0016_asciidoc_markdown_memo_post.html'}"><i class="fa-brands fa-markdown"></i> asciidoc/markdown</a></li>-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" th:href="${isIndexPage ? '#contact' : content.rootpath + 'index.html#contact'}">Contact</a>-->
+<!--                    </li>-->
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html#contact">संपर्क</a>
+                    </li>
+                </ul>
+                <!-- Theme Switcher moved outside the ul for simpler flexbox calculation -->
+                <div class="nav-item dropdown theme-switcher-container ms-lg-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle theme-dropdown-btn"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="इंटरफ़ेस थीम चुनें">
+                        <i class="bi bi-sun"></i>
+                        <span id="current-theme" class="visually-hidden">स्पष्ट</span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <li><button class="dropdown-item theme-option"
+                                    type="button"
+                                    data-theme="light">
+                            <i class="bi bi-sun me-2"></i>प्रकाश
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="dark">
+                            <i class="bi bi-moon me-2"></i>गहरा
+                        </button></li>
+                        <li><button class="dropdown-item theme-option" type="button" data-theme="high-contrast">
+                            <i class="bi bi-circle-half me-2"></i>उच्च कंट्रास्ट
+                        </button></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:start -->
+                <div class="nav-item dropdown lang-switcher-container ms-lg-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle lang-dropdown-btn"
+                            type="button"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="भाषा चुनें">
+                        <span class="me-1">🇮🇳</span>
+                        <span class="ms-1">HI</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                        <li><a class="dropdown-item lang-option" href="../../../en/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="en">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇧</span>English
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../zh/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="zh">
+                            <span class="lang-flag me-2" aria-hidden="true">🇨🇳</span>中文
+                        </a></li>
+                        <li><a class="dropdown-item lang-option active" href="0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="hi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇳</span>हिन्दी
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../es/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="es">
+                            <span class="lang-flag me-2" aria-hidden="true">🇪🇸</span>Español
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="fr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇫🇷</span>Français
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ar/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ar">
+                            <span class="lang-flag me-2" aria-hidden="true">🇸🇦</span>العربية
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../bn/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="bn">
+                            <span class="lang-flag me-2" aria-hidden="true">🇧🇩</span>বাংলা
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../pt/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="pt">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇹</span>Português
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ru/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ru">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇺</span>Русский
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ur/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ur">
+                            <span class="lang-flag me-2" aria-hidden="true">🇵🇰</span>اردو
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../it/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="it">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇹</span>Italiano
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../nl/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="nl">
+                            <span class="lang-flag me-2" aria-hidden="true">🇳🇱</span>Nederlands
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../de/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="de">
+                            <span class="lang-flag me-2" aria-hidden="true">🇩🇪</span>Deutsch
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../el/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="el">
+                            <span class="lang-flag me-2" aria-hidden="true">🇬🇷</span>Ελληνικά
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../tr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="tr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇷</span>Türkçe
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../vi/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="vi">
+                            <span class="lang-flag me-2" aria-hidden="true">🇻🇳</span>Tiếng Việt
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../th/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="th">
+                            <span class="lang-flag me-2" aria-hidden="true">🇹🇭</span>ไทย
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../id/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="id">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇩</span>Bahasa Indonesia
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ko/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ko">
+                            <span class="lang-flag me-2" aria-hidden="true">🇰🇷</span>한국어
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../ja/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="ja">
+                            <span class="lang-flag me-2" aria-hidden="true">🇯🇵</span>日本語
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../sr/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="sr">
+                            <span class="lang-flag me-2" aria-hidden="true">🇷🇸</span>Srpski
+                        </a></li>
+                        <li><a class="dropdown-item lang-option" href="../../../fa/blog/2026/0109_gradle_jhipster_docker_testcontainers_debugging_post.html" data-lang="fa">
+                            <span class="lang-flag me-2" aria-hidden="true">🇮🇷</span>فارسی
+                        </a></li>
+                    </ul>
+                </div>
+<!-- che-i18n:lang-switcher:end -->
+            </div>
+        </div>
+    </nav>
+</div>
+    <main class="container main-content-padding" id="main-content">
+        <article>
+            <script type="application/ld+json">
+                {
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "Article",
+                      "mainEntityOfPage": { "@type": "WebPage", "@id": "https:\/\/cheroliv.com\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"},
+                      "headline": "\u091C\u092C Gradle 9, Docker 29 \u0914\u0930 Testcontainers \u0905\u092A\u0928\u0940 \u092A\u0942\u0930\u0940 \u0924\u093E\u0915\u0924 \u0932\u0917\u093E\u0924\u0947 \u0939\u0948\u0902 : JHipster \u092C\u093F\u0932\u094D\u0921 \u0915\u093E debugging",
+                      "description": "Gradle JHipster \u092C\u093F\u0932\u094D\u0921 \u0938\u094D\u0915\u094D\u0930\u093F\u092A\u094D\u091F \u0915\u093E \u0921\u093F\u092C\u0917\u093F\u0902\u0917 \u0915\u0930\u0928\u0947 \u0915\u0947 \u092C\u093E\u0926 Gradle 9.4.1, Java 21 \u0914\u0930 Docker Engine 29.4.1 \u092E\u0947\u0902 \u0938\u0902\u0938\u094D\u0915\u0930\u0923 \u0905\u092A\u0917\u094D\u0930\u0947\u0921 \u092A\u0930 \u0905\u0928\u0941\u092D\u0935\u0964 buildSrc \u0938\u094D\u0915\u094D\u0930\u093F\u092A\u094D\u091F \u092E\u0947\u0902 \u0917\u0932\u0924 \u0928\u093E\u092E\u093F\u0924 \u091A\u0930 \u0938\u0947 \u0932\u0947\u0915\u0930 Docker API 1.32 \u0905\u0938\u0902\u0917\u0924\u093F \u0924\u0915, \u090F\u0915 \u092A\u0942\u0930\u094D\u0923 \u0924\u0915\u0928\u0940\u0915\u0940 \u091C\u0930\u094D\u0928\u0932\u0964",
+                      "datePublished": "2026-04-25",
+                      "dateModified": "2026-04-25",
+                      "author": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv", "url": "https://cheroliv.com/" },
+                      "publisher": { "@type": "Person", "@id": "https://cheroliv.com/#person", "name": "Cheroliv" },
+                      "url": "https:\/\/cheroliv.com\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html",
+                      "inLanguage": "hi"
+                    },
+                    {
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                        { "@type": "ListItem", "position": 1, "name": "स्वागत", "item": "https:\/\/cheroliv.com\/"},
+                        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https:\/\/cheroliv.com\/blog.html"},
+                        { "@type": "ListItem", "position": 3, "name": "\u091C\u092C Gradle 9, Docker 29 \u0914\u0930 Testcontainers \u0905\u092A\u0928\u0940 \u092A\u0942\u0930\u0940 \u0924\u093E\u0915\u0924 \u0932\u0917\u093E\u0924\u0947 \u0939\u0948\u0902 : JHipster \u092C\u093F\u0932\u094D\u0921 \u0915\u093E debugging", "item": "https:\/\/cheroliv.com\/blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html"}
+                      ]
+                    }
+                  ]
+                }
+            </script>
+            <header class="page-header mb-4">
+                <h1 class="h2">जब Gradle 9, Docker 29 और Testcontainers अपनी पूरी ताकत लगाते हैं : JHipster बिल्ड का debugging</h1>
+                <p class="lead">
+                    <em>प्रकाशित: 25 April 2026</em>
+                    
+                </p>
+            </header>
+
+            <div class="content" data-pagefind-body><div id="toc" class="toc">
+<div id="toctitle">विषय-सूची</div>
+<ul class="sectlevel1">
+<li><a href="#_सेट_एक_jhipster_परियोजना_एक_बिल्ड_जो_अब_लोड_नहीं_होती">सेट: एक JHipster परियोजना, एक बिल्ड जो अब लोड नहीं होती।</a></li>
+<li><a href="#_त्रुटि_1_भूत_चर_reportsdir">त्रुटि 1: भूत चर `reportsDir</a></li>
+<li><a href="#_त्रुटि_2_main_gradle_9_में_अब_उपलब्ध_नहीं_है">त्रुटि 2 : <code>main = \"&#8230;&#8203;\"</code> Gradle 9 में अब उपलब्ध नहीं है</a></li>
+<li><a href="#_त्रुटि_3_sourcecompatibility_परियोजना_की_संपत्ति_अब_नहीं_है">त्रुटि 3 : <code>sourceCompatibility</code> परियोजना की संपत्ति अब नहीं है</a></li>
+<li><a href="#_त्रुटि_4_तीन_ऑपरेंडेड_ग्रोवी_एसरशन">त्रुटि 4: तीन-ऑपरेंडेड ग्रोवी एसरशन</a></li>
+<li><a href="#_त्रुटि_5_अंतर्निहित_निर्भरता_compilekotlin_openapigenerate">त्रुटि 5: अंतर्निहित निर्भरता <code>compileKotlin</code> → `openApiGenerate</a></li>
+<li><a href="#_त्रुटि_6_generategitproperties_टूटता_है_पर_filteroutputstream_write">त्रुटि 6 : <code>generateGitProperties</code> टूटता है पर `FilterOutputStream.write()</a></li>
+<li><a href="#_अंत_में_testcontainers_मंच_पर_आता_है">अंत में : Testcontainers मंच पर आता है</a></li>
+<li><a href="#_फ़ेज़_1_डॉकरजावा_पथ">फ़ेज़ 1: डॉकर‑जावा पथ</a></li>
+<li><a href="#_फ़ेज़_2_वेब_खोज_और_गिटहब_ब्रेडक्रंब_ट्रेल">फ़ेज़ 2 : वेब खोज और गिटहब ब्रेडक्रंब ट्रेल</a></li>
+<li><a href="#_फ़ेज़_3_नाम_बदलित_artefacts_का_जाल">फ़ेज़ 3 : नाम बदलित artefacts का जाल</a></li>
+<li><a href="#_फ़ेज़_4_समाधान_को_बलपूर्वक_लागू_करना">फ़ेज़ 4 : समाधान को बलपूर्वक लागू करना</a></li>
+<li><a href="#_अंतिम_परिणाम">अंतिम परिणाम</a></li>
+<li><a href="#_सुधारों_का_सारांश_तालिका">सुधारों का सारांश तालिका</a></li>
+<li><a href="#_निष्कर्ष">निष्कर्ष</a></li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">preadne ka samay :15 minutes</div>
+<p>आपने पहले से ही इस क्षण का अनुभव किया है जब एक साधारण`./gradlew build`जो आप दिन में सौ बार लॉन्च करते हैं वह अचानक कभी न देखी गई त्रुटि पर क्रैश हो जाता है। इसे लगातार ग्यारह त्रुटियों से गुणा करें, डॉकर इंजन 29 की असंगतता की अच्छी खुराक जोड़ें, और Gradle 9 को छिड़कें जो दस साल से उपयोग में लाई जा रही APIs को मिटा देता है। यहाँ पूरा लॉग बुक है।</p>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">आरेख 1 — प्रवासन Gradle 9 (त्रुटि श्रृंखला)</div>
+<p>लक्ष्य : असंगतियों की श्रृंखला दिखाना।</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-275456e7f5f93f9c8a9b96d4c487ce42.png" alt="Diagram" width="611" height="106">
+</div>
+<div class="title">Figure 1. 👉 स्पष्ट, Gradle पर केंद्रित</div>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">आरेख 2 — असंगत JHipster प्लगइन</div>
+<p>उद्देश्य : तोड़े हुए प्लगइन को अलग करें।</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-5f0c3bf8c2e2db3c3f3feaedc30139ad.png" alt="Diagram" width="564" height="123">
+</div>
+<div class="title">Figure 2. 👉 निर्भरताओं की स्पष्ट दृष्टि।</div>
+</div>
+<hr>
+<div class="paragraph">
+<div class="title">आरेख 3 — Docker 29 / Testcontainers</div>
+<p>लक्ष्य : रनटाइम समस्या।</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-695e550ebe163bb9e36c1315439ee1cb.png" alt="Diagram" width="834" height="123">
+</div>
+<div class="title">Figure 3. 👉 रनटाइम का स्पष्ट इतिहास</div>
+</div>
+<hr>
+<div class="paragraph">
+<p>इसे खुद के रूप में पेश करने का एक और तरीका</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-bc44a67d68cd42db97774255ed2a5da5.png" alt="Diagram" width="1123" height="193">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_सेट_एक_jhipster_परियोजना_एक_बिल्ड_जो_अब_लोड_नहीं_होती">सेट: एक JHipster परियोजना, एक बिल्ड जो अब लोड नहीं होती।</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>प्रोजेक्ट`edster`एक JHipster एप्लिकेशन है जिसे 2024 में उत्पन्न किया गया। रूट बिल्ड स्क्रिप्ट`build.gradle`यह महीनों तक स्थिर रहा। फिर हम संस्करण अपग्रेड करने का निर्णय लेते हैं :</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">घटक</th>
+<th class="tableblock halign-left valign-top">लक्ष्य संस्करण</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ग्रैडल</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9.4.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">जावा</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21.0.11-tem (Eclipse Temurin)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JHipster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.x (framework`tech.jhipster:jhipster-framework:8.11.0`)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Spring Boot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4.5</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">कोटलिन</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.3.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">डॉकर इंजन</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">29.4.1 (API 1.54)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>जावा संस्करण बदलना SDKMAN के माध्यम से होता है :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sdk use java 21.0.11-tem</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>पहला लॉन्च :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew build --no-daemon
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file '/home/.../edster/build.gradle' line: 18
+
+* What went wrong:
+An exception occurred applying plugin request [id: 'jhipster.cucumber-conventions']
+&gt; Failed to apply plugin 'jhipster.cucumber-conventions'.
+   &gt; Could not create task ':cucumberTest'.
+      &gt; Could not create task ':consoleLauncherTest'.
+         &gt; Could not set unknown property 'reportsDir' for task ':consoleLauncherTest'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>हम बिल्ड स्क्रिप्ट के लोड होन से भी आगे नहीं बढ़ पाते। समस्या है`buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle`.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_त्रुटि_1_भूत_चर_reportsdir">त्रुटि 1: भूत चर `reportsDir</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>स्क्रिप्ट`jhipster.cucumber-conventions.gradle`सामग्री :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">tasks.register('consoleLauncherTest', JavaExec) {
+    dependsOn(testClasses)
+    String cucumberReportsDir = file("$buildDir/reports/tests")
+    outputs.dir(reportsDir)           // &lt;-- reportsDir n'existe PAS
+    classpath = sourceSets["test"].runtimeClasspath
+    main = "org.junit.platform.console.ConsoleLauncher"
+    // ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>परिभाषित चर है`cucumberReportsDir`. जो उपयोग में लायी जाती है`reportsDir`-- जिसे कहीं भी परिभाषित नहीं किया गया।</p>
+</div>
+<div class="paragraph">
+<p><strong>सुधार</strong>(No output, as the input text is empty)<code>outputs.dir(cucumberReportsDir)</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_त्रुटि_2_main_gradle_9_में_अब_उपलब्ध_नहीं_है">त्रुटि 2 : <code>main = \"&#8230;&#8203;\"</code> Gradle 9 में अब उपलब्ध नहीं है</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>तत्कालीन पुनरारम्भ :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not set unknown property 'main' for task ':consoleLauncherTest' of type org.gradle.api.tasks.JavaExec.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 प्रॉपर्टी को हटाता है।<code>main`के हित में`mainClass`कार्यों पर`JavaExec</code>।</p>
+</div>
+<div class="paragraph">
+<p><strong>सुधार</strong>:`mainClass = "org.junit.platform.console.ConsoleLauncher"`</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_त्रुटि_3_sourcecompatibility_परियोजना_की_संपत्ति_अब_नहीं_है">त्रुटि 3 : <code>sourceCompatibility</code> परियोजना की संपत्ति अब नहीं है</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>नई त्रुटि :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not set unknown property 'sourceCompatibility' for root project 'edster' of type org.gradle.api.Project.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>मूल स्क्रिप्ट था :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">sourceCompatibility=17
+targetCompatibility=17</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 इन संपत्तियों को रूट स्तर पर हटाता है। इन्हें एक ब्लॉक के भीतर रहना चाहिए।<code>java</code>.</p>
+</div>
+<div class="paragraph">
+<p><strong>सुधार</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_त्रुटि_4_तीन_ऑपरेंडेड_ग्रोवी_एसरशन">त्रुटि 4: तीन-ऑपरेंडेड ग्रोवी एसरशन</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>पुराने स्क्रिप्ट था :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">assert System.properties["java.specification.version"] == "17" || "21" || "24"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ग्रूवी में,<code>"21"</code> et <code>"24"`वे सत्य strings हैं। अभिव्यक्ति समाधान करती है</code>(&#8230;&#8203; == "17") || true || true`, जो हमेशा सच है&#8201;&#8212;&#8201;लेकिन सिंटैक्स वांछित कड़ी पुष्टि के लिए मान्य नहीं है।</p>
+</div>
+<div class="paragraph">
+<p><strong>सुधार</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">assert System.properties["java.specification.version"] in ["17", "21", "23", "24"]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_त्रुटि_5_अंतर्निहित_निर्भरता_compilekotlin_openapigenerate">त्रुटि 5: अंतर्निहित निर्भरता <code>compileKotlin</code> → `openApiGenerate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>बिल्ड प्रगति कर रहा है। Kotlin संकलन सफल रहा। फिर :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Task ':compileKotlin' uses this output of task ':openApiGenerate'
+without declaring an explicit or implicit dependency.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle 9 कार्यों के बीच निहित निर्भरताओं को अस्वीकार करता है। चूँकि`compileKotlin`वह उत्पन्न स्रोतों को पढ़ता है द्वारा`openApiGenerate`, लिंक की घोषणा करनी चाहिए।</p>
+</div>
+<div class="paragraph">
+<p><strong>सुधार</strong>में`build.gradle`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">afterEvaluate {
+    tasks.named("compileKotlin").configure {
+        dependsOn(tasks.named("openApiGenerate"))
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `afterEvaluate`आवश्यक है क्योंकि`openApiGenerate`एक एक्सटेंशन (plugin OpenAPI Generator) है और कॉन्फ़िगरेशन चरण के दौरान सीधे सुलभ कार्य नहीं है।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_त्रुटि_6_generategitproperties_टूटता_है_पर_filteroutputstream_write">त्रुटि 6 : <code>generateGitProperties</code> टूटता है पर `FilterOutputStream.write()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>जावा कंपाइलेशन सफल होती है। संसाधन प्रोसेस किए जाते हैं। फिर :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&gt; Task :generateGitProperties FAILED
+
+No signature of method: java.io.FilterOutputStream.write() is applicable for argument types: (Integer) values: [103]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>प्लगइन`gradle-git-properties`वर्जन 2.5.0, Java 21 या Gradle 9 के साथ असंगत है। एक आंतरिक बग कॉल करने की कोशिश कर रहा है।`write(int)`Groovy के माध्यम से एक स्ट्रीम पर जिसे बंद कर दिया गया।</p>
+</div>
+<div class="paragraph">
+<p><strong>सुधार</strong>में`gradle.properties`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">gitPropertiesPluginVersion=2.5.7</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_अंत_में_testcontainers_मंच_पर_आता_है">अंत में : Testcontainers मंच पर आता है</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>अब तक, यह शुद्ध "build script debugging" था. प्रत्येक त्रुटि Gradle 9 या Java 21 का असंगतत्व थी स्क्रिप्ट में बिल्ड. ऊपर दिए गए छह सुधारों के बाद, यह`./gradlew assemble`वह सफलतापूर्वक पास होता है</p>
+</div>
+<div class="paragraph">
+<p>लेकिन`./gradlew build`यह परीक्षण भी चलाता है, और Cucumber परीक्षण अस्थायी PostgreSQL को प्रारम्भ करने के लिए Testcontainers का उपयोग करते हैं।</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Could not find a valid Docker environment.
+
+EnvironmentAndSystemPropertyClientProviderStrategy: failed with exception BadRequestException
+(Status 400: {"message":"client version 1.32 is too old. Minimum supported API version is 1.40"}
+UnixSocketClientProviderStrategy: failed with exception BadRequestException
+(Status 400: {"message":"client version 1.32 is too old. Minimum supported API version is 1.40"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Testcontainers Docker के साथ संवाद करने में असमर्थ है। दो विभिन्न रणनीतियाँ (पर्यावरण चर + यूनिक्स सॉकेट) एक ही त्रुटि पर विफल होती हैं।</p>
+</div>
+<div id="diag-docker-handshake" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-c483c8df9e8790227d60d78f54ba3332.svg" alt="Handshake Docker API refusé par le daemon" width="753" height="616">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_फ़ेज़_1_डॉकरजावा_पथ">फ़ेज़ 1: डॉकर‑जावा पथ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>पहला प्रतिक्रिया : Testcontainers द्वारा उपयोग किए जाने वाले Java Docker क्लाइंट API संस्करण भेजता है`1.32`के HTTP हैंडशेक में, लेकिन Docker Engine 29.4.1 न्यूनतम की मांग करता है`1.40`समस्या क्लाइंट स्तर पर है, डेमन के स्तर पर नहीं।</p>
+</div>
+<div class="paragraph">
+<p>Testcontainers 1.20.6 द्वारा हल किए गए डॉकर‑जावा संस्करण की जाँच :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew dependencies --configuration testRuntimeClasspath | grep docker-java
+
++--- com.github.docker-java:docker-java-api:3.4.1
++--- com.github.docker-java:docker-java-transport:3.4.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>डॉकर-जावा 3.4.1, टेस्टकंटेनर्स 1.20.6 से संबंधित। डॉकर-जावा की नवीनतम सार्वजनिक संस्करण 3.5.1 है। आइए इसे संस्करण अपग्रेड करने के लिए बलपूर्वक करने की कोशिश करते हैं via`resolutionStrategy`ब्लॉक में`configurations` de <code>build.gradle</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">configurations {
+    all {
+        resolutionStrategy.eachDependency { details -&gt;
+            if (details.requested.group == "com.github.docker-java"
+                &amp;&amp; details.requested.name.startsWith("docker-java")) {
+                details.useVersion("3.5.1")
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>बिल्ड को फिर से चलाया गया। एक ही त्रुटि:`client version 1.32 is too old`.</p>
+</div>
+<div class="paragraph">
+<p>ग्रेडल कैश की पुष्टि: JARs को सही तरीके से पुनः डाउनलोड किया गया है, लेकिन त्रुटि अभी भी बरकरार है। docker-java 3.5.1 अभी भी भेज रहा है`1.32`. यह संस्करण Docker Engine 29.4.1 के लिए पर्याप्त नहीं है।</p>
+</div>
+<div class="paragraph">
+<p><strong>शुद्धिकरण कार्य</strong>ग्रैडल कैश को पूरी तरह साफ़ करें, बस इसलिए कि यकीन हो:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">rm -rf ~/.gradle/caches
+rm -rf /path/to/project/.gradle</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>पुराग के बाद पूरा रिलोड। वही त्रुटि।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_फ़ेज़_2_वेब_खोज_और_गिटहब_ब्रेडक्रंब_ट्रेल">फ़ेज़ 2 : वेब खोज और गिटहब ब्रेडक्रंब ट्रेल</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>docker-java 3.5.1 अपर्याप्त है। अब बस यह खोजने के लिए रह गया है कि क्या किसी ने इस सटीक समस्या का सामना किया है।</p>
+</div>
+<div class="paragraph">
+<p>testcontainers-java और docker-java मुद्दों पर लक्षित खोज :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">site:github.com/testcontainers "client version 1.32 is too old"
+site:github.com/docker-java "client version 1.32" Docker Engine 29</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>प्रारम्भिक तत्कालीन परिणाम :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11210">testcontainers-java#11210</a>—<code>[Bug]: client version 1.32 is too old. Minimum supported API version is 1.44</code></p>
+</li>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11212">testcontainers-java#11212</a>—<code>[Bug]: Docker 29.0.0 could not find a valid Docker environment</code></p>
+</li>
+<li>
+<p><a href="https://github.com/testcontainers/testcontainers-java/issues/11491">testcontainers-java#11491</a>—<code>[Bug]: Incompatibility in Ubuntu Github runners with Docker Engine 29.1.*</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>ब्रेडक्रंब पथ स्पष्ट है: Docker Engine 29.x ने अपना न्यूनतम API संस्करण बढ़ा दिया है।<code>1.24</code>(पुराना दोष) को`1.40`. Testcontainers 1.20.x docker-java 3.4.x API संस्करण की बातचीत करके भेजता है।`1.32`डेमेंन शालीनतापूर्वक लेकिन दृढ़ता से इन्कार करता है।</p>
+</div>
+<div class="paragraph">
+<p>इश्यू #11491 में, एक मेंटेनर जवाब देता है :</p>
+</div>
+<div class="paragraph">
+<p><em><em>_ हाय, मेरे पास संस्करण 2.0.3 के साथ चल रहा एक प्रोजेक्ट है, जो जीएच रनर पर इंजन 29.1 के साथ काम करता है। क्या आप सभी कृपया जाँच सकते हैं कि कोई संस्करण संघर्ष नहीं है? कृपया, याद रखें कि सभी मॉड्यूल्स को </em>___</em> के साथ प्रीफ़िक्स किया गया था`testcontainers-<code>. So, starting with version 2.x we went from`postgresql</code> to <code>testcontainers-postgresql</code> (no response needed; output empty)</p>
+</div>
+<div class="paragraph">
+<p>इस उत्तर में<strong>दो महत्वपूर्ण सूचनाएँ</strong> :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Testcontainers 2.0.3+ समस्या को हल करता है।</p>
+</li>
+<li>
+<p>मॉड्यूल्स ont été<strong>प्रीफ़िक्स <code>testcontainers-</code> के साथ नाम बदले गए</strong></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_फ़ेज़_3_नाम_बदलित_artefacts_का_जाल">फ़ेज़ 3 : नाम बदलित artefacts का जाल</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>नाम बदलना कठोर है। Testcontainers 2.x में, अब कोई भी पुराना नाम इस नाम के साथ काम नहीं करता है :</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">पुराना नाम (1.x)</th>
+<th class="tableblock halign-left valign-top">नया नाम (2.x)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:postgresql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-postgresql</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:jdbc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-jdbc</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:junit-jupiter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers-junit-jupiter</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.testcontainers:testcontainers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">अपरिवर्तित</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>पहला प्रयास : Testcontainers 2.0.5 BOM लागू करें और नए कलाकृतियों के नाम`build.gradle`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencies {
+    testImplementation platform("org.testcontainers:testcontainers-bom:2.0.5")
+    testImplementation "org.testcontainers:testcontainers-postgresql"
+    testImplementation "org.testcontainers:testcontainers-jdbc"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>./gradlew build</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">FAILURE: Could not find org.testcontainers:jdbc:2.0.5.
+Could not find org.testcontainers:junit-jupiter:2.0.5.</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>testcontainers-bom का BOM पर्याप्त नहीं है।</strong>क्यों? क्योंकि Spring Boot 3.4.5 अपना स्वयं का BOM निर्भरता प्रबंधन को उजागर करता है।<code>spring-boot-dependencies</code>) कौन<strong>जीतता है</strong>टेस्टकंटेनर्स के BOM पर ट्रांज़िटिव समाधान में। Spring Boot फिक्स करता है`testcontainers` à <code>1.20.6</code>, और इसलिए सभी कलाकृतियाँ जो स्प्रिंग बूट BOM में स्पष्ट रूप से नहीं हैं (जैसे नए`testcontainers-*<code>) वे पुराने नामों की ओर समाधान करते हैं`1.20.6</code>-- जो इस संस्करण में अब नहीं हैं।</p>
+</div>
+<div class="paragraph">
+<p>इसे निरीक्षण करते हुए`dependencies --configuration testRuntimeClasspath`, वहां पाया जाता है:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">+--- org.testcontainers:testcontainers -&gt; 1.20.6 (*)
+|    \--- org.testcontainers:testcontainers:2.0.5 -&gt; 1.20.6</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le <code>&#8594;`यह प्रतिस्थापन दर्शाता है: Testcontainers 2.0.5 <strong>मांगा</strong> है, लेकिन Spring Boot बल डालता है`1.20.6</code>.</p>
+</div>
+<div id="diag-bom-war" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-f4b375d839529761f553fac326713e3a.svg" alt="Conflit entre le BOM Spring Boot et le BOM Testcontainers" width="1128" height="321">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_फ़ेज़_4_समाधान_को_बलपूर्वक_लागू_करना">फ़ेज़ 4 : समाधान को बलपूर्वक लागू करना</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>रणनीति दोहरी हो जाती है :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>docker‑java को संस्करण 3.7.1 पर बाध्य करें (जिसका परीक्षण Docker Engine 29 के साथ संगतता के लिए किया गया है)</p>
+</li>
+<li>
+<p>स्प्रिंग बूट BOM को बायपास करके Testcontainers core को बलपूर्वक 2.0.5 पर सेट करें</p>
+</li>
+</ol>
+</div>
+<div id="diag-resolution-override" class="imageblock">
+<div class="content">
+<img src="./images/diag-plantuml-md5-afa57ef44d5b68dacdf71048463181e1.svg" alt="resolutionStrategy.eachDependency court-circuite le BOM Spring Boot" width="1114" height="468">
+</div>
+</div>
+<div class="paragraph">
+<p><strong>अंतिम सुधार</strong>में`build.gradle`:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">configurations {
+    all {
+        resolutionStrategy.eachDependency { details -&gt;
+            if (details.requested.group == "com.github.docker-java"
+                &amp;&amp; details.requested.name.startsWith("docker-java")) {
+                details.useVersion("3.7.1")
+            }
+            if (details.requested.group == "org.testcontainers"
+                &amp;&amp; details.requested.name == "testcontainers") {
+                details.useVersion("2.0.5")
+            }
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform("org.testcontainers:testcontainers-bom:2.0.5")
+    testImplementation "org.testcontainers:testcontainers-jdbc"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter"
+    testImplementation "org.testcontainers:testcontainers-postgresql"
+    testImplementation "org.testcontainers:testcontainers"
+    // ... autres dépendances Spring Boot
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Le `resolutionStrategy.eachDependency`यह BOM को बायपास करने का एकमात्र तरीका है।`spring-boot-dependencies`स्प्रिंग बूट प्लगइन द्वारा प्रबंधित। समानता परीक्षण पर`details.requested.name == "testcontainers"`est जानबूझकर सीमित है: केवल कोर मॉड्यूल को ही बलपूर्वक लगाया जाता है। मॉड्यूल`testcontainers-*`वे Testcontainers 2.0.5 के BOM का पालन करते हैं जिसे हमने स्पष्ट रूप से घोषित किया है।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_अंतिम_परिणाम">अंतिम परिणाम</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./gradlew build --no-daemon
+
+&gt; Task :consoleLauncherTest
+[2 containers found]
+[2 containers started]
+[2 containers successful]
+
+BUILD SUCCESSFUL in 1m 16s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Testcontainers 2.0.5 + docker-java 3.7.1 अंत में उनके PostgreSQL कंटेनर Docker Engine 29.4.1 के माध्यम से बनाने में सफल हो गए हैं। अंतिम व्यापार त्रुटि (Cucumber परीक्षण पर HTTP 500) एक पूर्णतः एप्लिकेशन समस्या है जो बिल्ड स्क्रिप्ट से पूरी तरह स्वतंत्र है।</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_सुधारों_का_सारांश_तालिका">सुधारों का सारांश तालिका</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">(No content)</th>
+<th class="tableblock halign-left valign-top">फ़ाइल</th>
+<th class="tableblock halign-left valign-top">समस्या</th>
+<th class="tableblock halign-left valign-top">सुधार</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">परिवर्तनीय`reportsDir`अस्तित्वहीन</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs.dir(cucumberReportsDir)</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>buildSrc/src/main/groovy/jhipster.cucumber-conventions.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`main`अप्रचलित Gradle 9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mainClass</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`sourceCompatibility`शीर्ष-स्तर प्रतिबंधित Gradle 9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ब्लॉक`java { sourceCompatibility = JavaVersion.VERSION_21 }`</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Groovy में सिंटैक्स के अनुसार अमान्य अभिकथन</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>assert &#8230;&#8203; in ["17", "21", "23", "24"]</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">अंतर्निहित निर्भरता`compileKotlin`(No characters)<code>openApiGenerate</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>afterEvaluate { tasks.named("compileKotlin").dependsOn("openApiGenerate") }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradle.properties</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`gitPropertiesPluginVersion`असंगत Java 21</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2.5.7</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">कैश ग्रैडल</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">docker-java 3.5.1 परीक्षण किया गया, समाधान हो गया परन्तु अपर्याप्त।</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">शुद्धिकरण + पासेज docker-java 3.7.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build.gradle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Testcontainers 1.20.6 असंगत Docker Engine 29</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Testcontainers 2.0.5 को जबरदस्ती + प्रीफ़िक्स`testcontainers-*`+ resolutionStrategy vs Spring Boot BOM</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_निष्कर्ष">निष्कर्ष</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>यदि आपका JHipster/Gradle बिल्ड Gradle 9 + Docker Engine 29 में अपग्रेड करने के बाद क्रैश हो जाता है, तो त्रुटियाँ दो श्रेणियों में विभाजित होती हैं:</p>
+</div>
+<div class="paragraph">
+<p><strong>बिल्ड स्क्रिप्ट त्रुटियाँ</strong>पहले 6 : Gradle 9 उन गुणों और सिंटैक्स को हटा देता है जो वर्षों से चल रहे थे`sourceCompatibility=<code>, `main =</code>, <code>reportsDir</code>). ये यांत्रिक प्रवासन हैं एक बार जब आप नई API को जान लेते हैं।</p>
+</div>
+<div class="paragraph">
+<p><strong>डॉकर रनटाइम त्रुटियाँ</strong>(अंतिम दो) : Docker Engine 29.4.1 API क्लाइंट्स (&lt; 1.40) को बाहर करता है। Testcontainers 1.20.6 (Spring Boot 3.4.5 द्वारा आवश्यक) docker-java 3.4.1 का उपयोग करके 1.32 भेजता है। केवल Testcontainers 2.0.5 + docker-java 3.7.1 समस्या को हल करता है, artifacts के नाम बदलने और संस्करण को बलपूर्वक लगाने के द्वारा।`resolutionStrategy.eachDependency`के रूप में केवल तरीका जिससे Spring Boot का अंतर्निहित BOM को परिहार किया जा सके</p>
+</div>
+<div class="paragraph">
+<p>पोजेक्ट के मूल में ग्रेडल बिल्ड स्क्रिप्ट अब साफ़ हो गया है।`./gradlew build`Java 21, Gradle 9.4.1, Spring Boot 3.4.5 और Docker इंजन 29.4.1 पर चलता है।</p>
+</div>
+</div>
+</div></div>
+
+            <!-- Articles connexes (liens internes SEO) -->
+            
+                
+                    <section class="mt-5 pt-4 border-top">
+                        <h2 class="h4 mb-3">संबंधित लेख</h2>
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0126_hyperframes_asciidoc_video_post.html" class="fw-semibold">HyperFrames-Gradle : AsciiDoc को MP4 वीडियो में बदलें</a>
+                                    <br/><small class="text-muted">31 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0125_audit_conso_opencode_methodologie_comparaison_prix_llm_post.html" class="fw-semibold">मेरी LLM उपभोग का ऑडिट: SQLite, OpenCode, Ollama Cloud, और क्यों मेरा प्रो सब्सक्रिप्शन वैश्विक बाजार को बर्बाद कर रहा है</a>
+                                    <br/><small class="text-muted">18 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0124_architecture_plugin_gradle_racine_consommateur_independant_post.html" class="fw-semibold">स्वतंत्र प्लग‑इन + उपभोक्ता मूल आर्किटेक्चर: मेरे Gradle बिल्ड्स क्यों दोहराते हैं</a>
+                                    <br/><small class="text-muted">14 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                                <div class="mb-2">
+                                    <a href="../../blog/2026/0123_knowledge_graph_moteur_recommandation_articles_connexes_post.html" class="fw-semibold">सिफ़ारिश इंजन के रूप में Knowledge Graph: मैंने क्रमानुक्रमिक « सम्बन्धित लेख » को कैसे समाप्त कर दिया</a>
+                                    <br/><small class="text-muted">12 May 2026</small>
+                                </div>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </section>
+                
+            
+
+            <!-- Section Commentaires Disqus -->
+            <section id="disqus_thread" class="mt-5"></section>
+            <script>
+                /*<![CDATA[*/
+                var disqus_identifier = "blog\/2026\/0109_gradle_jhipster_docker_testcontainers_debugging_post.html";
+
+                (({disqus_shortname, document}) => {
+                    injectScript('//' + disqus_shortname + '.disqus.com/embed.js');
+                    injectScript('//' + disqus_shortname + '.disqus.com/count.js');
+
+                    function injectScript(url) {
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = url;
+                        (document.head || document.body).appendChild(s);
+                    }
+                })({'disqus_shortname': 'cheroliv', 'document': document});
+                /*]]>*/
+            </script>
+            <noscript>
+                <div class="alert alert-warning">
+                    कृपया `JavaScript` को सक्रिय करें ताकि आप देख सकें
+                    <a href="https://disqus.com/?ref_noscript" class="alert-link">Disqus द्वारा संचालित टिप्पणियाँ</a>.
+                </div>
+            </noscript>
+
+        </article>
+    </main>
+</div>
+
+<div>
+    <!-- Footer -->
+    <footer class="enhanced-footer" data-pagefind-ignore>
+        <div class="container">
+            <div class="row">
+                <!-- Brand Section -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="fw-bold">
+                        <i class="bi bi-code-slash me-2"></i>
+                        CHEROLIV
+                    </h5>
+                    <p class="footer-description">
+                        शिक्षाशास्त्रीय इंजीनियरिंग (pedagogical engineering) में विशेषज्ञ डेवलपर ट्रेनर।
+सीखने के अनुभव को बदलने के लिए अभिनव ई-लर्निंग समाधानों का डिजाइन।
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://github.com/cheroliv" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <!--                        <a href="#" aria-label="LinkedIn">-->
+                        <!--                            <i class="fab fa-linkedin-in"></i>-->
+                        <!--                        </a>-->
+                        <!--                        <a href="#" aria-label="Twitter">-->
+                        <!--                            <i class="fab fa-twitter"></i>-->
+                        <!--                        </a>-->
+                        <a href="feed.xml" aria-label="RSS फ़ीड">
+                            <i class="fas fa-rss"></i>
+                        </a>
+                        <a href="../../index.html#contact" aria-label="संपर्क करें">
+                            <i class="fas fa-paper-plane"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">नेविगेशन</h6>
+                    <ul class="footer-links">
+                        <li><a href="../../index.html"><i class="bi bi-chevron-right"></i>होम</a></li>
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#about'"><i class="bi bi-chevron-right"></i>À propos</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'index.html#services'"><i class="bi bi-chevron-right"></i>Services</a></li>-->
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#portfolio'"><i class="bi bi-chevron-right"></i>Portfolio</a></li>-->
+                        <li><a href="../../blog.html"><i class="bi bi-chevron-right"></i>ब्लॉग</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="fw-bold">संसाधन</h6>
+                    <ul class="footer-links">
+                        <!--                        <li><a th:href="${content.rootpath} + 'index.html#formations'"><i class="bi bi-book"></i>Formations</a></li>-->
+<!--                        <li><a th:href="${content.rootpath} + 'blog.html'"><i class="bi bi-journal-text"></i>Articles</a></li>-->
+                        <li><a href="../../archive.html"><i class="bi bi-archive"></i>आर्काइव्स</a></li>
+<!--                        <li><a><i class="bi bi-journal-bookmark"></i>Mémos</a></li>-->
+                        <li><a href="https://pages-content.github.io/slides/" target="_blank"><i class="fa-regular fa-file-powerpoint"></i> स्लाइड्स</a></li>
+                        <li><a href="https://talaria-formation.github.io/formations/index.html" target="_blank"><i class="fa-solid fa-graduation-cap"></i> प्रशिक्षण</a></li>
+                        <li><a href="https://cccp.education/magic-stick/" target="_blank"><i class="fa-brands fa-linux"></i> बूट करने योग्य चाबी</a></li>
+                        <!--                        <li><a href="#"><i class="bi bi-file-earmark-pdf"></i>Documentation</a></li>-->
+                        <!--                        <li><a href="#"><i class="bi bi-youtube"></i>Tutoriels vidéo</a></li>-->
+                    </ul>
+                </div>
+
+                <!-- Contact Section -->
+<!--                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">-->
+<!--                    <h6 class="fw-bold">Me contacter</h6>-->
+<!--                    <p class="mb-3">Une question ? Un projet ? N'hésitez pas à me contacter.</p>-->
+<!--                    <ul class="contact-info">-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-envelope-fill"></i>-->
+<!--                            <a th:href="${content.rootpath} + 'index.html#contact'">-->
+<!--                                Formulaire de contact-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li>-->
+<!--                            <i class="bi bi-clock-fill"></i>-->
+<!--                            <span>Réponse sous 24-48h</span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </div>-->
+
+                <!-- Location Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold">स्थानीयकरण</h6>
+                    <p class="mb-3">पेरिस क्षेत्र में स्थित, फ्रांस में और रिमोटली हस्तक्षेप संभव है।</p>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>ईल-द-फ्रांस, फ्रांस</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-globe"></i>
+                            <span>रिमोट वर्क उपलब्ध</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span>फ्रांस में यात्राएं</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p>&copy; 2018-<span>2026</span> Cheroliv. सभी अधिकार सुरक्षित।</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Firebase JS SDK (modular) — modulepreload avec SRI (les import ES n'acceptent pas integrity) -->
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js" integrity="sha384-P+iFrwsiok461zJMFNzaLCJ6d5taHsN2f/1LvJIbpS0rtmujFeLbSOgCXf/crZvt" crossorigin="anonymous">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js" integrity="sha384-6QxeL5G6MDbdIGSX2HReBbwKEUGqiWqrrPjOdXy5yiS4yusI+qIuowuPhggbLsPm" crossorigin="anonymous">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa6zTpcWtA3qZarwK7Z7oMXxjxD33np3c",
+            authDomain: "cheroliv-contact.firebaseapp.com",
+            projectId: "cheroliv-contact",
+            storageBucket: "cheroliv-contact.firebasestorage.app",
+            messagingSenderId: "165984851604",
+            appId: "1:165984851604:web:6f99abe1747c81fa718681"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.__FIREBASE__ = { db, collection, addDoc, serverTimestamp };
+    </script>
+    <!-- highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js" integrity="sha384-HdearVH8cyfzwBIQOjL/6dSEmZxQ5rJRezN7spps8E7iu+R6utS8c2ab0AgBNFfH" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/groovy.min.js" integrity="sha384-Tm1Og6d1FV5GOFgkfZWi7DcSeMEA05xEeZfifgFC5IH6xxfoXwg5PaNNxrX4yinC" crossorigin="anonymous"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- intl-tel-input JS -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js" integrity="sha384-tu2ddrBDiy1H44Ve2/1KjirLOOghLqZja42n/44oo+uDwcXF5oaxhu6Xi2zZr9nE" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="../../js/script.js"></script>
+    <script src="../../js/contact.js"></script>
+    <script src="../../js/search-pagefind.js"></script>
+<!-- CONTACT-SEC: bakery — Turnstile API (async, non bloquant) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</div>
+</body>
+</html>
